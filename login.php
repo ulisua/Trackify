@@ -42,13 +42,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <head>
 <meta charset="UTF-8">
 <title>Login - Trackify</title>
-<style>
-body { font-family: Arial; display:flex; height:100vh; margin:0; }
-.left { width:50%; padding:50px; }
-.right { width:50%; background:#f2f2f2; display:flex; align-items:center; justify-content:center; }
-button { padding:10px; margin-top:10px; width:100%; }
-input { display:block; margin-top:10px; padding:10px; width:100%; }
-</style>
+<link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
 

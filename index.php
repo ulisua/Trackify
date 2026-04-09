@@ -1,30 +1,7 @@
 <?php
-session_start();
-
-// Si no está logueado → login
-if(!isset($_SESSION['usuario_id'])){
-    header("Location: login.php");
-    exit();
-}
-
-// Nombre del usuario
-$nombreUsuario = $_SESSION['usuario_nombre'];
+$page = 'dashboard';
+require_once 'includes/header.php';
 ?>
-
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trackify</title>
-    <link rel="stylesheet" href="styles.css">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-
-<body>
 
 <!-- BOTON FLOTANTE IA -->
 <div id="botonIA" class="boton-ia" onclick="toggleChat()">💬</div>
@@ -41,39 +18,6 @@ $nombreUsuario = $_SESSION['usuario_nombre'];
         <button class="btn-enviar" onclick="preguntarIA()">Enviar</button>
     </div>
 </div>
-
-<!-- OVERLAY -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="cerrarMenu()"></div>
-
-<header class="navbar">
-    <div class="logo">💰 Trackify</div>
-
-    <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menú">
-        <span></span>
-        <span></span>
-        <span></span>
-    </button>
-
-    <!-- ACA VA EL NOMBRE DINAMICO -->
-    <div class="user">Hola, <span id="usuarioNombre"><?php echo $nombreUsuario; ?></span></div>
-</header>
-
-<div class="layout">
-
-    <aside class="sidebar" id="sidebar">
-        <nav>
-            <a class="active">Dashboard</a>
-            <a href="ingresos.php">Ingresos</a>
-            <a href="ia.php">IA</a>
-            <a>Gastos</a>
-            <a>Categorías</a>
-            <a>Objetivos</a>
-            <a>Perfil</a>
-            <a href="logout.php">Cerrar sesión</a>
-        </nav>
-    </aside>
-
-    <main class="content">
 
         <!-- CARDS PRINCIPALES -->
         <section class="cards">
@@ -144,47 +88,7 @@ $nombreUsuario = $_SESSION['usuario_nombre'];
     </div>
 </div>
 
-<footer class="footer">
-    <p>Trackify © 2026</p>
-</footer>
-
-<script src="js/ia.js?v=2"></script>
-
-<!-- SCRIPT MENÚ -->
-<script>
-const sidebar = document.getElementById('sidebar');
-const toggle = document.getElementById('menuToggle');
-const overlay = document.getElementById('sidebarOverlay');
-
-function toggleMenu() {
-    const isOpen = sidebar.classList.contains('open');
-    isOpen ? cerrarMenu() : abrirMenu();
-}
-
-function abrirMenu() {
-    sidebar.classList.add('open');
-    toggle.classList.add('open');
-    overlay.classList.add('visible');
-    document.body.style.overflow = 'hidden';
-}
-
-function cerrarMenu() {
-    sidebar.classList.remove('open');
-    toggle.classList.remove('open');
-    overlay.classList.remove('visible');
-    document.body.style.overflow = '';
-}
-
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') cerrarMenu();
-});
-
-document.querySelectorAll('.sidebar a').forEach(link => {
-    link.addEventListener('click', () => {
-        if (window.innerWidth <= 900) cerrarMenu();
-    });
-});
-</script>
-
-</body>
-</html>
+<?php 
+$extra_js = '<script src="js/ia.js?v=2"></script>';
+require_once 'includes/footer.php'; 
+?>

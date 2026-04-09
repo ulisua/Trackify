@@ -43,13 +43,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <head>
 <meta charset="UTF-8">
 <title>Registro - Trackify</title>
-<style>
-body { font-family: Arial; padding:50px; }
-input { display:block; margin:10px 0; padding:10px; width:300px; }
-button { padding:10px; width:320px; }
-</style>
+<link rel="stylesheet" href="css/auth.css">
 </head>
-<body>
+<body class="registro-body">
 
 <h1>Crear cuenta</h1>
 
