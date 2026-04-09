@@ -1,7 +1,8 @@
 <?php
-$host = "localhost";
+$servername = "localhost";
+$username = "root";
+$password = "";
 $dbname = "usuarios";
-$user = "root";
-$pass = "";
-    $conexion = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
+
+$conn = new mysqli($servername, $username, $password, $dbname);
 ?>

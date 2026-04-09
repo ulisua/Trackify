@@ -6,15 +6,11 @@ $mensaje = '';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $nombre = $_POST['nombre'];
-    $apellido = $_POST['apellido'];
     $email = $_POST['email'];
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $telefono = $_POST['telefono'];
-    $pais = $_POST['pais'];
-    $moneda = $_POST['moneda'];
 
     // Verificar si ya existe
-    $check = $conn->prepare("SELECT id FROM usuarios WHERE email=?");
+    $check = $conn->prepare("SELECT id_usuario, nombre, email, clave FROM usuarios WHERE email=?");
     $check->bind_param("s", $email);
     $check->execute();
     $res = $check->get_result();
@@ -22,8 +18,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if($res->num_rows > 0){
         $mensaje = "El email ya está registrado";
     } else {
-        $query = $conn->prepare("INSERT INTO usuarios (nombre, apellido, email, password, telefono, pais, moneda) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $query->bind_param("sssssss", $nombre, $apellido, $email, $password, $telefono, $pais, $moneda);
+        $query = $conn->prepare("INSERT INTO usuarios (Nombre, email, clave) VALUES (?, ?, ?)");
+        $query->bind_param("sss", $nombre, $email, $password);
 
         if($query->execute()){
             $_SESSION['usuario_id'] = $conn->insert_id;
@@ -57,12 +53,8 @@ button { padding:10px; width:320px; }
 
 <form method="POST">
     <input type="text" name="nombre" placeholder="Nombre" required>
-    <input type="text" name="apellido" placeholder="Apellido" required>
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="password" placeholder="Contraseña" required>
-    <input type="text" name="telefono" placeholder="Teléfono">
-    <input type="text" name="pais" placeholder="País">
-    <input type="text" name="moneda" placeholder="Moneda">
     <button type="submit">Registrarse</button>
 </form>
 

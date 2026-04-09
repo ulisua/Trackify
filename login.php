@@ -22,8 +22,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if($result->num_rows === 1){
         $user = $result->fetch_assoc();
 
-        if(password_verify($password, $user['password'])){
-            $_SESSION['usuario_id'] = $user['id'];
+        if(password_verify($password, $user['clave'])){
+            $_SESSION['usuario_id'] = $user['id_usuario'];
             $_SESSION['usuario_nombre'] = $user['nombre'];
 
             header("Location: index.php");
