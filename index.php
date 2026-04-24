@@ -1,5 +1,69 @@
 <?php
 $page = 'dashboard';
+require_once 'conexion.php';
+if(session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+// Procesar el guardado del movimiento directamente en el dashboard
+if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipoMovimiento'])) {
+    $user_id = $_SESSION['usuario_id'];
+    $tipo = $_POST['tipoMovimiento']; // 'ingreso' o 'gasto'
+    $monto = floatval($_POST['monto']);
+    $categoria_nombre = $_POST['categoria'];
+    $descripcion = $_POST['descripcion'];
+    $fecha = $_POST['fecha'] ?? date('Y-m-d');
+
+    // Buscar si existe la categoría para este tipo, si no, crearla
+    $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
+    $stmt_cat->bind_param("ss", $categoria_nombre, $tipo);
+    $stmt_cat->execute();
+    $res_cat = $stmt_cat->get_result();
+    
+    if ($res_cat->num_rows > 0) {
+        $row_cat = $res_cat->fetch_assoc();
+        $id_categoria = $row_cat['id_categoria'];
+    } else {
+        $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
+        $stmt_ins_cat->bind_param("ss", $categoria_nombre, $tipo);
+        $stmt_ins_cat->execute();
+        $id_categoria = $stmt_ins_cat->insert_id;
+    }
+
+    // Insertar el Movimiento en la base de datos
+    $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt_mov->bind_param("iidsss", $user_id, $id_categoria, $monto, $tipo, $descripcion, $fecha);
+    $stmt_mov->execute();
+
+    // Redirigir para limpiar el formulario y evitar re-envíos
+    header("Location: index.php");
+    exit();
+}
+
+// Calcular totales
+$total_ingresos = 0;
+$total_gastos = 0;
+if(isset($_SESSION['usuario_id'])) {
+    $user_id = $_SESSION['usuario_id'];
+    
+    $stmt_ingresos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso'");
+    $stmt_ingresos->bind_param("i", $user_id);
+    $stmt_ingresos->execute();
+    $res_ing = $stmt_ingresos->get_result();
+    if ($row = $res_ing->fetch_assoc()) {
+        $total_ingresos = $row['total'] ?? 0;
+    }
+
+    $stmt_gastos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'gasto'");
+    $stmt_gastos->bind_param("i", $user_id);
+    $stmt_gastos->execute();
+    $res_gas = $stmt_gastos->get_result();
+    if ($row = $res_gas->fetch_assoc()) {
+        $total_gastos = $row['total'] ?? 0;
+    }
+}
+$balance = $total_ingresos - $total_gastos;
+
 require_once 'includes/header.php';
 ?>
 
@@ -23,15 +87,15 @@ require_once 'includes/header.php';
         <section class="cards">
             <div class="card">
                 <h4>Ingresos</h4>
-                <p id="ingresos">$0</p>
+                <p id="ingresos">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
             </div>
             <div class="card highlight">
                 <h4>Balance</h4>
-                <p id="balance">$0</p>
+                <p id="balance">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
             </div>
             <div class="card">
                 <h4>Gastos</h4>
-                <p id="gastos">$0</p>
+                <p id="gastos">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
             </div>
         </section>
 
@@ -76,16 +140,32 @@ require_once 'includes/header.php';
 
 <!-- MODAL -->
 <div id="modal" class="modal hidden">
-    <div class="modal-content">
-        <h3 id="modalTitulo"></h3>
-        <input type="number" id="monto" placeholder="Monto">
-        <input type="date" id="fecha">
-        <input type="text" id="extra" placeholder="Descripción / Categoría">
+    <form class="modal-content modal-form-content" method="POST" action="index.php">
+        <input type="hidden" id="tipoMovimiento" name="tipoMovimiento" value="">
+        <h3 id="modalTitulo">Nuevo</h3>
+        
+        <input type="number" step="0.01" id="monto" name="monto" placeholder="Monto ($)" required>
+        
+        <select id="categoria" name="categoria" required class="modal-form-select">
+            <option value="" disabled selected>Selecciona una categoría</option>
+            <option value="Sueldo">Sueldo</option>
+            <option value="Ventas">Ventas</option>
+            <option value="Comida">Comida</option>
+            <option value="Transporte">Transporte</option>
+            <option value="Entretenimiento">Entretenimiento</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Otros">Otros</option>
+        </select>
+
+        <input type="text" id="descripcion" name="descripcion" placeholder="Breve descripción (ej: café, chicles)" required>
+        
+        <input type="date" id="fecha" name="fecha" value="<?php echo date('Y-m-d'); ?>" required>
+        
         <div class="modal-actions">
-            <button class="btn" onclick="guardar()">Guardar</button>
-            <button class="btn cancel" onclick="cerrarModal()">Cancelar</button>
+            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
+            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
         </div>
-    </div>
+    </form>
 </div>
 
 <?php 

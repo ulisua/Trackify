@@ -35,3 +35,35 @@ document.querySelectorAll('.sidebar a').forEach(link => {
         if (window.innerWidth <= 900) cerrarMenu();
     });
 });
+
+function abrirModal(tipo) {
+    if(tipo === 'objetivo') return; // Puedes agregar lógica para objetivo luego
+    
+    const modal = document.getElementById('modal');
+    if (!modal) return;
+    
+    const modalTitulo = document.getElementById('modalTitulo');
+    const tipoMovimiento = document.getElementById('tipoMovimiento');
+    
+    tipoMovimiento.value = tipo;
+    modalTitulo.innerText = tipo === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Gasto';
+    
+    modal.classList.remove('hidden');
+    // Desenfoca y oscurece el layout de fondo usando la clase del css
+    const layout = document.querySelector('.layout');
+    const navbar = document.querySelector('.navbar');
+    if (layout) layout.classList.add('layout-blur');
+    if (navbar) navbar.classList.add('layout-blur');
+}
+
+function cerrarModal() {
+    const modal = document.getElementById('modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    
+    // Quita el desenfoque
+    const layout = document.querySelector('.layout');
+    const navbar = document.querySelector('.navbar');
+    if (layout) layout.classList.remove('layout-blur');
+    if (navbar) navbar.classList.remove('layout-blur');
+}

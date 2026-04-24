@@ -1,7 +1,54 @@
 <?php
 $page = 'categorias';
 $extra_css = '<link rel="stylesheet" href="css/categorias.css">';
+require_once 'conexion.php';
+if(session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_once 'includes/header.php';
+
+$user_id = $_SESSION['usuario_id'];
+$mes_actual = date('m');
+$anio_actual = date('Y');
+
+// Paleta de colores predefinida
+$colores = ['#F97316', '#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#14B8A6', '#CFF27C', '#EA73F5'];
+
+// Obtener todas las categorías y sumar sus movimientos
+$stmt = $conn->prepare("
+    SELECT c.id_categoria, c.nombre, c.tipo,
+           COUNT(m.id_movimiento) as cantidad, 
+           SUM(m.monto) as total_monto
+    FROM categorias c
+    LEFT JOIN movimientos m ON c.id_categoria = m.id_categoria AND m.id_usuario = ? AND MONTH(m.fecha) = ? AND YEAR(m.fecha) = ?
+    GROUP BY c.id_categoria
+    ORDER BY total_monto DESC
+");
+$stmt->bind_param("iii", $user_id, $mes_actual, $anio_actual);
+$stmt->execute();
+$res = $stmt->get_result();
+
+$gastos = [];
+$ingresos = [];
+$total_gastos = 0;
+$total_ingresos = 0;
+
+$color_index_g = 0;
+$color_index_i = 0;
+
+while ($row = $res->fetch_assoc()) {
+    if ($row['tipo'] === 'gasto') {
+        $row['color'] = $colores[$color_index_g % count($colores)];
+        $gastos[] = $row;
+        $total_gastos += $row['total_monto'] ?? 0;
+        $color_index_g++;
+    } else {
+        $row['color'] = $colores[$color_index_i % count($colores)];
+        $ingresos[] = $row;
+        $total_ingresos += $row['total_monto'] ?? 0;
+        $color_index_i++;
+    }
+}
 ?>
 
             <div class="page-header">
@@ -15,172 +62,75 @@ require_once 'includes/header.php';
                 <button class="tab" onclick="switchTab('ingresos', this)">Ingresos</button>
             </div>
 
-            <!-- Resumen distribución -->
-            <div class="resumen-cats">
-                <h3>Distribución del mes</h3>
-                <div class="resumen-row">
-                    <span class="resumen-cat-nombre">🍔 Comida</span>
-                    <div class="resumen-barra">
-                        <div class="resumen-barra-fill" style="width:38%;background:#F97316"></div>
+            <!-- Resumen distribución (Se muestra para gastos por defecto) -->
+            <div class="resumen-cats" id="resumenGastos">
+                <h3>Distribución del mes (Gastos)</h3>
+                <?php if ($total_gastos > 0): ?>
+                    <?php foreach ($gastos as $gasto): 
+                        if (!$gasto['total_monto']) continue;
+                        $pct = round(($gasto['total_monto'] / $total_gastos) * 100);
+                    ?>
+                    <div class="resumen-row">
+                        <span class="resumen-cat-nombre">🏷️ <?php echo htmlspecialchars($gasto['nombre']); ?></span>
+                        <div class="resumen-barra">
+                            <div class="resumen-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
+                        </div>
+                        <span class="resumen-pct"><?php echo $pct; ?>%</span>
                     </div>
-                    <span class="resumen-pct">38%</span>
-                </div>
-                <div class="resumen-row">
-                    <span class="resumen-cat-nombre">🚌 Transporte</span>
-                    <div class="resumen-barra">
-                        <div class="resumen-barra-fill" style="width:18%;background:#3B82F6"></div>
-                    </div>
-                    <span class="resumen-pct">18%</span>
-                </div>
-                <div class="resumen-row">
-                    <span class="resumen-cat-nombre">💡 Servicios</span>
-                    <div class="resumen-barra">
-                        <div class="resumen-barra-fill" style="width:25%;background:#8B5CF6"></div>
-                    </div>
-                    <span class="resumen-pct">25%</span>
-                </div>
-                <div class="resumen-row">
-                    <span class="resumen-cat-nombre">🎬 Entretenimiento</span>
-                    <div class="resumen-barra">
-                        <div class="resumen-barra-fill" style="width:10%;background:#EC4899"></div>
-                    </div>
-                    <span class="resumen-pct">10%</span>
-                </div>
-                <div class="resumen-row">
-                    <span class="resumen-cat-nombre">🏥 Salud</span>
-                    <div class="resumen-barra">
-                        <div class="resumen-barra-fill" style="width:9%;background:#10B981"></div>
-                    </div>
-                    <span class="resumen-pct">9%</span>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p style="color: #64748B;">No hay gastos registrados este mes.</p>
+                <?php endif; ?>
             </div>
 
             <!-- Grid de categorías — GASTOS -->
             <div class="cat-grid" id="gridGastos">
-                <div class="cat-card cat-comida">
-                    <div class="cat-icon">🍔</div>
-                    <div class="cat-nombre">Comida</div>
+                <?php foreach ($gastos as $gasto): 
+                    $monto = $gasto['total_monto'] ?? 0;
+                    $cant = $gasto['cantidad'] ?? 0;
+                    $pct = $total_gastos > 0 ? round(($monto / $total_gastos) * 100) : 0;
+                ?>
+                <div class="cat-card">
+                    <div class="cat-icon">🏷️</div>
+                    <div class="cat-nombre"><?php echo htmlspecialchars($gasto['nombre']); ?></div>
                     <div class="cat-stats">
-                        <span class="cat-monto">$32.300</span>
-                        <span class="cat-cant">14 movimientos</span>
+                        <span class="cat-monto">$<?php echo number_format($monto, 2, ',', '.'); ?></span>
+                        <span class="cat-cant"><?php echo $cant; ?> movimiento<?php echo $cant != 1 ? 's' : ''; ?></span>
                     </div>
                     <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:38%;background:#F97316"></div>
+                        <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
                     </div>
                     <div class="cat-acciones">
                         <button>✏️ Editar</button>
                         <button class="btn-del">🗑️</button>
                     </div>
                 </div>
-                <div class="cat-card cat-transporte">
-                    <div class="cat-icon">🚌</div>
-                    <div class="cat-nombre">Transporte</div>
-                    <div class="cat-stats">
-                        <span class="cat-monto">$15.200</span>
-                        <span class="cat-cant">8 movimientos</span>
-                    </div>
-                    <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:18%;background:#3B82F6"></div>
-                    </div>
-                    <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
-                    </div>
-                </div>
-                <div class="cat-card cat-servicios">
-                    <div class="cat-icon">💡</div>
-                    <div class="cat-nombre">Servicios</div>
-                    <div class="cat-stats">
-                        <span class="cat-monto">$21.000</span>
-                        <span class="cat-cant">3 movimientos</span>
-                    </div>
-                    <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:25%;background:#8B5CF6"></div>
-                    </div>
-                    <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
-                    </div>
-                </div>
-                <div class="cat-card cat-entrete">
-                    <div class="cat-icon">🎬</div>
-                    <div class="cat-nombre">Entretenimiento</div>
-                    <div class="cat-stats">
-                        <span class="cat-monto">$8.500</span>
-                        <span class="cat-cant">5 movimientos</span>
-                    </div>
-                    <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:10%;background:#EC4899"></div>
-                    </div>
-                    <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
-                    </div>
-                </div>
-                <div class="cat-card cat-salud">
-                    <div class="cat-icon">🏥</div>
-                    <div class="cat-nombre">Salud</div>
-                    <div class="cat-stats">
-                        <span class="cat-monto">$7.500</span>
-                        <span class="cat-cant">2 movimientos</span>
-                    </div>
-                    <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:9%;background:#10B981"></div>
-                    </div>
-                    <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
-                    </div>
-                </div>
-                <div class="cat-card cat-otros">
-                    <div class="cat-icon">📦</div>
-                    <div class="cat-nombre">Otros</div>
-                    <div class="cat-stats">
-                        <span class="cat-monto">$500</span>
-                        <span class="cat-cant">1 movimiento</span>
-                    </div>
-                    <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:1%;background:#94A3B8"></div>
-                    </div>
-                    <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
 
             <!-- Grid de categorías — INGRESOS (oculto por defecto) -->
             <div class="cat-grid" id="gridIngresos" style="display:none">
-                <div class="cat-card cat-trabajo">
-                    <div class="cat-icon">💼</div>
-                    <div class="cat-nombre">Trabajo</div>
+                <?php foreach ($ingresos as $ingreso): 
+                    $monto = $ingreso['total_monto'] ?? 0;
+                    $cant = $ingreso['cantidad'] ?? 0;
+                    $pct = $total_ingresos > 0 ? round(($monto / $total_ingresos) * 100) : 0;
+                ?>
+                <div class="cat-card">
+                    <div class="cat-icon">🏷️</div>
+                    <div class="cat-nombre"><?php echo htmlspecialchars($ingreso['nombre']); ?></div>
                     <div class="cat-stats">
-                        <span class="cat-monto">$80.000</span>
-                        <span class="cat-cant">1 movimiento</span>
+                        <span class="cat-monto">$<?php echo number_format($monto, 2, ',', '.'); ?></span>
+                        <span class="cat-cant"><?php echo $cant; ?> movimiento<?php echo $cant != 1 ? 's' : ''; ?></span>
                     </div>
                     <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:67%;background:#CFF27C"></div>
+                        <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $ingreso['color']; ?>"></div>
                     </div>
                     <div class="cat-acciones">
                         <button>✏️ Editar</button>
                         <button class="btn-del">🗑️</button>
                     </div>
                 </div>
-                <div class="cat-card cat-freelance">
-                    <div class="cat-icon">🖥️</div>
-                    <div class="cat-nombre">Freelance</div>
-                    <div class="cat-stats">
-                        <span class="cat-monto">$40.000</span>
-                        <span class="cat-cant">1 movimiento</span>
-                    </div>
-                    <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:33%;background:#EA73F5"></div>
-                    </div>
-                    <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
 
         </main>

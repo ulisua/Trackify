@@ -18,7 +18,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if($res->num_rows > 0){
         $mensaje = "El email ya está registrado";
     } else {
-        $query = $conn->prepare("INSERT INTO usuarios (Nombre, email, clave) VALUES (?, ?, ?)");
+        $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro) VALUES (?, ?, ?, NOW())");
         $query->bind_param("sss", $nombre, $email, $password);
 
         if($query->execute()){
@@ -38,23 +38,39 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Registro - Trackify</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/auth.css">
 </head>
-<body class="registro-body">
+<body>
 
-<h1>Crear cuenta</h1>
+<div class="glow-orb orb-1"></div>
+<div class="glow-orb orb-2"></div>
 
-<?php if($mensaje) echo "<p style='color:red;'>$mensaje</p>"; ?>
+<div class="auth-card">
+    <h1 class="logo">Trackify</h1>
+    <p class="subtitle">Crea tu cuenta para comenzar</p>
 
-<form method="POST">
-    <input type="text" name="nombre" placeholder="Nombre" required>
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Contraseña" required>
-    <button type="submit">Registrarse</button>
-</form>
+    <?php if($mensaje) echo "<div class='error-msg'>$mensaje</div>"; ?>
 
-<a href="login.php">Ya tengo cuenta</a>
+    <form method="POST">
+        <div class="form-group">
+            <input type="text" name="nombre" placeholder="Nombre completo" required>
+        </div>
+        <div class="form-group">
+            <input type="email" name="email" placeholder="Email" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Contraseña" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Registrarse</button>
+    </form>
+
+    <div class="footer-links">
+        ¿Ya tienes cuenta? <a href="login.php">Inicia sesión</a>
+    </div>
+</div>
 
 </body>
 </html>

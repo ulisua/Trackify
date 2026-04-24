@@ -1,8 +1,191 @@
-body { font-family: Arial; display:flex; height:100vh; margin:0; }
-.left { width:50%; padding:50px; }
-.right { width:50%; background:#f2f2f2; display:flex; align-items:center; justify-content:center; }
-button { padding:10px; margin-top:10px; width:100%; cursor: pointer;}
-input { display:block; margin-top:10px; padding:10px; width:100%; box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #1E1B26 0%, #084734 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Background animated glowing orbs */
+.glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    z-index: -1;
+}
+.orb-1 {
+    width: 300px;
+    height: 300px;
+    background: #CFF27C;
+    top: -100px;
+    left: -100px;
+}
+.orb-2 {
+    width: 400px;
+    height: 400px;
+    background: #EA73F5;
+    bottom: -150px;
+    right: -100px;
+}
+
+.auth-card {
+    background: rgba(30, 27, 38, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    transform: translateY(0);
+    animation: floatIn 0.6s ease-out forwards;
+}
+
+@keyframes floatIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 2.2rem;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #CFF27C, #EA73F5);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0 0 10px 0;
+}
+
+.subtitle {
+    color: #94A3B8;
+    margin-bottom: 30px;
+    font-size: 0.95rem;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    font-size: 1rem;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #CFF27C;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0 0 3px rgba(207, 242, 124, 0.1);
+}
+
+.btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+.btn-primary {
+    background: #CFF27C;
+    color: #1E1B26;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(207, 242, 124, 0.3);
+}
+
+.btn-google {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-google:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 20px 0;
+    color: #64748B;
+    font-size: 0.85rem;
+}
+
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.divider::before { margin-right: 15px; }
+.divider::after { margin-left: 15px; }
+
+.error-msg {
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    margin-top: 25px;
+    font-size: 0.9rem;
+    color: #94A3B8;
+}
+
+.footer-links a {
+    color: #EA73F5;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover {
+    color: #f0a3f8;
+    text-decoration: underline;
+}
 
 /* Adicional para registro */
 .registro-body { font-family: Arial; padding:50px; display: block; height: auto;}

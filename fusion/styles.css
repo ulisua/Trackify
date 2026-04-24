@@ -1045,29 +1045,3 @@ body {
         padding: 14px;
     }
 }
-
-/* Clases añadidas para el modal de index.php */
-.modal-form-content {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.modal-form-select {
-    padding: 14px 16px;
-    border: 1px solid #E2E8F0;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-family: inherit;
-    outline: none;
-    background: #F8FAFC;
-    margin-bottom: 5px;
-}
-
-.btn-guardar-modal {
-    background: #084734 !important;
-    color: #CFF27C !important;
-}
-
-.layout-blur {
-    transition: all 0.3s ease;
-    filter: blur(6px) brightness(0.6);
-}
