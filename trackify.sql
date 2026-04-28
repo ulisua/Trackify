@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-04-2026 a las 22:09:30
+-- Tiempo de generación: 28-04-2026 a las 22:23:29
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de datos: `trackify`
+-- Base de datos: `usuarios`
 --
 
 -- --------------------------------------------------------
@@ -32,6 +32,14 @@ CREATE TABLE `categorias` (
   `nombre` varchar(50) NOT NULL,
   `tipo` enum('ingreso','gasto') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `categorias`
+--
+
+INSERT INTO `categorias` (`id_categoria`, `nombre`, `tipo`) VALUES
+(1, 'Otros', 'ingreso'),
+(2, 'Servicios', 'gasto');
 
 -- --------------------------------------------------------
 
@@ -78,6 +86,16 @@ CREATE TABLE `movimientos` (
   `es_hormiga` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `movimientos`
+--
+
+INSERT INTO `movimientos` (`id_movimiento`, `id_usuario`, `id_categoria`, `monto`, `tipo`, `descripcion`, `fecha`, `es_hormiga`) VALUES
+(1, 2, 1, 5000.00, 'ingreso', 'Transferencia', '2026-04-28', 0),
+(2, 2, 2, 7000.00, 'gasto', 'Gas', '2026-04-28', 0),
+(3, 1, 1, 40000.00, 'ingreso', 'Transferencia', '2026-04-28', 0),
+(4, 1, 2, 30000.00, 'gasto', 'Luz', '2026-04-28', 0);
+
 -- --------------------------------------------------------
 
 --
@@ -91,6 +109,14 @@ CREATE TABLE `usuarios` (
   `clave` varchar(255) NOT NULL,
   `fecha_registro` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`id_usuario`, `nombre`, `email`, `clave`, `fecha_registro`) VALUES
+(1, 'Agus', 'agustinacecch@sagradocorazon.edu.ar', '$2y$10$qVjzvUsVks3tHAYnpcaDDOzZo.6eTjaPRmbzgYa7Npv2MoA0oKbge', '2026-04-28 17:14:39'),
+(2, 'María', 'mariadevirgiglio@sagradocorazon.edu.ar', '$2y$10$FJiAgwd9.dHL0uuJcaBXtOeHvBmiWaetZ3Sjrw5NQycjC4HME.8Pu', '2026-04-28 17:20:49');
 
 --
 -- Índices para tablas volcadas
@@ -139,7 +165,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `categorias`
 --
 ALTER TABLE `categorias`
-  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `metas_ahorro`
@@ -151,13 +177,13 @@ ALTER TABLE `metas_ahorro`
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
-  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Restricciones para tablas volcadas
