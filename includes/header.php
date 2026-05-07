@@ -35,7 +35,9 @@ $titulo = $titulo_pagina ?? 'Trackify';
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="cerrarMenu()"></div>
 
 <header class="navbar">
-    <div class="logo">💰 Trackify</div>
+    <div class="logo">
+        <img src="logo.png" alt="Trackify Icon" style="height: 60px;">
+    </div>
 
     <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menú">
         <span></span>
@@ -44,7 +46,7 @@ $titulo = $titulo_pagina ?? 'Trackify';
     </button>
 
     <!-- ACA VA EL NOMBRE DINAMICO -->
-    <div class="user">Hola, <span id="usuarioNombre"><?php echo htmlspecialchars($nombreUsuario); ?></span></div>
+    <div class="user">Hola, <span id="usuarioNombre" style="color: #EA73F5; font-weight: 600;"><?php echo htmlspecialchars($nombreUsuario); ?></span></div>
 </header>
 
 <div class="layout">

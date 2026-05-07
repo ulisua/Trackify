@@ -52,7 +52,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <div class="glow-orb orb-2"></div>
 
 <div class="auth-card">
-    <h1 class="logo">Trackify</h1>
+    <div class="logo" style="text-align: center; margin-bottom: 25px;">
+        <img src="logo.png" alt="Trackify Icon" style="height: 100px;">
+    </div>
     <p class="subtitle">Controla tus finanzas fácilmente</p>
 
     <button class="btn btn-google">

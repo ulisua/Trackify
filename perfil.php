@@ -1,7 +1,39 @@
 <?php
 $page = 'perfil';
 $extra_css = '<link rel="stylesheet" href="css/perfil.css">';
+require_once 'conexion.php';
+if(session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 require_once 'includes/header.php';
+
+$user_id = $_SESSION['usuario_id'];
+$query = $conn->prepare("SELECT nombre, email, fecha_registro FROM usuarios WHERE id_usuario=?");
+$query->bind_param("i", $user_id);
+$query->execute();
+$res = $query->get_result();
+$user_data = $res->fetch_assoc();
+
+$nombre = $user_data['nombre'] ?? 'Usuario';
+$email = $user_data['email'] ?? 'usuario@email.com';
+$fecha_registro = isset($user_data['fecha_registro']) ? date('M Y', strtotime($user_data['fecha_registro'])) : 'Ene 2026';
+
+// Movimientos count
+$query_mov = $conn->prepare("SELECT COUNT(*) as total_mov FROM movimientos WHERE id_usuario=?");
+$query_mov->bind_param("i", $user_id);
+$query_mov->execute();
+$res_mov = $query_mov->get_result();
+$mov_data = $res_mov->fetch_assoc();
+$total_movimientos = $mov_data['total_mov'] ?? 0;
+
+// Objetivos count
+$query_obj = $conn->prepare("SELECT COUNT(*) as total_obj FROM metas_ahorro WHERE id_usuario=?");
+$query_obj->bind_param("i", $user_id);
+$query_obj->execute();
+$res_obj = $query_obj->get_result();
+$obj_data = $res_obj->fetch_assoc();
+$total_objetivos = $obj_data['total_obj'] ?? 0;
+
 ?>
 
             <div class="page-header">
@@ -19,22 +51,22 @@ require_once 'includes/header.php';
                             <span class="perfil-avatar-edit">✏️ editar</span>
                         </div>
                         <div class="perfil-nombre-box">
-                            <strong id="nombreMostrado">Usuario</strong>
-                            <span id="emailMostrado">usuario@email.com</span>
+                            <strong id="nombreMostrado"><?php echo htmlspecialchars($nombre); ?></strong>
+                            <span id="emailMostrado"><?php echo htmlspecialchars($email); ?></span>
                         </div>
                         <div class="perfil-divider"></div>
                         <div class="perfil-user-stats">
                             <div class="perfil-user-stat">
                                 <span>Miembro desde</span>
-                                <span>Ene 2026</span>
+                                <span><?php echo $fecha_registro; ?></span>
                             </div>
                             <div class="perfil-user-stat">
                                 <span>Movimientos</span>
-                                <span>47</span>
+                                <span><?php echo $total_movimientos; ?></span>
                             </div>
                             <div class="perfil-user-stat">
                                 <span>Objetivos activos</span>
-                                <span>4</span>
+                                <span><?php echo $total_objetivos; ?></span>
                             </div>
                             <div class="perfil-user-stat">
                                 <span>Moneda</span>
@@ -62,21 +94,21 @@ require_once 'includes/header.php';
                             <div class="campo-row">
                                 <div class="campo">
                                     <label>Nombre</label>
-                                    <input type="text" id="inputNombre" value="Usuario" disabled>
+                                    <input type="text" id="inputNombre" value="<?php echo htmlspecialchars($nombre); ?>" disabled>
                                 </div>
                                 <div class="campo">
                                     <label>Apellido</label>
-                                    <input type="text" id="inputApellido" value="Apellido" disabled>
+                                    <input type="text" id="inputApellido" placeholder="Completame" disabled>
                                 </div>
                             </div>
                             <div class="campo-row">
                                 <div class="campo">
                                     <label>Email</label>
-                                    <input type="email" id="inputEmail" value="usuario@email.com" disabled>
+                                    <input type="email" id="inputEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
                                 </div>
                                 <div class="campo">
                                     <label>Teléfono</label>
-                                    <input type="tel" id="inputTel" value="+54 11 1234-5678" disabled>
+                                    <input type="tel" id="inputTel" placeholder="Completame" disabled>
                                 </div>
                             </div>
                             <div class="campo-row">

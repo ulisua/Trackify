@@ -138,36 +138,6 @@ require_once 'includes/header.php';
     </main>
 </div>
 
-<!-- MODAL -->
-<div id="modal" class="modal hidden">
-    <form class="modal-content modal-form-content" method="POST" action="index.php">
-        <input type="hidden" id="tipoMovimiento" name="tipoMovimiento" value="">
-        <h3 id="modalTitulo">Nuevo</h3>
-        
-        <input type="number" step="0.01" id="monto" name="monto" placeholder="Monto ($)" required>
-        
-        <select id="categoria" name="categoria" required class="modal-form-select">
-            <option value="" disabled selected>Selecciona una categoría</option>
-            <option value="Sueldo">Sueldo</option>
-            <option value="Ventas">Ventas</option>
-            <option value="Comida">Comida</option>
-            <option value="Transporte">Transporte</option>
-            <option value="Entretenimiento">Entretenimiento</option>
-            <option value="Servicios">Servicios</option>
-            <option value="Otros">Otros</option>
-        </select>
-
-        <input type="text" id="descripcion" name="descripcion" placeholder="Breve descripción (ej: café, chicles)" required>
-        
-        <input type="date" id="fecha" name="fecha" value="<?php echo date('Y-m-d'); ?>" required>
-        
-        <div class="modal-actions">
-            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
-            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
-        </div>
-    </form>
-</div>
-
 <?php 
 $extra_js = '<script src="js/ia.js?v=2"></script>';
 require_once 'includes/footer.php'; 
