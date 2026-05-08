@@ -37,7 +37,17 @@ document.querySelectorAll('.sidebar a').forEach(link => {
 });
 
 function abrirModal(tipo) {
-    if(tipo === 'objetivo') return; // Puedes agregar lógica para objetivo luego
+    if(tipo === 'objetivo') {
+        const modalObj = document.getElementById('modalObjetivo');
+        if (modalObj) {
+            modalObj.classList.remove('hidden');
+            const layout = document.querySelector('.layout');
+            const navbar = document.querySelector('.navbar');
+            if (layout) layout.classList.add('layout-blur');
+            if (navbar) navbar.classList.add('layout-blur');
+        }
+        return;
+    }
     
     const modal = document.getElementById('modal');
     if (!modal) return;
@@ -102,8 +112,10 @@ function abrirModal(tipo) {
 
 function cerrarModal() {
     const modal = document.getElementById('modal');
-    if (!modal) return;
-    modal.classList.add('hidden');
+    if (modal) modal.classList.add('hidden');
+    
+    const modalObj = document.getElementById('modalObjetivo');
+    if (modalObj) modalObj.classList.add('hidden');
     
     // Quita el desenfoque
     const layout = document.querySelector('.layout');

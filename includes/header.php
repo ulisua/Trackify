@@ -36,7 +36,7 @@ $titulo = $titulo_pagina ?? 'Trackify';
 
 <header class="navbar">
     <div class="logo">
-        <img src="logo.png" alt="Trackify Icon" style="height: 60px;">
+        <img src="logo.png" alt="Trackify Icon" style="height: 60px; transform: scale(1.5); transform-origin: left center;">
     </div>
 
     <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menú">

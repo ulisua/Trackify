@@ -5,39 +5,59 @@ if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Procesar el guardado del movimiento directamente en el dashboard
-if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipoMovimiento'])) {
+// Añadir columna descripcion a metas_ahorro si no existe (MariaDB 10.4 soporta IF NOT EXISTS)
+$conn->query("ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) DEFAULT NULL");
+
+// Procesar el guardado del movimiento u objetivo
+if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['usuario_id'];
-    $tipo = $_POST['tipoMovimiento']; // 'ingreso' o 'gasto'
-    $monto = floatval($_POST['monto']);
-    $categoria_nombre = $_POST['categoria'];
-    $descripcion = $_POST['descripcion'];
-    $fecha = $_POST['fecha'] ?? date('Y-m-d');
 
-    // Buscar si existe la categoría para este tipo, si no, crearla
-    $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
-    $stmt_cat->bind_param("ss", $categoria_nombre, $tipo);
-    $stmt_cat->execute();
-    $res_cat = $stmt_cat->get_result();
-    
-    if ($res_cat->num_rows > 0) {
-        $row_cat = $res_cat->fetch_assoc();
-        $id_categoria = $row_cat['id_categoria'];
-    } else {
-        $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
-        $stmt_ins_cat->bind_param("ss", $categoria_nombre, $tipo);
-        $stmt_ins_cat->execute();
-        $id_categoria = $stmt_ins_cat->insert_id;
+    if(isset($_POST['tipoMovimiento']) && $_POST['tipoMovimiento'] !== '') {
+        $tipo = $_POST['tipoMovimiento']; // 'ingreso' o 'gasto'
+        $monto = floatval($_POST['monto']);
+        $categoria_nombre = $_POST['categoria'];
+        $descripcion = $_POST['descripcion'];
+        $fecha = $_POST['fecha'] ?? date('Y-m-d');
+
+        // Buscar si existe la categoría para este tipo, si no, crearla
+        $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
+        $stmt_cat->bind_param("ss", $categoria_nombre, $tipo);
+        $stmt_cat->execute();
+        $res_cat = $stmt_cat->get_result();
+        
+        if ($res_cat->num_rows > 0) {
+            $row_cat = $res_cat->fetch_assoc();
+            $id_categoria = $row_cat['id_categoria'];
+        } else {
+            $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
+            $stmt_ins_cat->bind_param("ss", $categoria_nombre, $tipo);
+            $stmt_ins_cat->execute();
+            $id_categoria = $stmt_ins_cat->insert_id;
+        }
+
+        // Insertar el Movimiento en la base de datos
+        $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt_mov->bind_param("iidsss", $user_id, $id_categoria, $monto, $tipo, $descripcion, $fecha);
+        $stmt_mov->execute();
+
+        // Redirigir para limpiar el formulario y evitar re-envíos
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    } elseif(isset($_POST['form_type']) && $_POST['form_type'] === 'objetivo') {
+        $nombre = $_POST['nombre_meta'];
+        $desc = $_POST['desc_meta'];
+        $monto = floatval($_POST['monto_objetivo']);
+        $fecha = $_POST['fecha_limite'];
+        $monto_actual = 0;
+
+        $stmt_obj = $conn->prepare("INSERT INTO metas_ahorro (id_usuario, nombre_meta, descripcion, monto_objetivo, monto_actual, fecha_limite) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt_obj->bind_param("issdds", $user_id, $nombre, $desc, $monto, $monto_actual, $fecha);
+        $stmt_obj->execute();
+        
+        // Redirigir
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
     }
-
-    // Insertar el Movimiento en la base de datos
-    $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt_mov->bind_param("iidsss", $user_id, $id_categoria, $monto, $tipo, $descripcion, $fecha);
-    $stmt_mov->execute();
-
-    // Redirigir para limpiar el formulario y evitar re-envíos
-    header("Location: index.php");
-    exit();
 }
 
 // Calcular totales
