@@ -5,6 +5,22 @@ require_once 'conexion.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+
+// Procesar nueva categoría
+if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
+    if($_POST['form_type'] === 'nueva_categoria') {
+        $nombre_cat = $_POST['nombre_categoria'];
+        $tipo_cat = $_POST['tipo_categoria'];
+        
+        $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
+        $stmt_ins_cat->bind_param("ss", $nombre_cat, $tipo_cat);
+        $stmt_ins_cat->execute();
+        
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    }
+}
+
 require_once 'includes/header.php';
 
 $user_id = $_SESSION['usuario_id'];
@@ -53,7 +69,7 @@ while ($row = $res->fetch_assoc()) {
 
             <div class="page-header">
                 <h2>🏷️ Categorías</h2>
-                <button class="btn-nuevo" onclick="abrirModal()">+ Nueva categoría</button>
+                <button class="btn-nuevo" onclick="abrirModalCategoria()">+ Nueva categoría</button>
             </div>
 
             <!-- Tabs -->

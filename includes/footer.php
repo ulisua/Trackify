@@ -41,6 +41,65 @@
     </form>
 </div>
 
+<!-- MODAL AGREGAR AHORRO -->
+<div id="modalAhorro" class="modal hidden">
+    <form class="modal-content modal-form-content" method="POST" action="objetivos.php">
+        <input type="hidden" name="form_type" value="agregar_ahorro">
+        <input type="hidden" id="ahorro_id_meta" name="id_meta" value="">
+        <h3>Agregar ahorro</h3>
+        
+        <input type="number" step="0.01" id="monto_ahorro" name="monto_ahorro" placeholder="Monto a sumar ($)" required>
+        
+        <div class="modal-actions">
+            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
+            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL EDITAR OBJETIVO -->
+<div id="modalEditarObjetivo" class="modal hidden">
+    <form class="modal-content modal-form-content" method="POST" action="objetivos.php">
+        <input type="hidden" name="form_type" value="editar_objetivo">
+        <input type="hidden" id="edit_id_meta" name="id_meta" value="">
+        <h3>Editar objetivo</h3>
+        
+        <input type="text" id="edit_nombre_meta" name="nombre_meta" placeholder="Nombre del objetivo" required>
+        <input type="text" id="edit_desc_meta" name="desc_meta" placeholder="Breve descripción" required>
+        <input type="number" step="0.01" id="edit_monto_objetivo" name="monto_objetivo" placeholder="Monto objetivo ($)" required>
+        <input type="date" id="edit_fecha_limite" name="fecha_limite" required>
+        <select id="edit_estado" name="estado" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26;">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+            <option value="logrado">Logrado</option>
+        </select>
+        
+        <div class="modal-actions">
+            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
+            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL NUEVA CATEGORÍA -->
+<div id="modalCategoria" class="modal hidden">
+    <form class="modal-content modal-form-content" method="POST" action="categorias.php">
+        <input type="hidden" name="form_type" value="nueva_categoria">
+        <h3>Nueva categoría</h3>
+        
+        <input type="text" id="nombre_categoria" name="nombre_categoria" placeholder="Nombre de la categoría" required>
+        <select id="tipo_categoria" name="tipo_categoria" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26;">
+            <option value="gasto">Gasto</option>
+            <option value="ingreso">Ingreso</option>
+        </select>
+        
+        <div class="modal-actions">
+            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
+            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
 <footer class="footer">
     <p>Trackify © 2026</p>
 </footer>

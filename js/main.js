@@ -71,10 +71,14 @@ function abrirModal(tipo) {
         wrapper.classList.remove('open');
         
         let opciones = [];
-        if (tipo === 'ingreso') {
-            opciones = ["Sueldo", "Transferencia", "Préstamo recibido", "Reintegro", "Ventas", "Inversiones", "Intereses", "Regalos", "Devoluciones", "Freelance / trabajos extra", "Becas / subsidios", "Otros ingresos"];
+        if (window.dbCategorias) {
+            opciones = window.dbCategorias[tipo] || [];
         } else {
-            opciones = ["Alimentos", "Transporte", "Vivienda", "Servicios", "Salud", "Educación", "Entretenimiento", "Compras personales", "Deudas", "Impuestos", "Mascotas", "Suscripciones", "Regalos / donaciones", "Ropa", "Tecnología", "Viajes", "Otros gastos"];
+            if (tipo === 'ingreso') {
+                opciones = ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"];
+            } else {
+                opciones = ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
+            }
         }
         
         opciones.forEach(o => {
@@ -110,18 +114,56 @@ function abrirModal(tipo) {
     if (navbar) navbar.classList.add('layout-blur');
 }
 
-function cerrarModal() {
-    const modal = document.getElementById('modal');
-    if (modal) modal.classList.add('hidden');
-    
-    const modalObj = document.getElementById('modalObjetivo');
-    if (modalObj) modalObj.classList.add('hidden');
-    
-    // Quita el desenfoque
+function blurBackground(enable) {
     const layout = document.querySelector('.layout');
     const navbar = document.querySelector('.navbar');
-    if (layout) layout.classList.remove('layout-blur');
-    if (navbar) navbar.classList.remove('layout-blur');
+    if (enable) {
+        if (layout) layout.classList.add('layout-blur');
+        if (navbar) navbar.classList.add('layout-blur');
+    } else {
+        if (layout) layout.classList.remove('layout-blur');
+        if (navbar) navbar.classList.remove('layout-blur');
+    }
+}
+
+function cerrarModal() {
+    const modales = ['modal', 'modalObjetivo', 'modalAhorro', 'modalEditarObjetivo', 'modalCategoria'];
+    modales.forEach(id => {
+        const m = document.getElementById(id);
+        if (m) m.classList.add('hidden');
+    });
+    blurBackground(false);
+}
+
+function abrirModalAhorro(id_meta) {
+    const modal = document.getElementById('modalAhorro');
+    if (modal) {
+        document.getElementById('ahorro_id_meta').value = id_meta;
+        modal.classList.remove('hidden');
+        blurBackground(true);
+    }
+}
+
+function abrirModalEditarObj(id, nombre, desc, monto, fecha, estado) {
+    const modal = document.getElementById('modalEditarObjetivo');
+    if (modal) {
+        document.getElementById('edit_id_meta').value = id;
+        document.getElementById('edit_nombre_meta').value = nombre;
+        document.getElementById('edit_desc_meta').value = desc;
+        document.getElementById('edit_monto_objetivo').value = monto;
+        document.getElementById('edit_fecha_limite').value = fecha;
+        document.getElementById('edit_estado').value = estado;
+        modal.classList.remove('hidden');
+        blurBackground(true);
+    }
+}
+
+function abrirModalCategoria() {
+    const modal = document.getElementById('modalCategoria');
+    if (modal) {
+        modal.classList.remove('hidden');
+        blurBackground(true);
+    }
 }
 
 const descripcionesSugeridas = {

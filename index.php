@@ -5,9 +5,6 @@ if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Añadir columna descripcion a metas_ahorro si no existe (MariaDB 10.4 soporta IF NOT EXISTS)
-$conn->query("ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) DEFAULT NULL");
-
 // Procesar el guardado del movimiento u objetivo
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['usuario_id'];

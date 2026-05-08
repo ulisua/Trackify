@@ -2,17 +2,16 @@
 $page = 'objetivos';
 require_once 'conexion.php';
 
-// Añadir columna descripcion a metas_ahorro si no existe
-$conn->query("ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) DEFAULT NULL");
-
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Procesar el guardado de objetivo
-if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    if(isset($_POST['form_type']) && $_POST['form_type'] === 'objetivo') {
-        $user_id = $_SESSION['usuario_id'];
+// Procesar acciones de objetivos
+if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
+    $user_id = $_SESSION['usuario_id'];
+    $form_type = $_POST['form_type'];
+
+    if($form_type === 'objetivo') {
         $nombre = $_POST['nombre_meta'];
         $desc = $_POST['desc_meta'];
         $monto = floatval($_POST['monto_objetivo']);
@@ -23,6 +22,56 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_obj->bind_param("issdds", $user_id, $nombre, $desc, $monto, $monto_actual, $fecha);
         $stmt_obj->execute();
         
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    } elseif($form_type === 'agregar_ahorro') {
+        $id_meta = intval($_POST['id_meta']);
+        $monto_sumar = floatval($_POST['monto_ahorro']);
+        
+        $conn->query("UPDATE metas_ahorro SET monto_actual = monto_actual + $monto_sumar WHERE id_meta = $id_meta AND id_usuario = $user_id");
+        
+        $res = $conn->query("SELECT nombre_meta FROM metas_ahorro WHERE id_meta = $id_meta AND id_usuario = $user_id");
+        $nombre_meta = ($res && $row = $res->fetch_assoc()) ? $row['nombre_meta'] : 'Ahorro';
+        
+        $cat_nombre = "Ahorro para meta";
+        $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = 'gasto' LIMIT 1");
+        $stmt_cat->bind_param("s", $cat_nombre);
+        $stmt_cat->execute();
+        $res_cat = $stmt_cat->get_result();
+        
+        if ($res_cat->num_rows > 0) {
+            $id_categoria = $res_cat->fetch_assoc()['id_categoria'];
+        } else {
+            $conn->query("INSERT INTO categorias (nombre, tipo) VALUES ('$cat_nombre', 'gasto')");
+            $id_categoria = $conn->insert_id;
+        }
+        
+        $desc = "Aporte a: " . $nombre_meta;
+        $fecha = date('Y-m-d');
+        $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, 'gasto', ?, ?)");
+        $stmt_mov->bind_param("iidss", $user_id, $id_categoria, $monto_sumar, $desc, $fecha);
+        $stmt_mov->execute();
+        
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+        
+    } elseif($form_type === 'editar_objetivo') {
+        $id_meta = intval($_POST['id_meta']);
+        $nombre = $_POST['nombre_meta'];
+        $desc = $_POST['desc_meta'];
+        $monto = floatval($_POST['monto_objetivo']);
+        $fecha = $_POST['fecha_limite'];
+        $estado = $_POST['estado'];
+        
+        $stmt_upd = $conn->prepare("UPDATE metas_ahorro SET nombre_meta=?, descripcion=?, monto_objetivo=?, fecha_limite=?, estado=? WHERE id_meta=? AND id_usuario=?");
+        $stmt_upd->bind_param("ssdssii", $nombre, $desc, $monto, $fecha, $estado, $id_meta, $user_id);
+        $stmt_upd->execute();
+        
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    } elseif($form_type === 'eliminar_objetivo') {
+        $id_meta = intval($_POST['id_meta']);
+        $conn->query("DELETE FROM metas_ahorro WHERE id_meta = $id_meta AND id_usuario = $user_id");
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
     }
@@ -50,7 +99,16 @@ if(isset($_SESSION['usuario_id'])) {
         
         $total_progreso += $pct;
         
-        if($pct >= 100) {
+        $estado = $row['estado'] ?? 'activo';
+        $fecha_str = 'Vence: ' . date('d/m/Y', strtotime($row['fecha_limite']));
+        
+        if($estado === 'inactivo') {
+            $badge = '<span class="obj-badge badge-pausado" style="background:#cbd5e1; color:#334155; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Inactivo</span>';
+            $clase = 'pausado';
+            $color_fill = 'fill-rosa';
+            $color_pct = 'pct-rosa';
+            $fecha_str = 'Pausado';
+        } elseif($pct >= 100 || $estado === 'logrado') {
             $logrados++;
             $badge = '<span class="obj-badge badge-logrado">Logrado</span>';
             $clase = 'completado';
@@ -61,8 +119,6 @@ if(isset($_SESSION['usuario_id'])) {
             $activos++;
             $badge = '<span class="obj-badge badge-activo">Activo</span>';
             $clase = '';
-            $fecha_str = 'Vence: ' . date('d/m/Y', strtotime($row['fecha_limite']));
-            // Alternar colores o usar lila por defecto
             $color_fill = 'fill-lila';
             $color_pct = 'pct-lila';
         }
@@ -97,10 +153,14 @@ if(isset($_SESSION['usuario_id'])) {
                     <div class="obj-barra-fill ' . $color_fill . '" style="width:' . $pct_format . '%"></div>
                 </div>
             </div>
-            <div class="obj-acciones">
-                <button class="btn-agregar">+ Agregar ahorro</button>
-                <button class="btn-editar-obj">✏️ Editar</button>
-                <button class="btn-eliminar-obj">🗑️ Eliminar</button>
+            <div class="obj-acciones" style="display:flex; gap:10px;">
+                <button class="btn-agregar" onclick="abrirModalAhorro('.$row['id_meta'].')">+ Agregar ahorro</button>
+                <button class="btn-editar-obj" onclick="abrirModalEditarObj('.$row['id_meta'].', \''.htmlspecialchars($row['nombre_meta'], ENT_QUOTES).'\', \''.htmlspecialchars($row['descripcion'], ENT_QUOTES).'\', '.$row['monto_objetivo'].', \''.$row['fecha_limite'].'\', \''.$estado.'\')">✏️ Editar</button>
+                <form method="POST" action="objetivos.php" style="margin:0;" onsubmit="return confirm(\'¿Eliminar este objetivo?\');">
+                    <input type="hidden" name="form_type" value="eliminar_objetivo">
+                    <input type="hidden" name="id_meta" value="'.$row['id_meta'].'">
+                    <button type="submit" class="btn-eliminar-obj" style="cursor:pointer; background:transparent; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#64748B;">🗑️ Eliminar</button>
+                </form>
             </div>
         </div>';
     }

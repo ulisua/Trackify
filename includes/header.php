@@ -13,6 +13,17 @@ if(!isset($_SESSION['usuario_id'])){
 $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
 $pagina_actual = $page ?? '';
 $titulo = $titulo_pagina ?? 'Trackify';
+
+// Cargar categorías dinámicamente para JS
+$dbCategorias = ['ingreso' => [], 'gasto' => []];
+if (isset($conn)) {
+    $res = $conn->query("SELECT nombre, tipo FROM categorias ORDER BY nombre ASC");
+    if ($res) {
+        while($r = $res->fetch_assoc()){
+            $dbCategorias[$r['tipo']][] = $r['nombre'];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -25,6 +36,11 @@ $titulo = $titulo_pagina ?? 'Trackify';
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Pasar las categorías de PHP a Javascript
+        window.dbCategorias = <?php echo json_encode($dbCategorias); ?>;
+    </script>
     
     <?php if(isset($extra_css)) echo $extra_css; ?>
 </head>
