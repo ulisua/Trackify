@@ -66,6 +66,7 @@ $torta_data   = [];
 $barras_labels   = [];
 $barras_ingresos = [];
 $barras_gastos   = [];
+$ultimos_movimientos = [];
 
 if(isset($_SESSION['usuario_id'])) {
     $user_id = $_SESSION['usuario_id'];
@@ -125,6 +126,22 @@ if(isset($_SESSION['usuario_id'])) {
         $barras_ingresos[] = (float)$row['total_ingresos'];
         $barras_gastos[]   = (float)$row['total_gastos'];
     }
+
+    // ── Últimos 8 movimientos para la lista del dashboard ───────────────────
+    $stmt_ultimos = $conn->prepare(
+        "SELECT m.descripcion, m.monto, m.tipo, m.fecha, c.nombre as categoria
+         FROM movimientos m
+         JOIN categorias c ON m.id_categoria = c.id_categoria
+         WHERE m.id_usuario = ?
+         ORDER BY m.fecha DESC, m.id_movimiento DESC
+         LIMIT 8"
+    );
+    $stmt_ultimos->bind_param("i", $user_id);
+    $stmt_ultimos->execute();
+    $res_ultimos = $stmt_ultimos->get_result();
+    while ($row = $res_ultimos->fetch_assoc()) {
+        $ultimos_movimientos[] = $row;
+    }
 }
 $balance = $total_ingresos - $total_gastos;
 
@@ -135,7 +152,16 @@ $js_barras_labels  = json_encode($barras_labels);
 $js_barras_ing     = json_encode($barras_ingresos);
 $js_barras_gas     = json_encode($barras_gastos);
 
-// Cargar Chart.js solo en el dashboard
+// ── Recomendaciones IA simuladas (fallback si no hay API) ───────────────────
+$balance_texto = $balance >= 0 ? "positivo" : "negativo";
+$pct_gasto = $total_ingresos > 0 ? round(($total_gastos / $total_ingresos) * 100) : 0;
+$recomendaciones_fallback = [
+    ["icon" => "💡", "titulo" => "Balance actual", "texto" => "Tu balance es <strong>$balance_texto</strong>. " . ($balance >= 0 ? "¡Vas por buen camino!" : "Revisá tus gastos esta semana."), "tipo" => "info"],
+    ["icon" => "📊", "titulo" => "Ratio de gasto", "texto" => "Estás gastando el <strong>{$pct_gasto}%</strong> de tus ingresos. " . ($pct_gasto > 80 ? "⚠️ Está muy alto, tratá de reducirlo." : "Buen control financiero."), "tipo" => $pct_gasto > 80 ? "alerta" : "ok"],
+    ["icon" => "💰", "titulo" => "Consejo de ahorro", "texto" => "Intentá apartar al menos el <strong>20%</strong> de tus ingresos como ahorro antes de gastar.", "tipo" => "consejo"],
+    ["icon" => "🎯", "titulo" => "Objetivos", "texto" => "Crear objetivos de ahorro te ayuda a mantener el foco. ¡Revisá tus metas en la sección de Objetivos!", "tipo" => "consejo"],
+];
+
 $extra_css = '';
 
 require_once 'includes/header.php';
@@ -180,6 +206,13 @@ require_once 'includes/header.php';
             <div class="card">Gasto mensual <p id="gastoMensual">$0</p></div>
         </section>
 
+        <!-- BOTONES -->
+        <div class="acciones">
+            <button class="btn ingreso" onclick="abrirModal('ingreso')">+ Ingreso</button>
+            <button class="btn gasto" onclick="abrirModal('gasto')">+ Gasto</button>
+            <button class="btn objetivo" onclick="abrirModal('objetivo')">+ Objetivo</button>
+        </div>
+
         <!-- GRAFICOS -->
         <section class="graficos-container">
             <!-- Gráfico de torta: gastos por categoría -->
@@ -213,23 +246,70 @@ require_once 'includes/header.php';
             </div>
         </section>
 
-        <!-- BOTONES -->
-        <div class="acciones">
-            <button class="btn ingreso" onclick="abrirModal('ingreso')">+ Ingreso</button>
-            <button class="btn gasto" onclick="abrirModal('gasto')">+ Gasto</button>
-            <button class="btn objetivo" onclick="abrirModal('objetivo')">+ Objetivo</button>
-        </div>
-
-        <!-- GRID -->
+        <!-- GRID: Movimientos + IA -->
         <section class="grid">
-            <div class="box">
-                <h3>Movimientos</h3>
-                <ul id="movimientos"></ul>
+
+            <!-- MOVIMIENTOS -->
+            <div class="box movimientos-card">
+                <div class="movimientos-header">
+                    <h3>📋 Últimos movimientos</h3>
+                    <a href="ingresos.php" class="ver-mas-link">Ver todos →</a>
+                </div>
+
+                <?php if (empty($ultimos_movimientos)): ?>
+                    <div class="movimientos-empty">
+                        <span>🪙</span>
+                        <p>Aún no registraste ningún movimiento.</p>
+                    </div>
+                <?php else: ?>
+                    <ul class="movimientos-lista" id="movimientos">
+                        <?php foreach ($ultimos_movimientos as $mv): ?>
+                            <?php
+                                $es_ingreso = $mv['tipo'] === 'ingreso';
+                                $icono      = $es_ingreso ? '💰' : '💸';
+                                $clase_tipo = $es_ingreso ? 'mov-ingreso' : 'mov-gasto';
+                                $signo      = $es_ingreso ? '+' : '-';
+                                $monto_fmt  = '$' . number_format($mv['monto'], 0, ',', '.');
+                                $fecha_fmt  = date('d/m/Y', strtotime($mv['fecha']));
+                            ?>
+                            <li class="movimiento-item">
+                                <span class="mov-icono <?php echo $clase_tipo; ?>"><?php echo $icono; ?></span>
+                                <div class="mov-info">
+                                    <span class="mov-desc"><?php echo htmlspecialchars($mv['descripcion']); ?></span>
+                                    <span class="mov-cat"><?php echo htmlspecialchars($mv['categoria']); ?> · <?php echo $fecha_fmt; ?></span>
+                                </div>
+                                <span class="mov-monto <?php echo $clase_tipo; ?>"><?php echo $signo . $monto_fmt; ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
             </div>
-            <div class="box">
-                <h3>Recomendaciones IA</h3>
-                <p id="recomendacion"></p>
+
+            <!-- RECOMENDACIONES IA -->
+            <div class="box ia-card">
+                <div class="ia-header">
+                    <div class="ia-titulo-wrap">
+                        <h3>🤖 Recomendaciones IA</h3>
+                        <span class="ia-badge ia-badge-simulacion">Modo análisis</span>
+                    </div>
+                    <p class="ia-subtitulo">Análisis basado en tus finanzas actuales</p>
+                </div>
+
+                <ul class="ia-lista">
+                    <?php foreach ($recomendaciones_fallback as $rec): ?>
+                        <li class="ia-item ia-tipo-<?php echo $rec['tipo']; ?>">
+                            <span class="ia-item-icono"><?php echo $rec['icon']; ?></span>
+                            <div class="ia-item-body">
+                                <strong class="ia-item-titulo"><?php echo $rec['titulo']; ?></strong>
+                                <p class="ia-item-texto"><?php echo $rec['texto']; ?></p>
+                            </div>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <a href="ia.php" class="ia-btn-chat">💬 Hablar con la IA →</a>
             </div>
+
         </section>
 
     </main>
