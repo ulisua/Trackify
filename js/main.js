@@ -41,10 +41,7 @@ function abrirModal(tipo) {
         const modalObj = document.getElementById('modalObjetivo');
         if (modalObj) {
             modalObj.classList.remove('hidden');
-            const layout = document.querySelector('.layout');
-            const navbar = document.querySelector('.navbar');
-            if (layout) layout.classList.add('layout-blur');
-            if (navbar) navbar.classList.add('layout-blur');
+            // No se añade desenfoque extra al layout para evitar bloquear el formulario
         }
         return;
     }
@@ -107,23 +104,11 @@ function abrirModal(tipo) {
     
     
     modal.classList.remove('hidden');
-    // Desenfoca y oscurece el layout de fondo usando la clase del css
-    const layout = document.querySelector('.layout');
-    const navbar = document.querySelector('.navbar');
-    if (layout) layout.classList.add('layout-blur');
-    if (navbar) navbar.classList.add('layout-blur');
+    // No se añade desenfoque extra al layout para evitar bloquear el formulario
 }
 
 function blurBackground(enable) {
-    const layout = document.querySelector('.layout');
-    const navbar = document.querySelector('.navbar');
-    if (enable) {
-        if (layout) layout.classList.add('layout-blur');
-        if (navbar) navbar.classList.add('layout-blur');
-    } else {
-        if (layout) layout.classList.remove('layout-blur');
-        if (navbar) navbar.classList.remove('layout-blur');
-    }
+    // Ya no es necesario, el CSS backdrop-filter del modal maneja el desenfoque del fondo
 }
 
 function cerrarModal() {

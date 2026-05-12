@@ -60,6 +60,13 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // Calcular totales
 $total_ingresos = 0;
 $total_gastos = 0;
+// Datos para gráficos
+$torta_labels = [];
+$torta_data   = [];
+$barras_labels   = [];
+$barras_ingresos = [];
+$barras_gastos   = [];
+
 if(isset($_SESSION['usuario_id'])) {
     $user_id = $_SESSION['usuario_id'];
     
@@ -78,8 +85,58 @@ if(isset($_SESSION['usuario_id'])) {
     if ($row = $res_gas->fetch_assoc()) {
         $total_gastos = $row['total'] ?? 0;
     }
+
+    // ── Gráfico de torta: gastos por categoría ──────────────────────────────
+    $stmt_torta = $conn->prepare(
+        "SELECT c.nombre, SUM(m.monto) as total
+         FROM movimientos m
+         JOIN categorias c ON m.id_categoria = c.id_categoria
+         WHERE m.id_usuario = ? AND m.tipo = 'gasto'
+         GROUP BY c.id_categoria, c.nombre
+         ORDER BY total DESC
+         LIMIT 8"
+    );
+    $stmt_torta->bind_param("i", $user_id);
+    $stmt_torta->execute();
+    $res_torta = $stmt_torta->get_result();
+    while ($row = $res_torta->fetch_assoc()) {
+        $torta_labels[] = $row['nombre'];
+        $torta_data[]   = (float)$row['total'];
+    }
+
+    // ── Gráfico de barras: ingresos vs gastos por mes (últimos 6 meses) ─────
+    $stmt_barras = $conn->prepare(
+        "SELECT
+            DATE_FORMAT(fecha, '%Y-%m') as mes,
+            DATE_FORMAT(fecha, '%b %Y') as mes_label,
+            SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos,
+            SUM(CASE WHEN tipo = 'gasto'   THEN monto ELSE 0 END) as total_gastos
+         FROM movimientos
+         WHERE id_usuario = ?
+           AND fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+         GROUP BY mes, mes_label
+         ORDER BY mes ASC"
+    );
+    $stmt_barras->bind_param("i", $user_id);
+    $stmt_barras->execute();
+    $res_barras = $stmt_barras->get_result();
+    while ($row = $res_barras->fetch_assoc()) {
+        $barras_labels[]   = ucfirst($row['mes_label']);
+        $barras_ingresos[] = (float)$row['total_ingresos'];
+        $barras_gastos[]   = (float)$row['total_gastos'];
+    }
 }
 $balance = $total_ingresos - $total_gastos;
+
+// Codificar los datos para Chart.js
+$js_torta_labels   = json_encode($torta_labels);
+$js_torta_data     = json_encode($torta_data);
+$js_barras_labels  = json_encode($barras_labels);
+$js_barras_ing     = json_encode($barras_ingresos);
+$js_barras_gas     = json_encode($barras_gastos);
+
+// Cargar Chart.js solo en el dashboard
+$extra_css = '';
 
 require_once 'includes/header.php';
 ?>
@@ -124,12 +181,35 @@ require_once 'includes/header.php';
         </section>
 
         <!-- GRAFICOS -->
-        <section class="graficos">
-            <div class="grafico-box">
-                <canvas id="graficoTorta"></canvas>
+        <section class="graficos-container">
+            <!-- Gráfico de torta: gastos por categoría -->
+            <div class="grafico-card">
+                <div class="grafico-card-header">
+                    <span class="grafico-icono">🍕</span>
+                    <div>
+                        <h3 class="grafico-titulo">Gastos por Categoría</h3>
+                        <p class="grafico-subtitulo">Distribución total de egresos</p>
+                    </div>
+                </div>
+                <div class="grafico-wrap">
+                    <canvas id="graficoTorta"></canvas>
+                    <p class="grafico-empty" id="torta-empty" style="display:none;">Sin gastos registrados aún.</p>
+                </div>
             </div>
-            <div class="grafico-box">
-                <canvas id="graficoBarras"></canvas>
+
+            <!-- Gráfico de barras: ingresos vs gastos por mes -->
+            <div class="grafico-card">
+                <div class="grafico-card-header">
+                    <span class="grafico-icono">📊</span>
+                    <div>
+                        <h3 class="grafico-titulo">Ingresos vs Gastos</h3>
+                        <p class="grafico-subtitulo">Comparativa de los últimos 6 meses</p>
+                    </div>
+                </div>
+                <div class="grafico-wrap">
+                    <canvas id="graficoBarras"></canvas>
+                    <p class="grafico-empty" id="barras-empty" style="display:none;">Sin movimientos en los últimos 6 meses.</p>
+                </div>
             </div>
         </section>
 
@@ -155,7 +235,147 @@ require_once 'includes/header.php';
     </main>
 </div>
 
-<?php 
-$extra_js = '<script src="js/ia.js?v=2"></script>';
-require_once 'includes/footer.php'; 
+<?php
+$extra_js = '
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// ── Datos desde PHP (reales de la BD) ─────────────────────────────────────
+const tortaLabels   = ' . $js_torta_labels . ';
+const tortaData     = ' . $js_torta_data . ';
+const barrasLabels  = ' . $js_barras_labels . ';
+const barrasIng     = ' . $js_barras_ing . ';
+const barrasGas     = ' . $js_barras_gas . ';
+
+// ── Paleta de colores alineada con Trackify ────────────────────────────────
+const paleta = [
+    "#CFF27C",  // verde lima
+    "#EA73F5",  // violeta/fucsia
+    "#700353",  // fucsia oscuro
+    "#084734",  // verde oscuro
+    "#6EE7B7",  // menta
+    "#A78BFA",  // lila
+    "#F472B6",  // rosa
+    "#34D399",  // esmeralda
+];
+
+const paletaBordes = paleta.map(c => c + "CC");
+
+// ── Opciones comunes ───────────────────────────────────────────────────────
+Chart.defaults.font.family = "Inter, sans-serif";
+Chart.defaults.color = "#64748B";
+
+// ── Gráfico de Torta ────────────────────────────────────────────────────────
+const ctxTorta = document.getElementById("graficoTorta").getContext("2d");
+if (tortaData.length === 0) {
+    document.getElementById("torta-empty").style.display = "block";
+    document.getElementById("graficoTorta").style.display = "none";
+} else {
+    new Chart(ctxTorta, {
+        type: "doughnut",
+        data: {
+            labels: tortaLabels,
+            datasets: [{
+                data: tortaData,
+                backgroundColor: paleta.slice(0, tortaLabels.length),
+                borderColor: "#F8FAFC",
+                borderWidth: 3,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: "60%",
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        padding: 14,
+                        boxWidth: 12,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const val = ctx.parsed;
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = ((val / total) * 100).toFixed(1);
+                            return ` $${val.toLocaleString("es-AR")} (${pct}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ── Gráfico de Barras ───────────────────────────────────────────────────────
+const ctxBarras = document.getElementById("graficoBarras").getContext("2d");
+if (barrasLabels.length === 0) {
+    document.getElementById("barras-empty").style.display = "block";
+    document.getElementById("graficoBarras").style.display = "none";
+} else {
+    new Chart(ctxBarras, {
+        type: "bar",
+        data: {
+            labels: barrasLabels,
+            datasets: [
+                {
+                    label: "Ingresos",
+                    data: barrasIng,
+                    backgroundColor: "rgba(207, 242, 124, 0.85)",  // verde lima
+                    borderColor: "#CFF27C",
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    borderSkipped: false
+                },
+                {
+                    label: "Gastos",
+                    data: barrasGas,
+                    backgroundColor: "rgba(112, 3, 83, 0.85)",    // fucsia
+                    borderColor: "#700353",
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: { padding: 16, font: { size: 12 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` $${ctx.parsed.y.toLocaleString("es-AR")}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 12 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: "rgba(0,0,0,0.05)" },
+                    ticks: {
+                        font: { size: 11 },
+                        callback: val => "$" + val.toLocaleString("es-AR")
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+<script src="js/ia.js?v=2"></script>
+';
+require_once 'includes/footer.php';
 ?>

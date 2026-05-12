@@ -12,8 +12,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 18px 35px;
-    background: linear-gradient(90deg, #1E1B26, rgba(30, 27, 38, 0.95), #1a1721);
-    background-image: linear-gradient(135deg, rgba(30, 27, 38, 1) 0%, rgba(8, 71, 52, 0.2) 50%, rgba(112, 3, 83, 0.2) 100%);
+    background: linear-gradient(90deg, #000000 0%, #000000 66%, #700353 100%);
     color: white;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     z-index: 50;
@@ -38,7 +37,7 @@ body {
 
 .sidebar {
     width: 220px;
-    background: linear-gradient(180deg, #1E1B26 0%, rgba(30, 27, 38, 0.98) 50%, rgba(8, 71, 52, 0.15) 100%);
+    background: linear-gradient(180deg, #000000 0%, #000000 66%, #700353 100%);
     min-height: 100vh;
     position: sticky;
     top: 0;
@@ -437,7 +436,7 @@ body {
 
 /* ===== FOOTER ===== */
 .footer {
-    background: linear-gradient(90deg, #1E1B26 0%, rgba(8, 71, 52, 0.4) 50%, #1E1B26 100%);
+    background: linear-gradient(90deg, #000000 0%, #000000 66%, #700353 100%);
     padding: 25px 35px;
     text-align: center;
     color: #94a3b8;
@@ -1185,4 +1184,78 @@ body {
 .layout-blur {
     transition: all 0.3s ease;
     filter: blur(6px) brightness(0.6);
+}
+
+/* ===== GRÁFICOS DASHBOARD ===== */
+.graficos-container {
+    display: flex;
+    gap: 22px;
+    margin-bottom: 28px;
+}
+
+.grafico-card {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 22px 24px 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid #E2E8F0;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+    min-width: 0; /* evita overflow en flex */
+}
+
+.grafico-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+    transform: translateY(-2px);
+}
+
+.grafico-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.grafico-icono {
+    font-size: 1.7rem;
+    line-height: 1;
+}
+
+.grafico-titulo {
+    margin: 0 0 2px 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1E1B26;
+}
+
+.grafico-subtitulo {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #94A3B8;
+    font-weight: 400;
+}
+
+.grafico-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.grafico-empty {
+    text-align: center;
+    color: #94A3B8;
+    font-size: 0.9rem;
+    padding: 40px 0;
+}
+
+/* Responsive: apilado en mobile */
+@media (max-width: 900px) {
+    .graficos-container {
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .grafico-card {
+        padding: 18px 16px 14px;
+    }
 }
