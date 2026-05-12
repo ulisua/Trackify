@@ -2,7 +2,7 @@
 $servername = "localhost";
 $username = "root";
 $password = "";
-$dbname = "usuarios";
+$dbname = "trackify";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 ?>

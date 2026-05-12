@@ -18,7 +18,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if($res->num_rows > 0){
         $mensaje = "El email ya está registrado";
     } else {
-        $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro) VALUES (?, ?, ?, NOW())");
+        $query = $conn->prepare("INSERT INTO usuarios (Nombre, email, clave) VALUES (?, ?, ?)");
         $query->bind_param("sss", $nombre, $email, $password);
 
         if($query->execute()){
