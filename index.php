@@ -156,10 +156,10 @@ $js_barras_gas     = json_encode($barras_gastos);
 $balance_texto = $balance >= 0 ? "positivo" : "negativo";
 $pct_gasto = $total_ingresos > 0 ? round(($total_gastos / $total_ingresos) * 100) : 0;
 $recomendaciones_fallback = [
-    ["icon" => "💡", "titulo" => "Balance actual", "texto" => "Tu balance es <strong>$balance_texto</strong>. " . ($balance >= 0 ? "¡Vas por buen camino!" : "Revisá tus gastos esta semana."), "tipo" => "info"],
-    ["icon" => "📊", "titulo" => "Ratio de gasto", "texto" => "Estás gastando el <strong>{$pct_gasto}%</strong> de tus ingresos. " . ($pct_gasto > 80 ? "⚠️ Está muy alto, tratá de reducirlo." : "Buen control financiero."), "tipo" => $pct_gasto > 80 ? "alerta" : "ok"],
-    ["icon" => "💰", "titulo" => "Consejo de ahorro", "texto" => "Intentá apartar al menos el <strong>20%</strong> de tus ingresos como ahorro antes de gastar.", "tipo" => "consejo"],
-    ["icon" => "🎯", "titulo" => "Objetivos", "texto" => "Crear objetivos de ahorro te ayuda a mantener el foco. ¡Revisá tus metas en la sección de Objetivos!", "tipo" => "consejo"],
+    ["icon" => "<img src=\"iconos/generales/bombilla.png\" alt=\"Bombilla\" class=\"icono-inline\">", "titulo" => "Balance actual", "texto" => "Tu balance es <strong>$balance_texto</strong>. " . ($balance >= 0 ? "¡Vas por buen camino!" : "Revisá tus gastos esta semana."), "tipo" => "info"],
+    ["icon" => "<img src=\"iconos/generales/graficos.png\" alt=\"Gráfico\" class=\"icono-inline\">", "titulo" => "Ratio de gasto", "texto" => "Estás gastando el <strong>{$pct_gasto}%</strong> de tus ingresos. " . ($pct_gasto > 80 ? "⚠️ Está muy alto, tratá de reducirlo." : "Buen control financiero."), "tipo" => $pct_gasto > 80 ? "alerta" : "ok"],
+    ["icon" => "<img src=\"iconos/generales/altbilleteconalas.png\" alt=\"Dinero\" class=\"icono-inline\">", "titulo" => "Consejo de ahorro", "texto" => "Intentá apartar al menos el <strong>20%</strong> de tus ingresos como ahorro antes de gastar.", "tipo" => "consejo"],
+    ["icon" => "<img src=\"iconos/generales/dianaconflecha.png\" alt=\"Objetivo\" class=\"icono-inline\">", "titulo" => "Objetivos", "texto" => "Crear objetivos de ahorro te ayuda a mantener el foco. ¡Revisá tus metas en la sección de Objetivos!", "tipo" => "consejo"],
 ];
 
 $extra_css = '';
@@ -168,13 +168,13 @@ require_once 'includes/header.php';
 ?>
 
 <!-- BOTON FLOTANTE IA -->
-<div id="botonIA" class="boton-ia" onclick="toggleChat()">💬</div>
+<div id="botonIA" class="boton-ia" onclick="toggleChat()"><img src="iconos/generales/robot.png" alt="Chat" style="width: 24px; height: 24px; object-fit: contain;"></div>
 
 <!-- CHAT FLOTANTE -->
 <div id="chatFlotante" class="chat-flotante oculto">
     <div class="chat-header">
         <span>Asistente IA</span>
-        <span onclick="toggleChat()" style="cursor:pointer;">✖</span>
+        <span onclick="toggleChat()" style="cursor:pointer;"><img src="iconos/generales/flechaabajo.png" alt="Cerrar" class="icono-boton"></span>
     </div>
     <div id="chat" class="chat"></div>
     <div class="input-container">
@@ -218,7 +218,7 @@ require_once 'includes/header.php';
             <!-- Gráfico de torta: gastos por categoría -->
             <div class="grafico-card">
                 <div class="grafico-card-header">
-                    <span class="grafico-icono">🍕</span>
+                    <span class="grafico-icono"><img src="iconos/generales/graficotorta.png" alt="Torta" class="icono-titulo"></span>
                     <div>
                         <h3 class="grafico-titulo">Gastos por Categoría</h3>
                         <p class="grafico-subtitulo">Distribución total de egresos</p>
@@ -233,7 +233,7 @@ require_once 'includes/header.php';
             <!-- Gráfico de barras: ingresos vs gastos por mes -->
             <div class="grafico-card">
                 <div class="grafico-card-header">
-                    <span class="grafico-icono">📊</span>
+                    <span class="grafico-icono"><img src="iconos/generales/graficobarra.png" alt="Barras" class="icono-titulo"></span>
                     <div>
                         <h3 class="grafico-titulo">Ingresos vs Gastos</h3>
                         <p class="grafico-subtitulo">Comparativa de los últimos 6 meses</p>
@@ -252,13 +252,13 @@ require_once 'includes/header.php';
             <!-- MOVIMIENTOS -->
             <div class="box movimientos-card">
                 <div class="movimientos-header">
-                    <h3>📋 Últimos movimientos</h3>
+                    <h3 class="titulo-con-icono"><img src="iconos/generales/listaultmov1.png" alt="Movimientos" class="icono-titulo"> Últimos movimientos</h3>
                     <a href="ingresos.php" class="ver-mas-link">Ver todos →</a>
                 </div>
 
                 <?php if (empty($ultimos_movimientos)): ?>
                     <div class="movimientos-empty">
-                        <span>🪙</span>
+                        <span><img src="ICONO_MONEDA" alt="Moneda" style="width: 48px; height: 48px;"></span>
                         <p>Aún no registraste ningún movimiento.</p>
                     </div>
                 <?php else: ?>
@@ -266,7 +266,7 @@ require_once 'includes/header.php';
                         <?php foreach ($ultimos_movimientos as $mv): ?>
                             <?php
                                 $es_ingreso = $mv['tipo'] === 'ingreso';
-                                $icono      = $es_ingreso ? '💰' : '💸';
+                                $icono      = $es_ingreso ? '<img src="iconos/generales/altbilleteconalas.png" alt="Ingreso" class="icono-inline">' : '<img src="iconos/gasto/otrosgastos.png" alt="Gasto" class="icono-inline">';
                                 $clase_tipo = $es_ingreso ? 'mov-ingreso' : 'mov-gasto';
                                 $signo      = $es_ingreso ? '+' : '-';
                                 $monto_fmt  = '$' . number_format($mv['monto'], 0, ',', '.');
@@ -289,7 +289,7 @@ require_once 'includes/header.php';
             <div class="box ia-card">
                 <div class="ia-header">
                     <div class="ia-titulo-wrap">
-                        <h3>🤖 Recomendaciones IA</h3>
+                        <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="Recomendaciones" class="icono-titulo"> Recomendaciones IA</h3>
                         <span class="ia-badge ia-badge-simulacion">Modo análisis</span>
                     </div>
                     <p class="ia-subtitulo">Análisis basado en tus finanzas actuales</p>
@@ -307,7 +307,7 @@ require_once 'includes/header.php';
                     <?php endforeach; ?>
                 </ul>
 
-                <a href="ia.php" class="ia-btn-chat">💬 Hablar con la IA →</a>
+                <a href="ia.php" class="ia-btn-chat"><img src="iconos/generales/robot.png" alt="Chat" class="icono-boton"> Hablar con la IA →</a>
             </div>
 
         </section>

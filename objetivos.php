@@ -155,11 +155,11 @@ if(isset($_SESSION['usuario_id'])) {
             </div>
             <div class="obj-acciones" style="display:flex; gap:10px;">
                 <button class="btn-agregar" onclick="abrirModalAhorro('.$row['id_meta'].')">+ Agregar ahorro</button>
-                <button class="btn-editar-obj" onclick="abrirModalEditarObj('.$row['id_meta'].', \''.htmlspecialchars($row['nombre_meta'], ENT_QUOTES).'\', \''.htmlspecialchars($row['descripcion'], ENT_QUOTES).'\', '.$row['monto_objetivo'].', \''.$row['fecha_limite'].'\', \''.$estado.'\')">✏️ Editar</button>
+                <button class="btn-editar-obj" onclick="abrirModalEditarObj('.$row['id_meta'].', \''.htmlspecialchars($row['nombre_meta'], ENT_QUOTES).'\', \''.htmlspecialchars($row['descripcion'], ENT_QUOTES).'\', '.$row['monto_objetivo'].', \''.$row['fecha_limite'].'\', \''.$estado.'\')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
                 <form method="POST" action="objetivos.php" style="margin:0;" onsubmit="return confirm(\'¿Eliminar este objetivo?\');">
                     <input type="hidden" name="form_type" value="eliminar_objetivo">
                     <input type="hidden" name="id_meta" value="'.$row['id_meta'].'">
-                    <button type="submit" class="btn-eliminar-obj" style="cursor:pointer; background:transparent; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#64748B;">🗑️ Eliminar</button>
+                    <button type="submit" class="btn-eliminar-obj" style="cursor:pointer; background:transparent; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#64748B;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"> Eliminar</button>
                 </form>
             </div>
         </div>';
@@ -175,7 +175,7 @@ require_once 'includes/header.php';
 ?>
 
             <div class="page-header">
-                <h2>🎯 Objetivos de ahorro</h2>
+                <h2 class="titulo-con-icono"><img src="iconos/generales/dianaconflecha.png" alt="Objetivos" class="icono-titulo"> Objetivos de ahorro</h2>
                 <button class="btn-nuevo" onclick="abrirModal('objetivo')">+ Nuevo objetivo</button>
             </div>
 

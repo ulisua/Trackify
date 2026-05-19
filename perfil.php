@@ -37,7 +37,7 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
 ?>
 
             <div class="page-header">
-                <h2>👤 Mi perfil</h2>
+                <h2 class="titulo-con-icono"><img src="iconos/generales/usuario.png" alt="Perfil" class="icono-titulo"> Mi perfil</h2>
             </div>
 
             <div class="perfil-layout">
@@ -48,7 +48,7 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                         <div class="perfil-banner"></div>
                         <div class="perfil-avatar-wrap">
                             <div class="perfil-avatar" title="Cambiar foto">U</div>
-                            <span class="perfil-avatar-edit">✏️ editar</span>
+                            <span class="perfil-avatar-edit"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-inline"> editar</span>
                         </div>
                         <div class="perfil-nombre-box">
                             <strong id="nombreMostrado"><?php echo htmlspecialchars($nombre); ?></strong>
@@ -75,7 +75,7 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                         </div>
                         <div class="perfil-divider"></div>
                         <div style="padding:16px 20px 0;">
-                            <button class="btn-logout" onclick="confirmarLogout()">🚪 Cerrar sesión</button>
+                            <button class="btn-logout" onclick="confirmarLogout()"><img src="iconos/generales/puerta.png" alt="Salir" class="icono-boton"> Cerrar sesión</button>
                         </div>
                     </div>
                 </div>
@@ -86,8 +86,8 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                     <!-- Datos personales -->
                     <div class="seccion-card">
                         <div class="seccion-header">
-                            <h3>📋 Datos personales</h3>
-                            <button class="btn-editar-seccion" id="btnDatos" onclick="toggleEditar('datos')">✏️
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/flechaabajo.png" alt="Datos" class="icono-titulo"> Datos personales</h3>
+                            <button class="btn-editar-seccion" id="btnDatos" onclick="toggleEditar('datos')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton">
                                 Editar</button>
                         </div>
                         <div class="seccion-body">
@@ -138,8 +138,8 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                     <!-- Seguridad -->
                     <div class="seccion-card">
                         <div class="seccion-header">
-                            <h3>🔐 Seguridad</h3>
-                            <button class="btn-editar-seccion" id="btnSeg" onclick="toggleEditar('seg')">✏️
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/candado.png" alt="Seguridad" class="icono-titulo"> Seguridad</h3>
+                            <button class="btn-editar-seccion" id="btnSeg" onclick="toggleEditar('seg')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton">
                                 Editar</button>
                         </div>
                         <div class="seccion-body">
@@ -163,7 +163,7 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                     <!-- Preferencias -->
                     <div class="seccion-card">
                         <div class="seccion-header">
-                            <h3>⚙️ Preferencias</h3>
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="Preferencias" class="icono-titulo"> Preferencias</h3>
                         </div>
                         <div class="seccion-body">
                             <div class="toggle-row">
@@ -212,7 +212,7 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                     <!-- Zona de peligro -->
                     <div class="seccion-card zona-peligro">
                         <div class="seccion-header">
-                            <h3>⚠️ Zona de peligro</h3>
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/triangulopeligro.png" alt="Peligro" class="icono-titulo"> Zona de peligro</h3>
                         </div>
                         <div class="seccion-body">
                             <div class="peligro-row">
@@ -220,21 +220,21 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                                     <strong>Exportar mis datos</strong>
                                     <span>Descargá un .csv con todos tus movimientos</span>
                                 </div>
-                                <button class="btn-peligro">📥 Exportar</button>
+                                <button class="btn-peligro"><img src="iconos/generales/exportar.png" alt="Exportar" class="icono-boton"> Exportar</button>
                             </div>
                             <div class="peligro-row">
                                 <div class="peligro-info">
                                     <strong>Borrar historial</strong>
                                     <span>Elimina todos los movimientos (no se puede deshacer)</span>
                                 </div>
-                                <button class="btn-peligro">🗑️ Borrar historial</button>
+                                <button class="btn-peligro"><img src="iconos/generales/flechaizquierda.png" alt="Eliminar" class="icono-boton"> Borrar historial</button>
                             </div>
                             <div class="peligro-row">
                                 <div class="peligro-info">
                                     <strong>Eliminar cuenta</strong>
                                     <span>Borra tu cuenta y todos tus datos permanentemente</span>
                                 </div>
-                                <button class="btn-peligro" style="border-color:#BE123C;background:#FFF1F2;">💀 Eliminar
+                                <button class="btn-peligro" style="border-color:#BE123C;background:#FFF1F2;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar cuenta" class="icono-boton"> Eliminar
                                     cuenta</button>
                             </div>
                         </div>

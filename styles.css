@@ -1590,3 +1590,30 @@ body {
     box-shadow: 0 4px 12px rgba(8, 71, 52, 0.3);
     color: #CFF27C;
 }
+
+/* ===== ICONOS REEMPLAZO EMOJIS ===== */
+.titulo-con-icono {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icono-titulo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.icono-inline {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+.icono-boton {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}

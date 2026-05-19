@@ -42,7 +42,7 @@ while ($row = $res_lista->fetch_assoc()) {
 }
 ?>
 
-            <h2>💸 Ingresos</h2>
+            <h2 class="titulo-con-icono"><img src="iconos/ingreso/ventas.png" alt="Ingresos" class="icono-titulo"> Ingresos</h2>
 
             <!-- RESUMEN -->
             <section class="cards">
@@ -99,8 +99,8 @@ while ($row = $res_lista->fetch_assoc()) {
                                     <td><?php echo htmlspecialchars($ingreso['categoria_nombre']); ?></td>
                                     <td class="positivo">+$<?php echo number_format($ingreso['monto'], 2, ',', '.'); ?></td>
                                     <td>
-                                        <button class="edit">✏️</button>
-                                        <button class="delete">🗑️</button>
+                                        <button class="edit"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"></button>
+                                        <button class="delete"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -125,8 +125,8 @@ while ($row = $res_lista->fetch_assoc()) {
                                     <span class="mc-tag"><?php echo htmlspecialchars($ingreso['categoria_nombre']); ?></span>
                                     <span class="mc-fecha"><?php echo date('d/m', strtotime($ingreso['fecha'])); ?></span>
                                     <div class="mc-acciones">
-                                        <button class="edit">✏️</button>
-                                        <button class="delete">🗑️</button>
+                                        <button class="edit"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"></button>
+                                        <button class="delete"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
                                     </div>
                                 </div>
                             </div>

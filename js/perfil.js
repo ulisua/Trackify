@@ -23,10 +23,10 @@ function toggleEditar(id) {
     });
 
     if (s.editando) {
-        btn.textContent = '💾 Guardar';
+        btn.innerHTML = '<img src="ICONO_GUARDAR" alt="Guardar" class="icono-boton"> Guardar';
         btn.classList.add('guardando');
     } else {
-        btn.textContent = '✏️ Editar';
+        btn.innerHTML = '<img src="ICONO_EDITAR" alt="Editar" class="icono-boton"> Editar';
         btn.classList.remove('guardando');
         // Actualizar nombre y email mostrados
         const nom = document.getElementById('inputNombre');

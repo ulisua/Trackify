@@ -3,7 +3,7 @@ $page = 'ia';
 require_once 'includes/header.php';
 ?>
 
-            <h2>🤖 Preguntale a la IA</h2>
+            <h2 class="titulo-con-icono"><img src="ICONO_IA" alt="IA" class="icono-titulo"> Preguntale a la IA</h2>
 
             <div class="chat-container">
                 <div id="chat" class="chat"></div>

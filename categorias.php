@@ -68,7 +68,7 @@ while ($row = $res->fetch_assoc()) {
 ?>
 
             <div class="page-header">
-                <h2>🏷️ Categorías</h2>
+                <h2 class="titulo-con-icono"><img src="iconos/generales/carpetaabierta.png" alt="Categorías" class="icono-titulo"> Categorías</h2>
                 <button class="btn-nuevo" onclick="abrirModalCategoria()">+ Nueva categoría</button>
             </div>
 
@@ -87,7 +87,7 @@ while ($row = $res->fetch_assoc()) {
                         $pct = round(($gasto['total_monto'] / $total_gastos) * 100);
                     ?>
                     <div class="resumen-row">
-                        <span class="resumen-cat-nombre">🏷️ <?php echo htmlspecialchars($gasto['nombre']); ?></span>
+                        <span class="resumen-cat-nombre"><img src="iconos/generales/altbilleteconalas.png" alt="Tag" class="icono-inline"> <?php echo htmlspecialchars($gasto['nombre']); ?></span>
                         <div class="resumen-barra">
                             <div class="resumen-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
                         </div>
@@ -107,7 +107,7 @@ while ($row = $res->fetch_assoc()) {
                     $pct = $total_gastos > 0 ? round(($monto / $total_gastos) * 100) : 0;
                 ?>
                 <div class="cat-card">
-                    <div class="cat-icon">🏷️</div>
+                    <div class="cat-icon"><img src="iconos/generales/tagetiqueta.png" alt="Tag" style="width: 24px; height: 24px;"></div>
                     <div class="cat-nombre"><?php echo htmlspecialchars($gasto['nombre']); ?></div>
                     <div class="cat-stats">
                         <span class="cat-monto">$<?php echo number_format($monto, 2, ',', '.'); ?></span>
@@ -117,8 +117,8 @@ while ($row = $res->fetch_assoc()) {
                         <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
                     </div>
                     <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
+                        <button><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                        <button class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -132,7 +132,7 @@ while ($row = $res->fetch_assoc()) {
                     $pct = $total_ingresos > 0 ? round(($monto / $total_ingresos) * 100) : 0;
                 ?>
                 <div class="cat-card">
-                    <div class="cat-icon">🏷️</div>
+                    <div class="cat-icon"><img src="iconos/generales/tagetiqueta.png" alt="Tag" style="width: 24px; height: 24px;"></div>
                     <div class="cat-nombre"><?php echo htmlspecialchars($ingreso['nombre']); ?></div>
                     <div class="cat-stats">
                         <span class="cat-monto">$<?php echo number_format($monto, 2, ',', '.'); ?></span>
@@ -142,8 +142,8 @@ while ($row = $res->fetch_assoc()) {
                         <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $ingreso['color']; ?>"></div>
                     </div>
                     <div class="cat-acciones">
-                        <button>✏️ Editar</button>
-                        <button class="btn-del">🗑️</button>
+                        <button><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                        <button class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
                     </div>
                 </div>
                 <?php endforeach; ?>
