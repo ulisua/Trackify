@@ -6,15 +6,44 @@ if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Procesar nueva categoría
+// Procesar acciones de categorías
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
-    if($_POST['form_type'] === 'nueva_categoria') {
+    $user_id = $_SESSION['usuario_id'];
+    $form_type = $_POST['form_type'];
+    
+    if($form_type === 'nueva_categoria') {
         $nombre_cat = $_POST['nombre_categoria'];
         $tipo_cat = $_POST['tipo_categoria'];
         
         $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
         $stmt_ins_cat->bind_param("ss", $nombre_cat, $tipo_cat);
         $stmt_ins_cat->execute();
+        
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    } elseif($form_type === 'editar_categoria') {
+        $id_categoria = intval($_POST['id_categoria']);
+        $nombre_cat = $_POST['nombre_categoria'];
+        $tipo_cat = $_POST['tipo_categoria'];
+        
+        $stmt_upd = $conn->prepare("UPDATE categorias SET nombre = ?, tipo = ? WHERE id_categoria = ?");
+        $stmt_upd->bind_param("ssi", $nombre_cat, $tipo_cat, $id_categoria);
+        $stmt_upd->execute();
+        
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit();
+    } elseif($form_type === 'eliminar_categoria') {
+        $id_categoria = intval($_POST['id_categoria']);
+        
+        // Primero eliminar los movimientos relacionados para evitar fallos de clave foránea
+        $stmt_del_mov = $conn->prepare("DELETE FROM movimientos WHERE id_categoria = ?");
+        $stmt_del_mov->bind_param("i", $id_categoria);
+        $stmt_del_mov->execute();
+        
+        // Luego eliminar la categoría
+        $stmt_del_cat = $conn->prepare("DELETE FROM categorias WHERE id_categoria = ?");
+        $stmt_del_cat->bind_param("i", $id_categoria);
+        $stmt_del_cat->execute();
         
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
@@ -37,8 +66,8 @@ $stmt = $conn->prepare("
            SUM(m.monto) as total_monto
     FROM categorias c
     LEFT JOIN movimientos m ON c.id_categoria = m.id_categoria AND m.id_usuario = ? AND MONTH(m.fecha) = ? AND YEAR(m.fecha) = ?
-    GROUP BY c.id_categoria
-    ORDER BY total_monto DESC
+    GROUP BY c.id_categoria, c.nombre, c.tipo
+    ORDER BY IFNULL(SUM(m.monto), 0) DESC, c.nombre ASC
 ");
 $stmt->bind_param("iii", $user_id, $mes_actual, $anio_actual);
 $stmt->execute();
@@ -117,8 +146,12 @@ while ($row = $res->fetch_assoc()) {
                         <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
                     </div>
                     <div class="cat-acciones">
-                        <button><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
-                        <button class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
+                        <button onclick="abrirModalEditarCategoria(<?php echo $gasto['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($gasto['nombre']), ENT_QUOTES); ?>', 'gasto')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                        <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
+                            <input type="hidden" name="form_type" value="eliminar_categoria">
+                            <input type="hidden" name="id_categoria" value="<?php echo $gasto['id_categoria']; ?>">
+                            <button type="submit" class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
+                        </form>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -142,14 +175,17 @@ while ($row = $res->fetch_assoc()) {
                         <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $ingreso['color']; ?>"></div>
                     </div>
                     <div class="cat-acciones">
-                        <button><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
-                        <button class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
+                        <button onclick="abrirModalEditarCategoria(<?php echo $ingreso['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($ingreso['nombre']), ENT_QUOTES); ?>', 'ingreso')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                        <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
+                            <input type="hidden" name="form_type" value="eliminar_categoria">
+                            <input type="hidden" name="id_categoria" value="<?php echo $ingreso['id_categoria']; ?>">
+                            <button type="submit" class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
+                        </form>
                     </div>
                 </div>
                 <?php endforeach; ?>
             </div>
 
-        </main>
 <?php 
 $extra_js = '<script src="js/categorias.js"></script>';
 require_once 'includes/footer.php'; 

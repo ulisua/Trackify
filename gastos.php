@@ -1,6 +1,7 @@
 <?php
 $page = 'gastos';
 require_once 'conexion.php';
+require_once 'includes/movimientos_handler.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -42,7 +43,7 @@ while ($row = $res_lista->fetch_assoc()) {
 }
 ?>
 
-        <h2 class="titulo-con-icono"><img src="ICONO_GASTOS" alt="Gastos" class="icono-titulo"> Gastos</h2>
+        <h2 class="titulo-con-icono"><img src="iconos/gasto/otrosgastos.png" alt="Gastos" class="icono-titulo"> Gastos</h2>
 
         <!-- RESUMEN -->
         <section class="cards">
@@ -67,14 +68,17 @@ while ($row = $res_lista->fetch_assoc()) {
 
         <!-- FILTROS -->
         <section class="filtros">
-            <input type="date">
-            <select>
-                <option>Todos</option>
-                <option>Comida</option>
-                <option>Transporte</option>
-                <option>Servicios</option>
-                <option>Entretenimiento</option>
-                <option>Salud</option>
+            <input type="date" id="filtroFecha">
+            <select id="filtroCategoria">
+                <option value="Todos">Todas las categorías</option>
+                <?php
+                $stmt_cats = $conn->prepare("SELECT DISTINCT nombre FROM categorias WHERE tipo = 'gasto' ORDER BY nombre ASC");
+                $stmt_cats->execute();
+                $res_cats = $stmt_cats->get_result();
+                while ($row_cat = $res_cats->fetch_assoc()) {
+                    echo '<option value="' . htmlspecialchars($row_cat['nombre']) . '">' . htmlspecialchars($row_cat['nombre']) . '</option>';
+                }
+                ?>
             </select>
         </section>
 
@@ -95,14 +99,18 @@ while ($row = $res_lista->fetch_assoc()) {
                 <tbody id="tablaGastos">
                     <?php if (count($gastos) > 0): ?>
                         <?php foreach ($gastos as $gasto): ?>
-                            <tr>
+                            <tr data-fecha="<?php echo $gasto['fecha']; ?>" data-categoria="<?php echo htmlspecialchars($gasto['categoria_nombre']); ?>">
                                 <td><?php echo date('d/m', strtotime($gasto['fecha'])); ?></td>
                                 <td><?php echo htmlspecialchars($gasto['descripcion']); ?></td>
                                 <td><?php echo htmlspecialchars($gasto['categoria_nombre']); ?></td>
                                 <td class="negativo">-$<?php echo number_format($gasto['monto'], 2, ',', '.'); ?></td>
                                 <td>
-                                    <button class="edit"><img src="ICONO_EDITAR" alt="Editar" class="icono-boton"></button>
-                                    <button class="delete"><img src="ICONO_ELIMINAR" alt="Eliminar" class="icono-boton"></button>
+                                    <button class="edit" onclick="abrirModalEditarMovimiento(<?php echo $gasto['id_movimiento']; ?>, <?php echo $gasto['monto']; ?>, '<?php echo htmlspecialchars(addslashes($gasto['categoria_nombre']), ENT_QUOTES); ?>', '<?php echo htmlspecialchars(addslashes($gasto['descripcion']), ENT_QUOTES); ?>', '<?php echo $gasto['fecha']; ?>', 'gasto')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"></button>
+                                    <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este gasto?');">
+                                        <input type="hidden" name="form_type" value="eliminar_movimiento">
+                                        <input type="hidden" name="id_movimiento" value="<?php echo $gasto['id_movimiento']; ?>">
+                                        <button type="submit" class="delete"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
+                                    </form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -118,7 +126,7 @@ while ($row = $res_lista->fetch_assoc()) {
             <div class="movimiento-cards" id="movimientoCards">
                 <?php if (count($gastos) > 0): ?>
                     <?php foreach ($gastos as $gasto): ?>
-                        <div class="movimiento-card">
+                        <div class="movimiento-card" data-fecha="<?php echo $gasto['fecha']; ?>" data-categoria="<?php echo htmlspecialchars($gasto['categoria_nombre']); ?>">
                             <div class="mc-top">
                                 <span class="mc-desc"><?php echo htmlspecialchars($gasto['descripcion']); ?></span>
                                 <span class="mc-monto negativo">-$<?php echo number_format($gasto['monto'], 2, ',', '.'); ?></span>
@@ -127,8 +135,12 @@ while ($row = $res_lista->fetch_assoc()) {
                                 <span class="mc-tag"><?php echo htmlspecialchars($gasto['categoria_nombre']); ?></span>
                                 <span class="mc-fecha"><?php echo date('d/m', strtotime($gasto['fecha'])); ?></span>
                                 <div class="mc-acciones">
-                                    <button class="edit"><img src="ICONO_EDITAR" alt="Editar" class="icono-boton"></button>
-                                    <button class="delete"><img src="ICONO_ELIMINAR" alt="Eliminar" class="icono-boton"></button>
+                                    <button class="edit" onclick="abrirModalEditarMovimiento(<?php echo $gasto['id_movimiento']; ?>, <?php echo $gasto['monto']; ?>, '<?php echo htmlspecialchars(addslashes($gasto['categoria_nombre']), ENT_QUOTES); ?>', '<?php echo htmlspecialchars(addslashes($gasto['descripcion']), ENT_QUOTES); ?>', '<?php echo $gasto['fecha']; ?>', 'gasto')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"></button>
+                                    <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este gasto?');">
+                                        <input type="hidden" name="form_type" value="eliminar_movimiento">
+                                        <input type="hidden" name="id_movimiento" value="<?php echo $gasto['id_movimiento']; ?>">
+                                        <button type="submit" class="delete"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -141,3 +153,49 @@ while ($row = $res_lista->fetch_assoc()) {
         </section>
 
 <?php require_once 'includes/footer.php'; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const filtroFecha = document.getElementById('filtroFecha');
+    const filtroCategoria = document.getElementById('filtroCategoria');
+    
+    function filtrar() {
+        const fechaVal = filtroFecha.value;
+        const catVal = filtroCategoria.value;
+        
+        const rows = document.querySelectorAll('.tabla-desktop tbody tr');
+        rows.forEach(row => {
+            if (row.cells.length === 1) return;
+            const rFecha = row.getAttribute('data-fecha');
+            const rCat = row.getAttribute('data-categoria');
+            
+            let matchFecha = !fechaVal || (rFecha === fechaVal);
+            let matchCat = (catVal === 'Todos') || (rCat === catVal);
+            
+            if (matchFecha && matchCat) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        const cards = document.querySelectorAll('.movimiento-cards .movimiento-card');
+        cards.forEach(card => {
+            const rFecha = card.getAttribute('data-fecha');
+            const rCat = card.getAttribute('data-categoria');
+            
+            let matchFecha = !fechaVal || (rFecha === fechaVal);
+            let matchCat = (catVal === 'Todos') || (rCat === catVal);
+            
+            if (matchFecha && matchCat) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    if (filtroFecha) filtroFecha.addEventListener('input', filtrar);
+    if (filtroCategoria) filtroCategoria.addEventListener('change', filtrar);
+});
+</script>

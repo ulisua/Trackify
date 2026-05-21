@@ -6,13 +6,13 @@ function switchTab(tipo, btn) {
     document.getElementById('gridIngresos').style.display = tipo === 'ingresos' ? 'grid' : 'none';
 }
 
-// Modal
-function abrirModal() { document.getElementById('modalCat').classList.remove('hidden'); }
-function cerrarModal() { document.getElementById('modalCat').classList.add('hidden'); }
-document.getElementById('modalCat').addEventListener('click', function (e) { if (e.target === this) cerrarModal(); });
-
-// Emoji picker
-function selEmoji(btn) {
-    document.querySelectorAll('.emoji-opt').forEach(b => b.classList.remove('sel'));
-    btn.classList.add('sel');
+// Modal Editar Categoría
+function abrirModalEditarCategoria(id, nombre, tipo) {
+    const modal = document.getElementById('modalEditarCategoria');
+    if (modal) {
+        document.getElementById('edit_id_categoria').value = id;
+        document.getElementById('edit_nombre_categoria').value = nombre;
+        document.getElementById('edit_tipo_categoria').value = tipo;
+        modal.classList.remove('hidden');
+    }
 }

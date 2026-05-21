@@ -1,3 +1,6 @@
+    </main>
+</div>
+
 <!-- MODAL -->
 <div id="modal" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="index.php">
@@ -92,6 +95,53 @@
             <option value="gasto">Gasto</option>
             <option value="ingreso">Ingreso</option>
         </select>
+        
+        <div class="modal-actions">
+            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
+            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL EDITAR CATEGORÍA -->
+<div id="modalEditarCategoria" class="modal hidden">
+    <form class="modal-content modal-form-content" method="POST" action="categorias.php">
+        <input type="hidden" name="form_type" value="editar_categoria">
+        <input type="hidden" id="edit_id_categoria" name="id_categoria" value="">
+        <h3>Editar categoría</h3>
+        
+        <input type="text" id="edit_nombre_categoria" name="nombre_categoria" placeholder="Nombre de la categoría" required>
+        <select id="edit_tipo_categoria" name="tipo_categoria" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26;">
+            <option value="gasto">Gasto</option>
+            <option value="ingreso">Ingreso</option>
+        </select>
+        
+        <div class="modal-actions">
+            <button type="submit" class="btn btn-guardar-modal">Guardar</button>
+            <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- MODAL EDITAR MOVIMIENTO -->
+<div id="modalEditarMovimiento" class="modal hidden">
+    <form class="modal-content modal-form-content" method="POST" action="">
+        <input type="hidden" name="form_type" value="editar_movimiento">
+        <input type="hidden" id="edit_mov_id" name="id_movimiento" value="">
+        <input type="hidden" id="edit_mov_tipo" name="tipo" value="">
+        <h3 id="modalEditarMovimientoTitulo">Editar</h3>
+        
+        <input type="number" step="0.01" id="edit_mov_monto" name="monto" placeholder="Monto ($)" required>
+        
+        <div class="custom-select-wrapper" id="customEditMovCategoriaWrapper">
+            <div class="custom-select-trigger" id="customEditMovCategoriaTrigger">Selecciona una categoría</div>
+            <div class="custom-select-options" id="customEditMovCategoriaOptions"></div>
+        </div>
+        <input type="hidden" id="edit_mov_categoria" name="categoria" required>
+
+        <input type="text" id="edit_mov_descripcion" name="descripcion" placeholder="Breve descripción" required>
+        
+        <input type="date" id="edit_mov_fecha" name="fecha" required>
         
         <div class="modal-actions">
             <button type="submit" class="btn btn-guardar-modal">Guardar</button>

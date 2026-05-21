@@ -206,7 +206,6 @@ require_once 'includes/header.php';
                 ?>
             </div>
 
-        </main>
 <?php  
 $extra_js = '<script src="js/objetivos.js"></script>';
 require_once 'includes/footer.php'; 

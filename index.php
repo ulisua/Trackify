@@ -1,46 +1,16 @@
 <?php
 $page = 'dashboard';
 require_once 'conexion.php';
+require_once 'includes/movimientos_handler.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Procesar el guardado del movimiento u objetivo
+// Procesar el guardado del objetivo
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_SESSION['usuario_id'];
 
-    if(isset($_POST['tipoMovimiento']) && $_POST['tipoMovimiento'] !== '') {
-        $tipo = $_POST['tipoMovimiento']; // 'ingreso' o 'gasto'
-        $monto = floatval($_POST['monto']);
-        $categoria_nombre = $_POST['categoria'];
-        $descripcion = $_POST['descripcion'];
-        $fecha = $_POST['fecha'] ?? date('Y-m-d');
-
-        // Buscar si existe la categoría para este tipo, si no, crearla
-        $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
-        $stmt_cat->bind_param("ss", $categoria_nombre, $tipo);
-        $stmt_cat->execute();
-        $res_cat = $stmt_cat->get_result();
-        
-        if ($res_cat->num_rows > 0) {
-            $row_cat = $res_cat->fetch_assoc();
-            $id_categoria = $row_cat['id_categoria'];
-        } else {
-            $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
-            $stmt_ins_cat->bind_param("ss", $categoria_nombre, $tipo);
-            $stmt_ins_cat->execute();
-            $id_categoria = $stmt_ins_cat->insert_id;
-        }
-
-        // Insertar el Movimiento en la base de datos
-        $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt_mov->bind_param("iidsss", $user_id, $id_categoria, $monto, $tipo, $descripcion, $fecha);
-        $stmt_mov->execute();
-
-        // Redirigir para limpiar el formulario y evitar re-envíos
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    } elseif(isset($_POST['form_type']) && $_POST['form_type'] === 'objetivo') {
+    if(isset($_POST['form_type']) && $_POST['form_type'] === 'objetivo') {
         $nombre = $_POST['nombre_meta'];
         $desc = $_POST['desc_meta'];
         $monto = floatval($_POST['monto_objetivo']);
@@ -311,9 +281,6 @@ require_once 'includes/header.php';
             </div>
 
         </section>
-
-    </main>
-</div>
 
 <?php
 $extra_js = '

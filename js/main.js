@@ -112,7 +112,7 @@ function blurBackground(enable) {
 }
 
 function cerrarModal() {
-    const modales = ['modal', 'modalObjetivo', 'modalAhorro', 'modalEditarObjetivo', 'modalCategoria'];
+    const modales = ['modal', 'modalObjetivo', 'modalAhorro', 'modalEditarObjetivo', 'modalCategoria', 'modalEditarCategoria', 'modalEditarMovimiento'];
     modales.forEach(id => {
         const m = document.getElementById(id);
         if (m) m.classList.add('hidden');
@@ -149,6 +149,55 @@ function abrirModalCategoria() {
         modal.classList.remove('hidden');
         blurBackground(true);
     }
+}
+
+function abrirModalEditarMovimiento(id, monto, categoria, descripcion, fecha, tipo) {
+    const modal = document.getElementById('modalEditarMovimiento');
+    if (!modal) return;
+    
+    document.getElementById('edit_mov_id').value = id;
+    document.getElementById('edit_mov_monto').value = monto;
+    document.getElementById('edit_mov_descripcion').value = descripcion;
+    document.getElementById('edit_mov_fecha').value = fecha;
+    document.getElementById('edit_mov_tipo').value = tipo;
+    
+    const hiddenInput = document.getElementById('edit_mov_categoria');
+    const trigger = document.getElementById('customEditMovCategoriaTrigger');
+    const optionsContainer = document.getElementById('customEditMovCategoriaOptions');
+    const wrapper = document.getElementById('customEditMovCategoriaWrapper');
+    
+    if (hiddenInput && trigger && optionsContainer && wrapper) {
+        hiddenInput.value = categoria;
+        trigger.innerText = categoria;
+        optionsContainer.innerHTML = '';
+        wrapper.classList.remove('open');
+        
+        let opciones = [];
+        if (window.dbCategorias) {
+            opciones = window.dbCategorias[tipo] || [];
+        } else {
+            opciones = tipo === 'ingreso' ? 
+                ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"] : 
+                ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
+        }
+        
+        opciones.forEach(o => {
+            const div = document.createElement('div');
+            div.className = 'custom-option';
+            if (o === categoria) div.classList.add('selected');
+            div.innerText = o;
+            div.addEventListener('click', () => {
+                hiddenInput.value = o;
+                trigger.innerText = o;
+                wrapper.classList.remove('open');
+                optionsContainer.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+            });
+            optionsContainer.appendChild(div);
+        });
+    }
+    
+    modal.classList.remove('hidden');
 }
 
 const descripcionesSugeridas = {
@@ -196,6 +245,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', (e) => {
             if (!wrapper.contains(e.target)) {
                 wrapper.classList.remove('open');
+            }
+        });
+    }
+
+    const editWrapper = document.getElementById('customEditMovCategoriaWrapper');
+    const editTrigger = document.getElementById('customEditMovCategoriaTrigger');
+    if (editWrapper && editTrigger) {
+        editTrigger.addEventListener('click', () => {
+            editWrapper.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+            if (!editWrapper.contains(e.target)) {
+                editWrapper.classList.remove('open');
             }
         });
     }

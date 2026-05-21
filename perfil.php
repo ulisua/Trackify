@@ -243,7 +243,6 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                 </div>
             </div>
 
-        </main>
 <?php 
 $extra_js = '<script src="js/perfil.js"></script>';
 require_once 'includes/footer.php'; 
