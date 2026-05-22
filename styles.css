@@ -107,7 +107,7 @@ body {
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 30px rgba(207, 242, 124, 0.18);
 }
 
 .card h4 {
@@ -173,7 +173,14 @@ body {
 }
 
 .box:hover {
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 10px 30px rgba(207, 242, 124, 0.18);
+}
+
+/* Efecto glow global para tarjetas */
+.card:hover, .box:hover, .obj-card:hover, .cat-card:hover {
+    box-shadow: 0 0 25px rgba(207, 242, 124, 0.45) !important;
+    border-color: rgba(207, 242, 124, 0.4) !important;
+    transform: translateY(-3px);
 }
 
 .box h3 {
@@ -474,9 +481,11 @@ body {
 
 /* CHAT BOX */
 .chat {
-    background: #1E1B26; /* Dark background from palette */
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
+    background: rgba(30, 27, 38, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
     padding: 15px;
     height: 350px;
     overflow-y: auto;
@@ -582,21 +591,25 @@ body {
     right: 20px;
     width: 340px;
     height: 450px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #E2E8F0;
+    background: rgba(30, 27, 38, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
     z-index: 999;
 }
 
 /* HEADER */
 .chat-header {
-    background: #084734;
+    background: rgba(8, 71, 52, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: #CFF27C;
     padding: 15px;
-    border-radius: 8px 8px 0 0;
+    border-radius: 12px 12px 0 0;
     display: flex;
     justify-content: space-between;
     font-weight: 600;
@@ -959,10 +972,94 @@ body {
     letter-spacing: 0.04em;
 }
 
+.tabla.tabla-gastos thead {
+    background: #fff1f2;
+}
+
+.tabla.tabla-gastos th {
+    color: #700353;
+}
+
+.tabla.tabla-ingresos thead {
+    background: #f0fdf4;
+}
+
+.tabla.tabla-ingresos th {
+    color: #084734;
+}
+
 .tabla td {
     padding: 14px 18px;
     border-bottom: 1px solid #F1F5F9;
     color: #334155;
+}
+
+/* ===== SWEETALERT2 OVERRIDES ===== */
+.swal-trackify {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+}
+.swal-btn-primary { background: #084734 !important; color: #CFF27C !important; }
+.swal-btn-danger { background: #700353 !important; color: white !important; }
+.swal-btn-cancel { background: transparent !important; border: 1px solid rgba(255,255,255,0.2) !important; color: #94A3B8 !important; }
+.swal-btn-cancel:hover { background: rgba(255,255,255,0.05) !important; color: white !important; }
+
+/* ===== FLATPICKR OVERRIDES ===== */
+.flatpickr-calendar {
+    background: #ffffff;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 12px !important;
+    font-family: 'Inter', sans-serif !important;
+    padding-bottom: 5px;
+}
+.flatpickr-months {
+    background: #084734 !important;
+    color: #CFF27C !important;
+    border-radius: 12px 12px 0 0 !important;
+    padding-top: 5px;
+}
+.flatpickr-months .flatpickr-month {
+    color: #CFF27C !important;
+    fill: #CFF27C !important;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month input.cur-year {
+    color: #CFF27C !important;
+}
+.flatpickr-months .flatpickr-prev-month svg, .flatpickr-months .flatpickr-next-month svg {
+    fill: #CFF27C !important;
+}
+.flatpickr-day.selected {
+    background: #084734 !important;
+    border-color: #084734 !important;
+    color: #CFF27C !important;
+}
+.flatpickr-day:hover {
+    background: #E2E8F0 !important;
+}
+span.flatpickr-weekday {
+    color: #084734 !important;
+    font-weight: 600 !important;
+}
+
+/* ===== GLOW ORBS (GLASSMORPHISM BG) ===== */
+.glow-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.5;
+    z-index: -1;
+    pointer-events: none;
+}
+.orb-1 {
+    width: 300px;
+    height: 300px;
+    background: #CFF27C;
+}
+.orb-2 {
+    width: 400px;
+    height: 400px;
+    background: #EA73F5;
 }
 
 .tabla tbody tr:last-child td {

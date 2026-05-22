@@ -47,10 +47,3 @@ function actualizarAvatar() {
 const inputNom = document.getElementById('inputNombre');
 if(inputNom) inputNom.addEventListener('input', actualizarAvatar);
 
-// Logout
-function confirmarLogout() {
-    if (confirm('¿Cerrar sesión?')) {
-        alert('Sesión cerrada. Redirigiendo al login...');
-        window.location.href = 'logout.php';
-    }
-}

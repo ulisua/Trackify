@@ -154,6 +154,98 @@
     <p>Trackify © 2026</p>
 </footer>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+    // Inicializar Flatpickr
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInputs = document.querySelectorAll("input[type='date']");
+        
+        // Asignar placeholders por defecto si no existen
+        dateInputs.forEach(input => {
+            if (!input.placeholder) {
+                input.placeholder = "Selecciona una fecha";
+            }
+        });
+
+        flatpickr(dateInputs, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: "es",
+            disableMobile: "true"
+        });
+
+        // Cerrar calendario al hacer scroll en cualquier contenedor
+        window.addEventListener('scroll', function() {
+            dateInputs.forEach(input => {
+                if(input._flatpickr && input._flatpickr.isOpen) {
+                    input._flatpickr.close();
+                }
+            });
+        }, true);
+    });
+
+    // Función global para confirmaciones con SweetAlert2
+    function confirmarEliminacion(e, mensaje) {
+        e.preventDefault();
+        const form = e.target;
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: mensaje || "Esta acción no se puede deshacer.",
+            icon: 'warning',
+            iconColor: '#EA73F5',
+            showCancelButton: true,
+            confirmButtonColor: '#700353',
+            cancelButtonColor: '#1E1B26',
+            confirmButtonText: 'Eliminar',
+            cancelButtonText: 'Cancelar',
+            background: '#2c2c3e',
+            color: '#F8FAFC',
+            borderRadius: '12px',
+            customClass: {
+                popup: 'swal-trackify',
+                confirmButton: 'btn swal-btn-danger',
+                cancelButton: 'btn swal-btn-cancel'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+
+    function confirmarLogout() {
+        Swal.fire({
+            title: '¿Cerrar sesión?',
+            text: "Tendrás que volver a ingresar tus credenciales.",
+            icon: 'question',
+            iconColor: '#CFF27C',
+            showCancelButton: true,
+            confirmButtonColor: '#084734',
+            cancelButtonColor: '#1E1B26',
+            confirmButtonText: 'Salir',
+            cancelButtonText: 'Cancelar',
+            background: '#2c2c3e',
+            color: '#F8FAFC',
+            customClass: {
+                popup: 'swal-trackify',
+                confirmButton: 'btn swal-btn-primary',
+                cancelButton: 'btn swal-btn-cancel'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'logout.php';
+            }
+        });
+    }
+</script>
+
 <script src="js/main.js?v=4"></script>
 <?php if(isset($extra_js)) echo $extra_js; ?>
 

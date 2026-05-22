@@ -112,6 +112,21 @@ if(isset($_SESSION['usuario_id'])) {
     while ($row = $res_ultimos->fetch_assoc()) {
         $ultimos_movimientos[] = $row;
     }
+    
+    // ── Gasto mensual actual ───────────────────────────────────────────────
+    $gasto_mensual = 0;
+    $stmt_mes = $conn->prepare(
+        "SELECT SUM(monto) as total FROM movimientos 
+         WHERE id_usuario = ? AND tipo = 'gasto' 
+         AND MONTH(fecha) = MONTH(CURRENT_DATE()) 
+         AND YEAR(fecha) = YEAR(CURRENT_DATE())"
+    );
+    $stmt_mes->bind_param("i", $user_id);
+    $stmt_mes->execute();
+    $res_mes = $stmt_mes->get_result();
+    if ($row = $res_mes->fetch_assoc()) {
+        $gasto_mensual = $row['total'] ?? 0;
+    }
 }
 $balance = $total_ingresos - $total_gastos;
 
@@ -171,9 +186,15 @@ require_once 'includes/header.php';
 
         <!-- CARDS SECUNDARIAS -->
         <section class="cards small">
-            <div class="card">% gasto <p id="porcentaje">0%</p></div>
-            <div class="card">Mayor categoría <p id="categoriaTop">-</p></div>
-            <div class="card">Gasto mensual <p id="gastoMensual">$0</p></div>
+            <?php 
+                $nombre_cat_top = '-';
+                if (!empty($torta_labels)) {
+                    $nombre_cat_top = $torta_labels[0];
+                }
+            ?>
+            <div class="card">% gasto <p id="porcentaje"><?php echo $pct_gasto; ?>%</p></div>
+            <div class="card">Mayor categoría <p id="categoriaTop"><?php echo htmlspecialchars($nombre_cat_top); ?></p></div>
+            <div class="card">Gasto mensual <p id="gastoMensual">$<?php echo number_format($gasto_mensual, 0, ',', '.'); ?></p></div>
         </section>
 
         <!-- BOTONES -->

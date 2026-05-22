@@ -92,6 +92,11 @@ if(isset($_SESSION['usuario_id'])) {
     $stmt->execute();
     $result = $stmt->get_result();
     
+    $color_classes = ['fill-mint', 'fill-lime', 'fill-pink', 'fill-lavender', 'fill-teal', 'fill-violet'];
+    $color_idx = 0;
+
+    $hoy = date('Y-m-d');
+
     while($row = $result->fetch_assoc()) {
         $total_metas++;
         $pct = ($row['monto_objetivo'] > 0) ? ($row['monto_actual'] / $row['monto_objetivo']) * 100 : 0;
@@ -100,13 +105,16 @@ if(isset($_SESSION['usuario_id'])) {
         $total_progreso += $pct;
         
         $estado = $row['estado'] ?? 'activo';
-        $fecha_str = 'Vence: ' . date('d/m/Y', strtotime($row['fecha_limite']));
+        $fecha_limite = $row['fecha_limite'];
+        $fecha_str = 'Vence: ' . date('d/m/Y', strtotime($fecha_limite));
+        
+        $es_vencido = false;
         
         if($estado === 'inactivo') {
             $badge = '<span class="obj-badge badge-pausado" style="background:#cbd5e1; color:#334155; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Inactivo</span>';
             $clase = 'pausado';
-            $color_fill = 'fill-rosa';
-            $color_pct = 'pct-rosa';
+            $color_fill = 'fill-gris';
+            $color_pct = 'pct-gris';
             $fecha_str = 'Pausado';
         } elseif($pct >= 100 || $estado === 'logrado') {
             $logrados++;
@@ -115,12 +123,22 @@ if(isset($_SESSION['usuario_id'])) {
             $fecha_str = 'Completado';
             $color_fill = 'fill-verde';
             $color_pct = 'pct-verde';
+        } elseif ($fecha_limite < $hoy) {
+            // Vencido
+            $es_vencido = true;
+            $badge = '<span class="obj-badge badge-vencido" style="background:#fef2f2; color:#ef4444; border: 1px solid #fca5a5; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Vencido</span>';
+            $clase = 'vencido';
+            $fecha_str = 'Venció: ' . date('d/m/Y', strtotime($fecha_limite));
+            $color_fill = 'fill-gris';
+            $color_pct = 'pct-gris';
         } else {
             $activos++;
             $badge = '<span class="obj-badge badge-activo">Activo</span>';
             $clase = '';
-            $color_fill = 'fill-lila';
-            $color_pct = 'pct-lila';
+            // Color dinámico
+            $color_fill = $color_classes[$color_idx % count($color_classes)];
+            $color_pct = $color_fill . '-text'; // Usaremos esto para el color del texto del %
+            $color_idx++;
         }
         
         $desc = htmlspecialchars($row['descripcion'] ?? '');
@@ -128,6 +146,28 @@ if(isset($_SESSION['usuario_id'])) {
         $monto_act = number_format($row['monto_actual'], 0, ',', '.');
         $monto_obj = number_format($row['monto_objetivo'], 0, ',', '.');
         $pct_format = number_format($pct, 0);
+
+        $acciones_html = '';
+        if ($es_vencido) {
+            // Solo permitir eliminar si está vencido
+            $acciones_html = '
+                <form method="POST" action="objetivos.php" style="margin:0;" onsubmit="confirmarEliminacion(event, \'¿Eliminar este objetivo vencido?\');">
+                    <input type="hidden" name="form_type" value="eliminar_objetivo">
+                    <input type="hidden" name="id_meta" value="'.$row['id_meta'].'">
+                    <button type="submit" class="btn-eliminar-obj btn-peligro" style="cursor:pointer; background:#fef2f2; border:1px solid #fca5a5; border-radius:6px; padding:8px 12px; color:#dc2626; font-weight:600;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton" style="filter: invert(24%) sepia(91%) saturate(7464%) hue-rotate(351deg) brightness(97%) contrast(93%);"> Eliminar</button>
+                </form>
+            ';
+        } else {
+            $acciones_html = '
+                <button class="btn-agregar" onclick="abrirModalAhorro('.$row['id_meta'].')">+ Agregar ahorro</button>
+                <button class="btn-editar-obj" onclick="abrirModalEditarObj('.$row['id_meta'].', \''.htmlspecialchars($row['nombre_meta'], ENT_QUOTES).'\', \''.htmlspecialchars($row['descripcion'], ENT_QUOTES).'\', '.$row['monto_objetivo'].', \''.$row['fecha_limite'].'\', \''.$estado.'\')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                <form method="POST" action="objetivos.php" style="margin:0;" onsubmit="confirmarEliminacion(event, \'¿Eliminar este objetivo?\');">
+                    <input type="hidden" name="form_type" value="eliminar_objetivo">
+                    <input type="hidden" name="id_meta" value="'.$row['id_meta'].'">
+                    <button type="submit" class="btn-eliminar-obj" style="cursor:pointer; background:transparent; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#64748B;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"> Eliminar</button>
+                </form>
+            ';
+        }
 
         $html_metas .= '
         <div class="obj-card ' . $clase . '">
@@ -154,13 +194,7 @@ if(isset($_SESSION['usuario_id'])) {
                 </div>
             </div>
             <div class="obj-acciones" style="display:flex; gap:10px;">
-                <button class="btn-agregar" onclick="abrirModalAhorro('.$row['id_meta'].')">+ Agregar ahorro</button>
-                <button class="btn-editar-obj" onclick="abrirModalEditarObj('.$row['id_meta'].', \''.htmlspecialchars($row['nombre_meta'], ENT_QUOTES).'\', \''.htmlspecialchars($row['descripcion'], ENT_QUOTES).'\', '.$row['monto_objetivo'].', \''.$row['fecha_limite'].'\', \''.$estado.'\')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
-                <form method="POST" action="objetivos.php" style="margin:0;" onsubmit="return confirm(\'¿Eliminar este objetivo?\');">
-                    <input type="hidden" name="form_type" value="eliminar_objetivo">
-                    <input type="hidden" name="id_meta" value="'.$row['id_meta'].'">
-                    <button type="submit" class="btn-eliminar-obj" style="cursor:pointer; background:transparent; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#64748B;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"> Eliminar</button>
-                </form>
+                ' . $acciones_html . '
             </div>
         </div>';
     }

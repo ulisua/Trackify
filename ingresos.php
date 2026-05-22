@@ -86,7 +86,7 @@ while ($row = $res_lista->fetch_assoc()) {
             <section class="tabla-box">
 
                 <!-- Tabla para desktop -->
-                <table class="tabla tabla-desktop">
+                <table class="tabla tabla-desktop tabla-ingresos">
                     <thead>
                         <tr>
                             <th>Fecha</th>
@@ -106,7 +106,7 @@ while ($row = $res_lista->fetch_assoc()) {
                                     <td class="positivo">+$<?php echo number_format($ingreso['monto'], 2, ',', '.'); ?></td>
                                     <td>
                                         <button class="edit" onclick="abrirModalEditarMovimiento(<?php echo $ingreso['id_movimiento']; ?>, <?php echo $ingreso['monto']; ?>, '<?php echo htmlspecialchars(addslashes($ingreso['categoria_nombre']), ENT_QUOTES); ?>', '<?php echo htmlspecialchars(addslashes($ingreso['descripcion']), ENT_QUOTES); ?>', '<?php echo $ingreso['fecha']; ?>', 'ingreso')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"></button>
-                                        <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este ingreso?');">
+                                        <form method="POST" action="" style="display:inline;" onsubmit="confirmarEliminacion(event, '¿Estás seguro de que deseas eliminar este ingreso?');">
                                             <input type="hidden" name="form_type" value="eliminar_movimiento">
                                             <input type="hidden" name="id_movimiento" value="<?php echo $ingreso['id_movimiento']; ?>">
                                             <button type="submit" class="delete"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
@@ -136,7 +136,7 @@ while ($row = $res_lista->fetch_assoc()) {
                                     <span class="mc-fecha"><?php echo date('d/m', strtotime($ingreso['fecha'])); ?></span>
                                     <div class="mc-acciones">
                                         <button class="edit" onclick="abrirModalEditarMovimiento(<?php echo $ingreso['id_movimiento']; ?>, <?php echo $ingreso['monto']; ?>, '<?php echo htmlspecialchars(addslashes($ingreso['categoria_nombre']), ENT_QUOTES); ?>', '<?php echo htmlspecialchars(addslashes($ingreso['descripcion']), ENT_QUOTES); ?>', '<?php echo $ingreso['fecha']; ?>', 'ingreso')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"></button>
-                                        <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este ingreso?');">
+                                        <form method="POST" action="" style="display:inline;" onsubmit="confirmarEliminacion(event, '¿Estás seguro de que deseas eliminar este ingreso?');">
                                             <input type="hidden" name="form_type" value="eliminar_movimiento">
                                             <input type="hidden" name="id_movimiento" value="<?php echo $ingreso['id_movimiento']; ?>">
                                             <button type="submit" class="delete"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>

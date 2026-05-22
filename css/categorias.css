@@ -63,6 +63,85 @@
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
         }
 
+        /* ===== VARIABLES DE COLOR POR TARJETA ===== */
+        .card-mint {
+            --card-bg: #edf7f5;
+            --card-border: #d2eae5;
+            --card-accent: #084734;
+            --card-text: #052e22;
+            --card-text-muted: #2f564a;
+            --card-btn-bg: #dcf1ec;
+            --card-btn-color: #084734;
+            --card-btn-border: #c3e2db;
+            --card-glow: rgba(8, 71, 52, 0.15);
+        }
+        .card-lime {
+            --card-bg: #f7f8ea;
+            --card-border: #e2e6c5;
+            --card-accent: #6d801b;
+            --card-text: #2d350b;
+            --card-text-muted: #535e23;
+            --card-btn-bg: #eff2df;
+            --card-btn-color: #4a5712;
+            --card-btn-border: #daddbe;
+            --card-glow: rgba(109, 128, 27, 0.15);
+        }
+        .card-pink {
+            --card-bg: #fcf0fa;
+            --card-border: #ebd0e7;
+            --card-accent: #EA73F5;
+            --card-text: #470235;
+            --card-text-muted: #792562;
+            --card-btn-bg: #fae3f6;
+            --card-btn-color: #700353;
+            --card-btn-border: #f1cdef;
+            --card-glow: rgba(234, 115, 245, 0.15);
+        }
+        .card-lavender {
+            --card-bg: #ece8f4;
+            --card-border: #dad2e8;
+            --card-accent: #5a3b75;
+            --card-text: #241730;
+            --card-text-muted: #483659;
+            --card-btn-bg: #e1dbea;
+            --card-btn-color: #3b2450;
+            --card-btn-border: #cec5db;
+            --card-glow: rgba(90, 59, 117, 0.15);
+        }
+        .card-grey {
+            --card-bg: #f0f2f1;
+            --card-border: #d8dedb;
+            --card-accent: #334155;
+            --card-text: #1e293b;
+            --card-text-muted: #475569;
+            --card-btn-bg: #e2e8e5;
+            --card-btn-color: #1e293b;
+            --card-btn-border: #cbd5e1;
+            --card-glow: rgba(51, 65, 85, 0.15);
+        }
+        .card-violet {
+            --card-bg: #f4edf3;
+            --card-border: #ebd8e9;
+            --card-accent: #700353;
+            --card-text: #3b022c;
+            --card-text-muted: #6b2651;
+            --card-btn-bg: #ebddec;
+            --card-btn-color: #490236;
+            --card-btn-border: #dfc8e0;
+            --card-glow: rgba(112, 3, 83, 0.15);
+        }
+        .card-teal {
+            --card-bg: #eef7f6;
+            --card-border: #cee5e2;
+            --card-accent: #0b4c4e;
+            --card-text: #052425;
+            --card-text-muted: #225758;
+            --card-btn-bg: #dcedeb;
+            --card-btn-color: #0b4c4e;
+            --card-btn-border: #c3e2df;
+            --card-glow: rgba(11, 76, 78, 0.15);
+        }
+
         /* Grid de categorías */
         .cat-grid {
             display: grid;
@@ -72,31 +151,31 @@
         }
 
         .cat-card {
-            background: white;
-            border: 1px solid #E2E8F0;
-            border-radius: 10px;
+            background: var(--card-bg, white);
+            border: 1px solid var(--card-border, #E2E8F0);
+            border-radius: 12px;
             padding: 20px 18px;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-        }
-
-        .cat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            border-radius: 10px 0 0 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+            color: var(--card-text, #1E1B26);
         }
 
         .cat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        }
+        
+        .cat-card.con-monto {
+            border-bottom: 3px solid var(--card-accent, #084734);
+        }
+        
+        .cat-card.con-monto:hover {
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.06), 0 0 20px var(--card-glow, rgba(0,0,0,0.1));
         }
 
         .cat-icon {
@@ -106,7 +185,7 @@
 
         .cat-nombre {
             font-weight: 600;
-            color: #1E1B26;
+            color: var(--card-text, #1E1B26);
             font-size: 1rem;
         }
 
@@ -119,11 +198,12 @@
         .cat-monto {
             font-size: 1.1rem;
             font-weight: 700;
+            color: var(--card-accent, #1E1B26);
         }
 
         .cat-cant {
             font-size: 0.8rem;
-            color: #94A3B8;
+            color: var(--card-text-muted, #94A3B8);
         }
 
         .cat-acciones {
@@ -133,20 +213,20 @@
         }
 
         .cat-acciones button {
-            background: #F8FAFC;
-            border: 1px solid #E2E8F0;
-            border-radius: 5px;
+            background: var(--card-btn-bg, #F8FAFC);
+            border: 1px solid var(--card-btn-border, #E2E8F0);
+            border-radius: 6px;
             padding: 5px 10px;
             font-size: 0.8rem;
             cursor: pointer;
             font-family: inherit;
-            color: #64748B;
-            transition: all 0.15s;
+            color: var(--card-btn-color, #64748B);
+            transition: all 0.2s;
         }
 
         .cat-acciones button:hover {
-            background: #E2E8F0;
-            color: #1E1B26;
+            filter: brightness(0.92);
+            transform: translateY(-1px);
         }
 
         .cat-acciones .btn-del:hover {
@@ -155,75 +235,10 @@
             color: #BE123C;
         }
 
-        /* Colores por categoría */
-        .cat-comida::before {
-            background: #F97316;
-        }
-
-        .cat-comida .cat-monto {
-            color: #F97316;
-        }
-
-        .cat-transporte::before {
-            background: #3B82F6;
-        }
-
-        .cat-transporte .cat-monto {
-            color: #3B82F6;
-        }
-
-        .cat-servicios::before {
-            background: #8B5CF6;
-        }
-
-        .cat-servicios .cat-monto {
-            color: #8B5CF6;
-        }
-
-        .cat-entrete::before {
-            background: #EC4899;
-        }
-
-        .cat-entrete .cat-monto {
-            color: #EC4899;
-        }
-
-        .cat-salud::before {
-            background: #10B981;
-        }
-
-        .cat-salud .cat-monto {
-            color: #10B981;
-        }
-
-        .cat-trabajo::before {
-            background: #CFF27C;
-        }
-
-        .cat-trabajo .cat-monto {
-            color: #084734;
-        }
-
-        .cat-freelance::before {
-            background: #EA73F5;
-        }
-
-        .cat-freelance .cat-monto {
-            color: #9B0ABA;
-        }
-
-        .cat-otros::before {
-            background: #94A3B8;
-        }
-
-        .cat-otros .cat-monto {
-            color: #64748B;
-        }
-
         /* Barra de progreso mini */
         .cat-barra {
             height: 4px;
-            background: #F1F5F9;
+            background: rgba(0, 0, 0, 0.06);
             border-radius: 99px;
             overflow: hidden;
             margin-top: 4px;
@@ -232,6 +247,8 @@
         .cat-barra-fill {
             height: 100%;
             border-radius: 99px;
+            background: var(--card-accent, #084734);
+            transition: width 0.3s ease;
         }
 
         /* Sección de resumen */
@@ -270,7 +287,7 @@
             align-items: center;
             gap: 8px;
             font-size: 0.95rem;
-            color: #1E1B26;
+            color: var(--card-text, #1E1B26);
             font-weight: 500;
             min-width: 140px;
         }
@@ -278,7 +295,7 @@
         .resumen-barra {
             flex: 1;
             height: 8px;
-            background: #F1F5F9;
+            background: rgba(0, 0, 0, 0.04);
             border-radius: 99px;
             overflow: hidden;
         }
@@ -286,6 +303,8 @@
         .resumen-barra-fill {
             height: 100%;
             border-radius: 99px;
+            background: var(--card-accent, #084734);
+            transition: width 0.3s ease;
         }
 
         .resumen-pct {

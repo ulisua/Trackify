@@ -199,45 +199,31 @@
         }
 
         /* Colores por objetivo */
-        .fill-verde {
-            background: linear-gradient(90deg, #084734, #16A34A);
-        }
+        /* Colores por objetivo (basados en la nueva paleta) */
+        .fill-mint { background: #084734; }
+        .fill-mint-text { color: #084734; }
 
-        .fill-lila {
-            background: linear-gradient(90deg, #7C3AED, #EA73F5);
-        }
+        .fill-lime { background: #6d801b; }
+        .fill-lime-text { color: #6d801b; }
 
-        .fill-naranja {
-            background: linear-gradient(90deg, #EA580C, #F97316);
-        }
+        .fill-pink { background: #EA73F5; }
+        .fill-pink-text { color: #EA73F5; }
 
-        .fill-azul {
-            background: linear-gradient(90deg, #1D4ED8, #60A5FA);
-        }
+        .fill-lavender { background: #5a3b75; }
+        .fill-lavender-text { color: #5a3b75; }
 
-        .fill-rosa {
-            background: linear-gradient(90deg, #BE185D, #F472B6);
-        }
+        .fill-teal { background: #0b4c4e; }
+        .fill-teal-text { color: #0b4c4e; }
 
-        .pct-verde {
-            color: #16A34A;
-        }
+        .fill-violet { background: #700353; }
+        .fill-violet-text { color: #700353; }
 
-        .pct-lila {
-            color: #7C3AED;
-        }
+        .fill-verde { background: linear-gradient(90deg, #084734, #16A34A); }
+        .pct-verde { color: #16A34A; }
 
-        .pct-naranja {
-            color: #EA580C;
-        }
+        .fill-gris { background: #94A3B8; }
+        .pct-gris { color: #94A3B8; }
 
-        .pct-azul {
-            color: #1D4ED8;
-        }
-
-        .pct-rosa {
-            color: #BE185D;
-        }
 
         /* Acciones del objetivo */
         .obj-acciones {
@@ -314,6 +300,19 @@
             background: #DCFCE7;
             padding: 3px 10px;
             border-radius: 99px;
+        }
+
+        /* Objetivo vencido */
+        .obj-card.vencido {
+            filter: grayscale(100%) opacity(75%);
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        
+        .obj-card.vencido:hover {
+            filter: grayscale(80%) opacity(100%);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
         /* Modal nuevo objetivo */

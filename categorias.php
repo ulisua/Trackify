@@ -56,8 +56,9 @@ $user_id = $_SESSION['usuario_id'];
 $mes_actual = date('m');
 $anio_actual = date('Y');
 
-// Paleta de colores predefinida
-$colores = ['#F97316', '#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#EF4444', '#14B8A6', '#CFF27C', '#EA73F5'];
+// Paleta de colores predefinida de clases CSS y acentos correspondientes
+$color_classes = ['card-mint', 'card-lime', 'card-pink', 'card-lavender', 'card-grey', 'card-violet', 'card-teal'];
+$color_hexes = ['#084734', '#6d801b', '#EA73F5', '#5a3b75', '#334155', '#700353', '#0b4c4e'];
 
 // Obtener todas las categorías y sumar sus movimientos
 $stmt = $conn->prepare("
@@ -83,12 +84,14 @@ $color_index_i = 0;
 
 while ($row = $res->fetch_assoc()) {
     if ($row['tipo'] === 'gasto') {
-        $row['color'] = $colores[$color_index_g % count($colores)];
+        $row['color_class'] = $color_classes[$color_index_g % count($color_classes)];
+        $row['color'] = $color_hexes[$color_index_g % count($color_hexes)];
         $gastos[] = $row;
         $total_gastos += $row['total_monto'] ?? 0;
         $color_index_g++;
     } else {
-        $row['color'] = $colores[$color_index_i % count($colores)];
+        $row['color_class'] = $color_classes[$color_index_i % count($color_classes)];
+        $row['color'] = $color_hexes[$color_index_i % count($color_hexes)];
         $ingresos[] = $row;
         $total_ingresos += $row['total_monto'] ?? 0;
         $color_index_i++;
@@ -115,10 +118,10 @@ while ($row = $res->fetch_assoc()) {
                         if (!$gasto['total_monto']) continue;
                         $pct = round(($gasto['total_monto'] / $total_gastos) * 100);
                     ?>
-                    <div class="resumen-row">
+                    <div class="resumen-row <?php echo htmlspecialchars($gasto['color_class']); ?>">
                         <span class="resumen-cat-nombre"><img src="iconos/generales/altbilleteconalas.png" alt="Tag" class="icono-inline"> <?php echo htmlspecialchars($gasto['nombre']); ?></span>
                         <div class="resumen-barra">
-                            <div class="resumen-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
+                            <div class="resumen-barra-fill" style="width:<?php echo $pct; ?>%;"></div>
                         </div>
                         <span class="resumen-pct"><?php echo $pct; ?>%</span>
                     </div>
@@ -135,7 +138,7 @@ while ($row = $res->fetch_assoc()) {
                     $cant = $gasto['cantidad'] ?? 0;
                     $pct = $total_gastos > 0 ? round(($monto / $total_gastos) * 100) : 0;
                 ?>
-                <div class="cat-card">
+                <div class="cat-card <?php echo htmlspecialchars($gasto['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>">
                     <div class="cat-icon"><img src="iconos/generales/tagetiqueta.png" alt="Tag" style="width: 24px; height: 24px;"></div>
                     <div class="cat-nombre"><?php echo htmlspecialchars($gasto['nombre']); ?></div>
                     <div class="cat-stats">
@@ -143,11 +146,11 @@ while ($row = $res->fetch_assoc()) {
                         <span class="cat-cant"><?php echo $cant; ?> movimiento<?php echo $cant != 1 ? 's' : ''; ?></span>
                     </div>
                     <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $gasto['color']; ?>"></div>
+                        <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;"></div>
                     </div>
                     <div class="cat-acciones">
                         <button onclick="abrirModalEditarCategoria(<?php echo $gasto['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($gasto['nombre']), ENT_QUOTES); ?>', 'gasto')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
-                        <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
+                        <form method="POST" action="" style="display:inline;" onsubmit="confirmarEliminacion(event, '¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
                             <input type="hidden" name="form_type" value="eliminar_categoria">
                             <input type="hidden" name="id_categoria" value="<?php echo $gasto['id_categoria']; ?>">
                             <button type="submit" class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
@@ -164,7 +167,7 @@ while ($row = $res->fetch_assoc()) {
                     $cant = $ingreso['cantidad'] ?? 0;
                     $pct = $total_ingresos > 0 ? round(($monto / $total_ingresos) * 100) : 0;
                 ?>
-                <div class="cat-card">
+                <div class="cat-card <?php echo htmlspecialchars($ingreso['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>">
                     <div class="cat-icon"><img src="iconos/generales/tagetiqueta.png" alt="Tag" style="width: 24px; height: 24px;"></div>
                     <div class="cat-nombre"><?php echo htmlspecialchars($ingreso['nombre']); ?></div>
                     <div class="cat-stats">
@@ -172,11 +175,11 @@ while ($row = $res->fetch_assoc()) {
                         <span class="cat-cant"><?php echo $cant; ?> movimiento<?php echo $cant != 1 ? 's' : ''; ?></span>
                     </div>
                     <div class="cat-barra">
-                        <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $ingreso['color']; ?>"></div>
+                        <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;"></div>
                     </div>
                     <div class="cat-acciones">
                         <button onclick="abrirModalEditarCategoria(<?php echo $ingreso['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($ingreso['nombre']), ENT_QUOTES); ?>', 'ingreso')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
-                        <form method="POST" action="" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
+                        <form method="POST" action="" style="display:inline;" onsubmit="confirmarEliminacion(event, '¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
                             <input type="hidden" name="form_type" value="eliminar_categoria">
                             <input type="hidden" name="id_categoria" value="<?php echo $ingreso['id_categoria']; ?>">
                             <button type="submit" class="btn-del"><img src="iconos/generales/tachodebasura.png" alt="Eliminar" class="icono-boton"></button>
