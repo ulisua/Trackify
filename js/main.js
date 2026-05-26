@@ -146,6 +146,10 @@ function abrirModalEditarObj(id, nombre, desc, monto, fecha, estado) {
 function abrirModalCategoria() {
     const modal = document.getElementById('modalCategoria');
     if (modal) {
+        const iconoSelect = document.getElementById('icono_categoria');
+        const colorInput = document.getElementById('color_categoria');
+        if (iconoSelect) iconoSelect.value = iconoSelect.options[0]?.value || iconoSelect.value;
+        if (colorInput) colorInput.value = '#EA73F5';
         modal.classList.remove('hidden');
         blurBackground(true);
     }

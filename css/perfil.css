@@ -420,3 +420,38 @@
                 text-align: center;
             }
         }
+
+        /* ===== MODAL BORRAR HISTORIAL ===== */
+        .modal-confirmacion {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .modal-confirmacion h3 {
+            margin: 0 0 16px 0;
+            font-size: 1.1rem;
+        }
+
+        #inputConfirmacionBorrar:focus {
+            border-color: #EA73F5;
+            background: #ffffff;
+            box-shadow: 0 0 0 3px rgba(234, 115, 245, 0.1);
+        }
+
+        /* Animación de carga */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .icono-boton[style*="animation: spin"] {
+            animation: spin 1s linear infinite !important;
+        }
+

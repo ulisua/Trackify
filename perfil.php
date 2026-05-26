@@ -220,14 +220,14 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                                     <strong>Exportar mis datos</strong>
                                     <span>Descargá un .csv con todos tus movimientos</span>
                                 </div>
-                                <button class="btn-peligro"><img src="iconos/generales/exportar.png" alt="Exportar" class="icono-boton"> Exportar</button>
+                                <button id="btnExportarDatos" class="btn-peligro"><img src="iconos/generales/exportar.png" alt="Exportar" class="icono-boton"> Exportar</button>
                             </div>
                             <div class="peligro-row">
                                 <div class="peligro-info">
                                     <strong>Borrar historial</strong>
                                     <span>Elimina todos los movimientos (no se puede deshacer)</span>
                                 </div>
-                                <button class="btn-peligro"><img src="iconos/generales/flechaizquierda.png" alt="Eliminar" class="icono-boton"> Borrar historial</button>
+                                <button id="btnBorrarHistorial" type="button" class="btn-peligro"><img src="iconos/generales/flechaizquierda.png" alt="Eliminar" class="icono-boton"> Borrar historial</button>
                             </div>
                             <div class="peligro-row">
                                 <div class="peligro-info">
@@ -244,6 +244,6 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
             </div>
 
 <?php 
-$extra_js = '<script src="js/perfil.js"></script>';
+$extra_js = '<script src="js/utils/exportCSV.js"></script><script src="js/perfil.js"></script>';
 require_once 'includes/footer.php'; 
 ?>

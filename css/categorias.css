@@ -153,21 +153,21 @@
         .cat-card {
             background: var(--card-bg, white);
             border: 1px solid var(--card-border, #E2E8F0);
-            border-radius: 12px;
-            padding: 20px 18px;
+            border-radius: 18px;
+            padding: 22px 20px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
             color: var(--card-text, #1E1B26);
         }
 
         .cat-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
         }
         
         .cat-card.con-monto {
@@ -175,12 +175,28 @@
         }
         
         .cat-card.con-monto:hover {
-            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.06), 0 0 20px var(--card-glow, rgba(0,0,0,0.1));
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.08), 0 0 20px var(--card-glow, rgba(0,0,0,0.1));
         }
 
         .cat-icon {
-            font-size: 1.8rem;
-            line-height: 1;
+            width: 46px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: background 0.2s ease;
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+        }
+
+        .cat-icon img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
         }
 
         .cat-nombre {

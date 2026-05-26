@@ -2,6 +2,7 @@
 $page = 'categorias';
 $extra_css = '<link rel="stylesheet" href="css/categorias.css">';
 require_once 'conexion.php';
+require_once 'includes/categorias_meta.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -12,22 +13,38 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
     $form_type = $_POST['form_type'];
     
     if($form_type === 'nueva_categoria') {
-        $nombre_cat = $_POST['nombre_categoria'];
+        $nombre_cat = trim($_POST['nombre_categoria']);
         $tipo_cat = $_POST['tipo_categoria'];
+        $icono_cat = trim($_POST['icono'] ?? '');
+        $color_cat = trim($_POST['color'] ?? '');
+
+        if (!$icono_cat || !$color_cat) {
+            $meta = obtenerMetaCategoriaPorNombre($nombre_cat, $tipo_cat);
+            $icono_cat = $icono_cat ?: $meta['icono'];
+            $color_cat = $color_cat ?: $meta['color'];
+        }
         
-        $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
-        $stmt_ins_cat->bind_param("ss", $nombre_cat, $tipo_cat);
+        $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo, icono, color) VALUES (?, ?, ?, ?)");
+        $stmt_ins_cat->bind_param("ssss", $nombre_cat, $tipo_cat, $icono_cat, $color_cat);
         $stmt_ins_cat->execute();
         
         header("Location: " . $_SERVER['PHP_SELF']);
         exit();
     } elseif($form_type === 'editar_categoria') {
         $id_categoria = intval($_POST['id_categoria']);
-        $nombre_cat = $_POST['nombre_categoria'];
+        $nombre_cat = trim($_POST['nombre_categoria']);
         $tipo_cat = $_POST['tipo_categoria'];
+        $icono_cat = trim($_POST['icono'] ?? '');
+        $color_cat = trim($_POST['color'] ?? '');
+
+        if (!$icono_cat || !$color_cat) {
+            $meta = obtenerMetaCategoriaPorNombre($nombre_cat, $tipo_cat);
+            $icono_cat = $icono_cat ?: $meta['icono'];
+            $color_cat = $color_cat ?: $meta['color'];
+        }
         
-        $stmt_upd = $conn->prepare("UPDATE categorias SET nombre = ?, tipo = ? WHERE id_categoria = ?");
-        $stmt_upd->bind_param("ssi", $nombre_cat, $tipo_cat, $id_categoria);
+        $stmt_upd = $conn->prepare("UPDATE categorias SET nombre = ?, tipo = ?, icono = ?, color = ? WHERE id_categoria = ?");
+        $stmt_upd->bind_param("ssssi", $nombre_cat, $tipo_cat, $icono_cat, $color_cat, $id_categoria);
         $stmt_upd->execute();
         
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -62,12 +79,12 @@ $color_hexes = ['#084734', '#6d801b', '#EA73F5', '#5a3b75', '#334155', '#700353'
 
 // Obtener todas las categorías y sumar sus movimientos
 $stmt = $conn->prepare("
-    SELECT c.id_categoria, c.nombre, c.tipo,
+    SELECT c.id_categoria, c.nombre, c.tipo, c.icono, c.color,
            COUNT(m.id_movimiento) as cantidad, 
            SUM(m.monto) as total_monto
     FROM categorias c
     LEFT JOIN movimientos m ON c.id_categoria = m.id_categoria AND m.id_usuario = ? AND MONTH(m.fecha) = ? AND YEAR(m.fecha) = ?
-    GROUP BY c.id_categoria, c.nombre, c.tipo
+    GROUP BY c.id_categoria, c.nombre, c.tipo, c.icono, c.color
     ORDER BY IFNULL(SUM(m.monto), 0) DESC, c.nombre ASC
 ");
 $stmt->bind_param("iii", $user_id, $mes_actual, $anio_actual);
@@ -83,15 +100,24 @@ $color_index_g = 0;
 $color_index_i = 0;
 
 while ($row = $res->fetch_assoc()) {
+    actualizarCategoriaMetaSiFalta($conn, $row);
+    if (empty($row['icono'])) {
+        $meta = obtenerMetaCategoriaPorNombre($row['nombre'], $row['tipo']);
+        $row['icono'] = $meta['icono'];
+    }
+    if (empty($row['color'])) {
+        $meta = $meta ?? obtenerMetaCategoriaPorNombre($row['nombre'], $row['tipo']);
+        $row['color'] = $meta['color'];
+    }
+    $row['icon_alt'] = $row['nombre'];
+
     if ($row['tipo'] === 'gasto') {
         $row['color_class'] = $color_classes[$color_index_g % count($color_classes)];
-        $row['color'] = $color_hexes[$color_index_g % count($color_hexes)];
         $gastos[] = $row;
         $total_gastos += $row['total_monto'] ?? 0;
         $color_index_g++;
     } else {
         $row['color_class'] = $color_classes[$color_index_i % count($color_classes)];
-        $row['color'] = $color_hexes[$color_index_i % count($color_hexes)];
         $ingresos[] = $row;
         $total_ingresos += $row['total_monto'] ?? 0;
         $color_index_i++;
@@ -119,9 +145,9 @@ while ($row = $res->fetch_assoc()) {
                         $pct = round(($gasto['total_monto'] / $total_gastos) * 100);
                     ?>
                     <div class="resumen-row <?php echo htmlspecialchars($gasto['color_class']); ?>">
-                        <span class="resumen-cat-nombre"><img src="iconos/generales/altbilleteconalas.png" alt="Tag" class="icono-inline"> <?php echo htmlspecialchars($gasto['nombre']); ?></span>
+                        <span class="resumen-cat-nombre"><img src="<?php echo htmlspecialchars($gasto['icono']); ?>" alt="<?php echo htmlspecialchars($gasto['icon_alt']); ?>" class="icono-inline"> <?php echo htmlspecialchars($gasto['nombre']); ?></span>
                         <div class="resumen-barra">
-                            <div class="resumen-barra-fill" style="width:<?php echo $pct; ?>%;"></div>
+                            <div class="resumen-barra-fill" style="width:<?php echo $pct; ?>%; background: <?php echo htmlspecialchars($gasto['color']); ?>;"></div>
                         </div>
                         <span class="resumen-pct"><?php echo $pct; ?>%</span>
                     </div>
@@ -138,8 +164,10 @@ while ($row = $res->fetch_assoc()) {
                     $cant = $gasto['cantidad'] ?? 0;
                     $pct = $total_gastos > 0 ? round(($monto / $total_gastos) * 100) : 0;
                 ?>
-                <div class="cat-card <?php echo htmlspecialchars($gasto['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>">
-                    <div class="cat-icon"><img src="iconos/generales/tagetiqueta.png" alt="Tag" style="width: 24px; height: 24px;"></div>
+                <div class="cat-card <?php echo htmlspecialchars($gasto['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" style="--card-accent: <?php echo htmlspecialchars($gasto['color']); ?>;">
+                    <div class="cat-icon">
+                        <img src="<?php echo htmlspecialchars($gasto['icono']); ?>" alt="<?php echo htmlspecialchars($gasto['icon_alt']); ?>">
+                    </div>
                     <div class="cat-nombre"><?php echo htmlspecialchars($gasto['nombre']); ?></div>
                     <div class="cat-stats">
                         <span class="cat-monto">$<?php echo number_format($monto, 2, ',', '.'); ?></span>
@@ -149,7 +177,7 @@ while ($row = $res->fetch_assoc()) {
                         <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;"></div>
                     </div>
                     <div class="cat-acciones">
-                        <button onclick="abrirModalEditarCategoria(<?php echo $gasto['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($gasto['nombre']), ENT_QUOTES); ?>', 'gasto')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                        <button onclick="abrirModalEditarCategoria(<?php echo $gasto['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($gasto['nombre']), ENT_QUOTES); ?>', 'gasto', '<?php echo htmlspecialchars(addslashes($gasto['icono']), ENT_QUOTES); ?>', '<?php echo htmlspecialchars($gasto['color']); ?>')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
                         <form method="POST" action="" style="display:inline;" onsubmit="confirmarEliminacion(event, '¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
                             <input type="hidden" name="form_type" value="eliminar_categoria">
                             <input type="hidden" name="id_categoria" value="<?php echo $gasto['id_categoria']; ?>">
@@ -167,8 +195,10 @@ while ($row = $res->fetch_assoc()) {
                     $cant = $ingreso['cantidad'] ?? 0;
                     $pct = $total_ingresos > 0 ? round(($monto / $total_ingresos) * 100) : 0;
                 ?>
-                <div class="cat-card <?php echo htmlspecialchars($ingreso['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>">
-                    <div class="cat-icon"><img src="iconos/generales/tagetiqueta.png" alt="Tag" style="width: 24px; height: 24px;"></div>
+                <div class="cat-card <?php echo htmlspecialchars($ingreso['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" style="--card-accent: <?php echo htmlspecialchars($ingreso['color']); ?>;">
+                    <div class="cat-icon">
+                        <img src="<?php echo htmlspecialchars($ingreso['icono']); ?>" alt="<?php echo htmlspecialchars($ingreso['icon_alt']); ?>">
+                    </div>
                     <div class="cat-nombre"><?php echo htmlspecialchars($ingreso['nombre']); ?></div>
                     <div class="cat-stats">
                         <span class="cat-monto">$<?php echo number_format($monto, 2, ',', '.'); ?></span>
@@ -178,7 +208,7 @@ while ($row = $res->fetch_assoc()) {
                         <div class="cat-barra-fill" style="width:<?php echo $pct; ?>%;"></div>
                     </div>
                     <div class="cat-acciones">
-                        <button onclick="abrirModalEditarCategoria(<?php echo $ingreso['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($ingreso['nombre']), ENT_QUOTES); ?>', 'ingreso')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
+                        <button onclick="abrirModalEditarCategoria(<?php echo $ingreso['id_categoria']; ?>, '<?php echo htmlspecialchars(addslashes($ingreso['nombre']), ENT_QUOTES); ?>', 'ingreso', '<?php echo htmlspecialchars(addslashes($ingreso['icono']), ENT_QUOTES); ?>', '<?php echo htmlspecialchars($ingreso['color']); ?>')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar</button>
                         <form method="POST" action="" style="display:inline;" onsubmit="confirmarEliminacion(event, '¿Estás seguro de que deseas eliminar esta categoría? Esto también borrará todos los movimientos asociados.');">
                             <input type="hidden" name="form_type" value="eliminar_categoria">
                             <input type="hidden" name="id_categoria" value="<?php echo $ingreso['id_categoria']; ?>">

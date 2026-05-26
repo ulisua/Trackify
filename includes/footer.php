@@ -1,6 +1,8 @@
     </main>
 </div>
 
+<?php require_once __DIR__ . '/categorias_meta.php'; ?>
+
 <!-- MODAL -->
 <div id="modal" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="index.php">
@@ -95,6 +97,15 @@
             <option value="gasto">Gasto</option>
             <option value="ingreso">Ingreso</option>
         </select>
+        <select id="icono_categoria" name="icono" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26; margin-top: 12px;">
+            <?php foreach (obtenerOpcionesIconoCategoria() as $ruta => $nombreIcono): ?>
+                <option value="<?php echo htmlspecialchars($ruta); ?>"><?php echo htmlspecialchars($nombreIcono); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; color:#475569; margin-top:12px;">
+            Color de acento
+            <input type="color" id="color_categoria" name="color" value="#EA73F5" style="width:100%; height:44px; border:none; padding:0; background:#fff; border-radius:8px; cursor:pointer;">
+        </label>
         
         <div class="modal-actions">
             <button type="submit" class="btn btn-guardar-modal">Guardar</button>
@@ -115,6 +126,15 @@
             <option value="gasto">Gasto</option>
             <option value="ingreso">Ingreso</option>
         </select>
+        <select id="edit_icono_categoria" name="icono" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26; margin-top: 12px;">
+            <?php foreach (obtenerOpcionesIconoCategoria() as $ruta => $nombreIcono): ?>
+                <option value="<?php echo htmlspecialchars($ruta); ?>"><?php echo htmlspecialchars($nombreIcono); ?></option>
+            <?php endforeach; ?>
+        </select>
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; color:#475569; margin-top:12px;">
+            Color de acento
+            <input type="color" id="edit_color_categoria" name="color" value="#EA73F5" style="width:100%; height:44px; border:none; padding:0; background:#fff; border-radius:8px; cursor:pointer;">
+        </label>
         
         <div class="modal-actions">
             <button type="submit" class="btn btn-guardar-modal">Guardar</button>
@@ -148,6 +168,41 @@
             <button type="button" class="btn cancel" onclick="cerrarModal()">Cancelar</button>
         </div>
     </form>
+</div>
+
+<!-- MODAL BORRAR HISTORIAL COMPLETO -->
+<div id="modalBorrarHistorial" class="modal hidden">
+    <div class="modal-content modal-confirmacion" style="max-width:480px;">
+        <h3 style="color:#EA73F5; margin-bottom:16px;">Borrar todo el historial</h3>
+        
+        <div style="background:#FFF1F2; border-left:4px solid #BE123C; padding:12px; border-radius:6px; margin-bottom:20px;">
+            <p style="margin:0; color:#BE123C; font-size:0.9rem; font-weight:500;">⚠️ Advertencia</p>
+            <p style="margin:8px 0 0 0; color:#7F1D1D; font-size:0.85rem;">Esta acción eliminará <strong>TODOS</strong> tus movimientos (ingresos y gastos) permanentemente.</p>
+            <p style="margin:4px 0 0 0; color:#7F1D1D; font-size:0.85rem;"><strong>No se puede deshacer.</strong></p>
+        </div>
+        
+        <p style="color:#475569; font-size:0.9rem; margin-bottom:20px;">Para confirmar, escribí "SI, ESTOY SEGURO" en el campo de abajo:</p>
+        
+        <form id="formBorrarHistorial" method="POST" action="includes/movimientos_handler.php" style="display:flex; flex-direction:column; gap:16px;">
+            <input type="hidden" name="form_type" value="borrar_historial_completo">
+            <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES); ?>">
+            
+            <input 
+                type="text" 
+                id="inputConfirmacionBorrar" 
+                name="confirmacion_borrar"
+                placeholder="SI, ESTOY SEGURO" 
+                style="padding:12px; border:2px solid #E2E8F0; border-radius:6px; font-size:0.95rem; font-family:inherit; color:#1E1B26; background:#F8FAFC; outline:none; transition:all 0.2s;"
+                autocomplete="off"
+                required
+            >
+            
+            <div class="modal-actions" style="gap:12px;">
+                <button type="button" class="btn cancel" onclick="cerrarModalBorrar()" style="flex:1;">Cancelar</button>
+                <button type="submit" class="btn" id="btnConfirmarBorrar" disabled style="flex:1; background:#BE123C; color:white; cursor:not-allowed; opacity:0.6;">Eliminar todo</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <footer class="footer">

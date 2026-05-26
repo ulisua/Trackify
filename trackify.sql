@@ -30,16 +30,18 @@ SET time_zone = "+00:00";
 CREATE TABLE `categorias` (
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(50) NOT NULL,
-  `tipo` enum('ingreso','gasto') NOT NULL
+  `tipo` enum('ingreso','gasto') NOT NULL,
+  `icono` varchar(255) DEFAULT NULL,
+  `color` varchar(7) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `categorias`
 --
 
-INSERT INTO `categorias` (`id_categoria`, `nombre`, `tipo`) VALUES
-(1, 'Otros', 'ingreso'),
-(2, 'Servicios', 'gasto');
+INSERT INTO `categorias` (`id_categoria`, `nombre`, `tipo`, `icono`, `color`) VALUES
+(1, 'Otros', 'ingreso', 'iconos/ingreso/otrosdinero.png', '#334155'),
+(2, 'Servicios', 'gasto', 'iconos/gasto/servicio.png', '#084734');
 
 -- --------------------------------------------------------
 
@@ -166,6 +168,9 @@ ALTER TABLE `usuarios`
 --
 ALTER TABLE `categorias`
   MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+ALTER TABLE `categorias`
+  ADD COLUMN IF NOT EXISTS `icono` varchar(255) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS `color` varchar(7) DEFAULT NULL;
 
 --
 -- AUTO_INCREMENT de la tabla `metas_ahorro`
