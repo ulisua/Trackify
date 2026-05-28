@@ -78,10 +78,67 @@ function attachExportHandler() {
     });
 }
 
+function limpiarLocalStorageTrackify() {
+    if (typeof localStorage === 'undefined') return;
+    Object.keys(localStorage).forEach(key => {
+        if (/^trackify/i.test(key)) {
+            localStorage.removeItem(key);
+        }
+    });
+}
+
+function abrirConfirmacionEliminarCuenta() {
+    Swal.fire({
+        title: '¿Seguro que querés eliminar tu cuenta?',
+        text: 'Esta acción eliminará permanentemente todos tus datos y no se puede deshacer.',
+        icon: 'warning',
+        iconColor: '#EA73F5',
+        showCancelButton: true,
+        confirmButtonColor: '#700353',
+        cancelButtonColor: '#1E1B26',
+        confirmButtonText: 'Eliminar definitivamente',
+        cancelButtonText: 'Cancelar',
+        background: '#2c2c3e',
+        color: '#F8FAFC',
+        customClass: {
+            popup: 'swal-trackify',
+            confirmButton: 'btn swal-btn-danger',
+            cancelButton: 'btn swal-btn-cancel'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            limpiarLocalStorageTrackify();
+            const form = document.getElementById('formEliminarCuenta');
+            const button = document.getElementById('btnEliminarCuenta');
+            if (button) {
+                button.disabled = true;
+                button.style.opacity = '0.6';
+                button.textContent = 'Eliminando...';
+            }
+            if (form) {
+                form.submit();
+            }
+        }
+    });
+}
+
+function attachEliminarCuentaHandler() {
+    const btnEliminar = document.getElementById('btnEliminarCuenta');
+    if (!btnEliminar) return;
+    btnEliminar.addEventListener('click', function(e) {
+        e.preventDefault();
+        abrirConfirmacionEliminarCuenta();
+    });
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachExportHandler);
+    document.addEventListener('DOMContentLoaded', function() {
+        attachExportHandler();
+        attachEliminarCuentaHandler();
+    });
 } else {
     attachExportHandler();
+    attachEliminarCuentaHandler();
 }
 
 // ============== BORRAR HISTORIAL COMPLETO ==============

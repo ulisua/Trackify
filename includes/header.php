@@ -5,7 +5,11 @@ if(session_status() !== PHP_SESSION_ACTIVE) {
 
 // Si no está logueado → login
 if(!isset($_SESSION['usuario_id'])){
-    header("Location: login.php");
+    $loginPath = dirname($_SERVER['PHP_SELF']);
+    if ($loginPath === '/' || $loginPath === '\\') {
+        $loginPath = '';
+    }
+    header("Location: {$loginPath}/login.php");
     exit();
 }
 

@@ -7,7 +7,8 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    overflow: hidden;
+    padding: 20px 0;
+    overflow-y: auto;
 }
 
 /* Background animated glowing orbs */

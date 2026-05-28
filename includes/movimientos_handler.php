@@ -127,5 +127,38 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
     }
+
+    // 5. Eliminar cuenta
+    if(isset($_POST['form_type']) && $_POST['form_type'] === 'eliminar_cuenta') {
+        $stmt_del_mov = $conn->prepare("DELETE FROM movimientos WHERE id_usuario = ?");
+        $stmt_del_mov->bind_param("i", $user_id);
+        $stmt_del_mov->execute();
+
+        $stmt_del_meta = $conn->prepare("DELETE FROM metas_ahorro WHERE id_usuario = ?");
+        $stmt_del_meta->bind_param("i", $user_id);
+        $stmt_del_meta->execute();
+
+        $stmt_del_user = $conn->prepare("DELETE FROM usuarios WHERE id_usuario = ?");
+        $stmt_del_user->bind_param("i", $user_id);
+        $stmt_del_user->execute();
+
+        // Destruir sesión limpia y eliminar cookie de sesión si existe
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params['path'], $params['domain'],
+                $params['secure'], $params['httponly']
+            );
+        }
+        session_destroy();
+
+        $basePath = dirname(dirname($_SERVER['PHP_SELF']));
+        if ($basePath === '/') {
+            $basePath = '';
+        }
+        header("Location: {$basePath}/login.php");
+        exit();
+    }
 }
 ?>

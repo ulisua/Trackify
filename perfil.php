@@ -234,11 +234,14 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                                     <strong>Eliminar cuenta</strong>
                                     <span>Borra tu cuenta y todos tus datos permanentemente</span>
                                 </div>
-                                <button class="btn-peligro" style="border-color:#BE123C;background:#FFF1F2;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar cuenta" class="icono-boton"> Eliminar
+                                <button id="btnEliminarCuenta" type="button" class="btn-peligro" style="border-color:#BE123C;background:#FFF1F2;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar cuenta" class="icono-boton"> Eliminar
                                     cuenta</button>
                             </div>
                         </div>
                     </div>
+                    <form id="formEliminarCuenta" method="POST" action="includes/movimientos_handler.php" style="display:none;">
+                        <input type="hidden" name="form_type" value="eliminar_cuenta">
+                    </form>
 
                 </div>
             </div>
