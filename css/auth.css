@@ -11,6 +11,16 @@ body {
     overflow-y: auto;
 }
 
+.login-body {
+    min-height: 100dvh;
+    padding: 24px;
+    overflow: hidden;
+}
+
+.login-body .glow-orb {
+    pointer-events: none;
+}
+
 /* Background animated glowing orbs */
 .glow-orb {
     position: absolute;
