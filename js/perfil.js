@@ -90,21 +90,29 @@ function limpiarLocalStorageTrackify() {
 function abrirConfirmacionEliminarCuenta() {
     Swal.fire({
         title: '¿Seguro que querés eliminar tu cuenta?',
-        text: 'Esta acción eliminará permanentemente todos tus datos y no se puede deshacer.',
+        html: '<strong>Esta acción eliminará permanentemente todos tus datos</strong> y no se puede deshacer.',
         icon: 'warning',
         iconColor: '#EA73F5',
         showCancelButton: true,
-        confirmButtonColor: '#700353',
-        cancelButtonColor: '#1E1B26',
-        confirmButtonText: 'Eliminar definitivamente',
+        reverseButtons: true,
+        confirmButtonColor: '#BE123C',
+        cancelButtonColor: '#1E293B',
+        confirmButtonText: 'Eliminar cuenta',
         cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        width: 560,
+        padding: '2rem 1.75rem 1.75rem',
         background: '#2c2c3e',
         color: '#F8FAFC',
         customClass: {
-            popup: 'swal-trackify',
+            popup: 'swal-trackify swal-trackify-danger',
+            title: 'swal-trackify-title',
+            htmlContainer: 'swal-trackify-copy',
+            actions: 'swal-trackify-actions',
             confirmButton: 'btn swal-btn-danger',
             cancelButton: 'btn swal-btn-cancel'
-        }
+        },
+        focusCancel: true
     }).then((result) => {
         if (result.isConfirmed) {
             limpiarLocalStorageTrackify();

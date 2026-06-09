@@ -154,7 +154,7 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         session_destroy();
 
         $basePath = dirname(dirname($_SERVER['PHP_SELF']));
-        if ($basePath === '/') {
+        if ($basePath === '/' || $basePath === '\\' || $basePath === '.') {
             $basePath = '';
         }
         header("Location: {$basePath}/login.php");

@@ -249,7 +249,7 @@ require_once 'includes/header.php';
 
                 <?php if (empty($ultimos_movimientos)): ?>
                     <div class="movimientos-empty">
-                        <span><img src="ICONO_MONEDA" alt="Moneda" style="width: 48px; height: 48px;"></span>
+                        <span><img src="iconos/generales/altbilleteconalas.png" alt="Sin movimientos" style="width: 48px; height: 48px;"></span>
                         <p>Aún no registraste ningún movimiento.</p>
                     </div>
                 <?php else: ?>

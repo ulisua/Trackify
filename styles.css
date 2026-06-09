@@ -468,6 +468,39 @@ body {
 }
 
 /* ===== CHAT (PANTALLA IA) ===== */
+.ia-chat-shell {
+    position: relative;
+    width: 100%;
+    max-width: 720px;
+    margin: 18px auto 0;
+    padding: 28px 24px 24px;
+    border-radius: 28px;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.ia-chat-shell .glow-orb {
+    position: absolute;
+    z-index: 0;
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.ia-chat-shell .orb-1 {
+    top: -90px;
+    left: -80px;
+}
+
+.ia-chat-shell .orb-2 {
+    right: -110px;
+    bottom: -120px;
+}
+
+.ia-chat-shell .chat-container {
+    position: relative;
+    z-index: 1;
+}
+
 .chat-container {
     max-width: 600px;
     margin: auto;
@@ -1209,6 +1242,43 @@ span.flatpickr-weekday {
     height: auto;
 }
 
+/* ===== SWEETALERT2 CUENTA ===== */
+.swal-trackify-danger {
+    border: 1px solid rgba(234, 115, 245, 0.18) !important;
+    background: linear-gradient(180deg, rgba(44, 44, 62, 0.98) 0%, rgba(21, 18, 34, 0.98) 100%) !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45) !important;
+    border-radius: 24px !important;
+}
+
+.swal-trackify-danger .swal2-title {
+    color: #F8FAFC !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+}
+
+.swal-trackify-danger .swal2-html-container {
+    color: #CBD5E1 !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+}
+
+.swal-trackify-danger .swal2-icon {
+    border-color: rgba(234, 115, 245, 0.65) !important;
+    color: #EA73F5 !important;
+}
+
+.swal-trackify-danger .swal2-actions {
+    gap: 12px !important;
+}
+
+.swal-trackify-danger .swal2-confirm,
+.swal-trackify-danger .swal2-cancel {
+    min-width: 160px !important;
+    border-radius: 12px !important;
+    padding: 12px 18px !important;
+    font-weight: 700 !important;
+}
+
 /* ===== FOOTER ===== */
 .footer {
     text-align: center;
@@ -1713,4 +1783,4 @@ span.flatpickr-weekday {
     width: 16px;
     height: 16px;
     object-fit: contain;
-}
+}
