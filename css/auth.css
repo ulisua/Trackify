@@ -14,7 +14,7 @@ body {
 .login-body {
     min-height: 100dvh;
     padding: 24px;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .login-body .glow-orb {
