@@ -1,0 +1,91 @@
+Contexto completo actualizado del proyecto Trackify
+
+Trackify es una aplicación web de gestión financiera personal desarrollada con PHP, MySQL, HTML, CSS y JavaScript. Su propósito es ayudar al usuario a llevar control de ingresos, gastos, categorías, objetivos de ahorro y análisis de su situación económica, además de incorporar una capa de inteligencia artificial para ofrecer recomendaciones útiles.
+
+Stack actual:
+- Frontend: HTML, CSS y JavaScript vanilla
+- Backend: PHP
+- Base de datos: MySQL / MariaDB
+- Servidor local: XAMPP / Apache
+- Gráficos: Chart.js
+- IA: integración con API de Groq (modelo LLaMA u otro disponible)
+- Exportación: CSV para movimientos
+
+Arquitectura general:
+El proyecto funciona mediante una arquitectura cliente-servidor simple:
+1. El usuario interactúa con la interfaz.
+2. El frontend envía peticiones al backend con fetch() o formularios.
+3. PHP procesa datos, valida sesiones y consulta la base de datos.
+4. El servidor devuelve JSON o renderiza contenido dinámico.
+5. El frontend actualiza la vista con resultados, gráficos y respuestas IA.
+
+Archivos principales:
+- index.php: dashboard principal con resumen financiero y gráficos.
+- ingresos.php y gastos.php: vistas específicas de movimientos.
+- categorias.php: gestión de categorías personalizadas.
+- objetivos.php: seguimiento de metas de ahorro.
+- perfil.php: perfil del usuario.
+- ia.php: interfaz y lógica para el asistente IA.
+- export_movimientos.php: exportación de datos a CSV.
+- conexion.php: configuración y migraciones automáticas.
+- includes/: componentes reutilizables.
+- js/: scripts del frontend.
+- css/: estilos del proyecto.
+
+Funcionalidades actuales:
+- Registro y login de usuarios.
+- Gestión de sesiones.
+- CRUD de movimientos.
+- Gestión de categorías, iconos y colores.
+- Dashboard con balance, gastos, ingresos y métricas clave.
+- Gráficos comparativos y distribución por categorías.
+- Seguimiento de metas.
+- Perfil de usuario.
+- Exportación CSV.
+- Chat IA para consultas financieras.
+- Eliminación de historial y cuenta.
+
+Modelo de datos:
+El sistema trabaja con tablas como usuarios, categorias, movimientos y metas_ahorro. Cada movimiento pertenece a un usuario y a una categoría, y la lógica de negocio debe respetar el contexto del usuario autenticado.
+
+IA y análisis financiero:
+La IA debe analizar información real del usuario, como:
+- balance general
+- porcentaje de gasto sobre ingresos
+- comportamiento por categorías
+- tendencias mensuales
+- progreso de objetivos
+- recomendaciones personalizadas basadas en datos reales
+
+La idea es que la IA no responda de forma genérica, sino con contexto financiero legítimo y útil.
+
+Seguridad:
+- sesiones para aislar usuarios
+- consultas preparadas para evitar SQL injection
+- escape de salidas para prevenir XSS
+- control de rutas privadas
+- variables de entorno para no exponer claves sensibles
+
+Nuevos horizontes del proyecto:
+- análisis automático de patrones de gasto
+- alertas de gastos inusuales
+- sugerencias de presupuesto mensual
+- categorización inteligente
+- predicciones básicas de ahorro o riesgo financiero
+- reportes semanales/mensuales
+- mejoras de UX y responsividad
+- soporte para múltiples monedas o presupuestos personalizados
+- integración más profunda entre frontend, backend e IA
+
+Instrucciones para el desarrollo:
+Priorizar soluciones prácticas, seguras y aplicables al código. La IA debe usar datos reales del usuario, ofrecer recomendaciones accionables y ser coherente con el contexto financiero del proyecto. Se debe evitar contenido superficial o genérico, y buscar siempre calidad técnica, claridad y utilidad.
+
+Ejemplo de interacción con IA:
+
+fetch("ia.php", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ pregunta: "¿Estoy gastando demasiado este mes?" })
+})
+
+La respuesta esperada debería ser JSON con una propiedad como respuesta, y en algunos casos con campos adicionales que ayuden al frontend a mostrar contexto, análisis o recomendaciones.

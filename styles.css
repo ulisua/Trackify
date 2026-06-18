@@ -1719,22 +1719,22 @@ span.flatpickr-weekday {
 
 .ia-tipo-info {
     background: rgba(99, 102, 241, 0.06);
-    border-left-color: #6366f1;
+    /*border-left-color: #6366f1;*/
 }
 
 .ia-tipo-ok {
     background: rgba(207, 242, 124, 0.12);
-    border-left-color: #CFF27C;
+    /*border-left-color: #CFF27C;*/
 }
 
 .ia-tipo-alerta {
     background: rgba(250, 204, 21, 0.10);
-    border-left-color: #facc15;
+    /*border-left-color: #facc15;*/
 }
 
 .ia-tipo-consejo {
     background: rgba(234, 115, 245, 0.08);
-    border-left-color: #EA73F5;
+    /*border-left-color: #EA73F5;*/
 }
 
 .ia-item-icono {
