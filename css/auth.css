@@ -1,22 +1,18 @@
-body {
-    margin: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(135deg, #1E1B26 0%, #084734 100%);
-    color: white;
-
+/* Página de autenticación: aplicada al contenedor .login-body
+   Evitamos pisar estilos globales del body (font-family, etc.)
+*/
+.login-body {
     display: flex;
     justify-content: center;
     align-items: center;
-
     min-height: 100vh;
     overflow: hidden;
-
     position: relative;
+    background: linear-gradient(135deg, #1E1B26 0%, #084734 100%);
+    color: white;
 }
 
-.login-body {
-    min-height: 100vh;
-}
+
 
 .login-body .glow-orb {
     pointer-events: none;

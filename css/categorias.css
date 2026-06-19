@@ -475,3 +475,68 @@
                 display: none;
             }
         }
+
+        .tabs { background: var(--bg-hover); }
+.tab { color: var(--text-secondary); }
+.tab.active { background: var(--bg-card); color: var(--text-primary); }
+
+.cat-card, .modal-cat-content {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+/* Adaptación de colores de categorías para Modo Oscuro */
+body.dark-mode .card-mint {
+    --card-bg: rgba(8, 71, 52, 0.15);
+    --card-border: rgba(8, 71, 52, 0.3);
+    --card-text: #dcf1ec;
+    --card-text-muted: #95c4b8;
+    --card-btn-bg: rgba(8, 71, 52, 0.4);
+    --card-btn-color: #dcf1ec;
+    --card-btn-border: rgba(8, 71, 52, 0.5);
+}
+body.dark-mode .card-lime {
+    --card-bg: rgba(109, 128, 27, 0.15);
+    --card-border: rgba(109, 128, 27, 0.3);
+    --card-text: #eff2df;
+    --card-text-muted: #c4ce91;
+    --card-btn-bg: rgba(109, 128, 27, 0.4);
+    --card-btn-color: #eff2df;
+    --card-btn-border: rgba(109, 128, 27, 0.5);
+}
+body.dark-mode .card-pink {
+    --card-bg: rgba(234, 115, 245, 0.15);
+    --card-border: rgba(234, 115, 245, 0.3);
+    --card-text: #fae3f6;
+    --card-text-muted: #e49edc;
+    --card-btn-bg: rgba(234, 115, 245, 0.3);
+    --card-btn-color: #fae3f6;
+    --card-btn-border: rgba(234, 115, 245, 0.4);
+}
+body.dark-mode .card-lavender {
+    --card-bg: rgba(90, 59, 117, 0.2);
+    --card-border: rgba(90, 59, 117, 0.4);
+    --card-text: #e1dbea;
+    --card-text-muted: #b9a8cf;
+    --card-btn-bg: rgba(90, 59, 117, 0.4);
+    --card-btn-color: #e1dbea;
+    --card-btn-border: rgba(90, 59, 117, 0.5);
+}
+body.dark-mode .card-grey {
+    --card-bg: rgba(51, 65, 85, 0.2);
+    --card-border: rgba(51, 65, 85, 0.4);
+    --card-text: #e2e8f0;
+    --card-text-muted: #94a3b8;
+    --card-btn-bg: rgba(51, 65, 85, 0.4);
+    --card-btn-color: #e2e8f0;
+    --card-btn-border: rgba(51, 65, 85, 0.5);
+}
+body.dark-mode .card-violet {
+    --card-bg: rgba(112, 3, 83, 0.2);
+    --card-border: rgba(112, 3, 83, 0.4);
+    --card-text: #ebddec;
+    --card-text-muted: #d09cbd;
+    --card-btn-bg: rgba(112, 3, 83, 0.4);
+    --card-btn-color: #ebddec;
+    --card-btn-border: rgba(112, 3, 83, 0.5);
+}

@@ -3,12 +3,92 @@
     box-sizing: border-box;
 }
 
+/* ===== SISTEMA DE TEMAS Y VARIABLES ===== */
+:root {
+    /* Paleta Principal Trackify */
+    --brand-dark: #1E1B26;
+    --brand-green-dark: #084734;
+    --brand-green-light: #CFF27C;
+    --brand-pink: #EA73F5;
+    --brand-purple: #700353;
+
+    /* Tema Claro (Por Defecto) */
+    --bg-body: #F8FAFC;
+    --bg-card: #ffffff;
+    --bg-input: #F8FAFC;
+    --bg-modal: #ffffff;
+    --bg-hover: #F1F5F9;
+    --bg-active: #eef2f5;
+    
+    --text-primary: #1E1B26;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+    --text-inverse: #ffffff;
+
+    --border-color: #E2E8F0;
+    --divider-color: #f8fafc;
+
+    --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.18);
+    --shadow-glow: rgba(207, 242, 124, 0.45);
+
+    /* Badges - Tema Claro */
+    --badge-activo-bg: #DCFCE7;
+    --badge-activo-text: #16A34A;
+    --badge-pausado-bg: #FEF9C3;
+    --badge-pausado-text: #A16207;
+    --badge-logrado-bg: #E0E7FF;
+    --badge-logrado-text: #4338CA;
+}
+
+body.dark-mode {
+    /* Tema Oscuro */
+    --bg-body: #121016; 
+    --bg-card: #1E1B26;
+    --bg-input: #2A2635;
+    --bg-modal: #1E1B26;
+    --bg-hover: #2A2635;
+    --bg-active: #383344;
+    
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+
+    --border-color: #383344;
+    --divider-color: #2A2635;
+
+    --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.2);
+    --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.08);
+    --shadow-glow: rgba(207, 242, 124, 0.25);
+
+    /* Badges - Tema Oscuro */
+    --badge-activo-bg: rgba(22, 163, 74, 0.15);
+    --badge-activo-text: #4ade80;
+    --badge-pausado-bg: rgba(161, 98, 7, 0.15);
+    --badge-pausado-text: #facc15;
+    --badge-logrado-bg: rgba(67, 56, 202, 0.15);
+    --badge-logrado-text: #818cf8;
+}
+
 body {
     margin: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #F8FAFC;
-    color: #1E1B26;
+    background: var(--bg-body);
+    color: var(--text-primary);
     overflow-x: hidden;
+}
+
+/* ===== COMPONENTES: usar variables de tema por defecto ===== */
+.card, .box, .modal-content, .modal-cat-content, .modal-obj-content, .tabla-box,
+.obj-card, .perfil-sidebar-card, .seccion-card, .auth-card, .cat-card, .modal-confirmacion {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-card);
+}
+
+.btn, .btn-google, .btn-primary, .btn-nuevo, .btn-agregar {
+    transition: all 0.2s ease;
 }
 
 /* ===== NAVBAR ===== */
@@ -1816,3 +1896,47 @@ span.flatpickr-weekday {
     height: 16px;
     object-fit: contain;
 }
+
+body {
+    background: var(--bg-body);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card, .box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+}
+
+.card h4 { color: var(--text-secondary); }
+.card p { color: var(--text-primary); }
+.box h3 { color: var(--text-primary); }
+
+#movimientos li {
+    border-bottom: 1px solid var(--divider-color);
+    color: var(--text-primary);
+}
+
+.modal-content {
+    background: var(--bg-modal);
+    border: 1px solid var(--border-color);
+}
+.modal-content h3 { color: var(--text-primary); }
+
+.modal-content input, .custom-select-trigger {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.custom-select-options {
+    background: var(--bg-modal);
+    border: 1px solid var(--border-color);
+}
+
+.custom-option { color: var(--text-primary); }
+.custom-option:hover { background: var(--bg-hover); color: var(--brand-green-dark); }
+.custom-option.selected { background: var(--bg-active); color: var(--brand-green-dark); }
+.modal-actions .cancel { color: var(--text-secondary); border-color: var(--border-color); }
+.modal-actions .cancel:hover { background: var(--bg-hover); color: var(--text-primary); }

@@ -455,3 +455,18 @@
             animation: spin 1s linear infinite !important;
         }
 
+.perfil-sidebar-card, .seccion-card, .modal-confirmacion { 
+    background: var(--bg-card); 
+    border-color: var(--border-color); 
+}
+.perfil-nombre-box strong, .perfil-user-stat span:last-child, .seccion-header h3, .campo-label, .modal-confirmacion h3 { 
+    color: var(--text-primary); 
+}
+.perfil-nombre-box span, .perfil-user-stat span:first-child, .campo-valor { 
+    color: var(--text-secondary); 
+}
+.perfil-divider, .seccion-header, .campo-row { 
+    border-color: var(--border-color); 
+    background: var(--bg-card);
+}
+.btn-logout { background: transparent; }

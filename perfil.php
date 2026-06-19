@@ -199,11 +199,10 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                             <div class="toggle-row">
                                 <div class="toggle-info">
                                     <strong>Modo oscuro</strong>
-                                    <span>Próximamente disponible</span>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" disabled>
-                                    <span class="slider" style="opacity:0.4;cursor:default"></span>
+                                    <input type="checkbox" id="btnModoOscuro">
+                                    <span class="slider"></span>
                                 </label>
                             </div>
                         </div>

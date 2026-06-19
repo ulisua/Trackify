@@ -1,6 +1,11 @@
-const sidebar = document.getElementById('sidebar');
-const toggle = document.getElementById('menuToggle');
-const overlay = document.getElementById('sidebarOverlay');
+// Elementos globales del layout
+let sidebar, toggle, overlay;
+
+function initGlobals() {
+    sidebar = document.getElementById('sidebar');
+    toggle = document.getElementById('menuToggle');
+    overlay = document.getElementById('sidebarOverlay');
+}
 
 function toggleMenu() {
     if(!sidebar) return;
@@ -29,55 +34,40 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Close sidebar on link click if mobile
-document.querySelectorAll('.sidebar a').forEach(link => {
-    link.addEventListener('click', () => {
-        if (window.innerWidth <= 900) cerrarMenu();
-    });
-});
-
 function abrirModal(tipo) {
     if(tipo === 'objetivo') {
         const modalObj = document.getElementById('modalObjetivo');
-        if (modalObj) {
-            modalObj.classList.remove('hidden');
-            // No se añade desenfoque extra al layout para evitar bloquear el formulario
-        }
+        if (modalObj) modalObj.classList.remove('hidden');
         return;
     }
-    
+
     const modal = document.getElementById('modal');
     if (!modal) return;
-    
+
     const modalTitulo = document.getElementById('modalTitulo');
     const tipoMovimiento = document.getElementById('tipoMovimiento');
-    
     tipoMovimiento.value = tipo;
     modalTitulo.innerText = tipo === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Gasto';
-    
+
     // Populate custom categories based on 'tipo'
     const hiddenInput = document.getElementById('categoria');
     const trigger = document.getElementById('customCategoriaTrigger');
     const optionsContainer = document.getElementById('customCategoriaOptions');
     const wrapper = document.getElementById('customCategoriaWrapper');
-    
+
     if (hiddenInput && trigger && optionsContainer && wrapper) {
         hiddenInput.value = '';
         trigger.innerText = 'Selecciona una categoría';
         optionsContainer.innerHTML = '';
         wrapper.classList.remove('open');
-        
+
         let opciones = [];
         if (window.dbCategorias) {
             opciones = window.dbCategorias[tipo] || [];
         } else {
-            if (tipo === 'ingreso') {
-                opciones = ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"];
-            } else {
-                opciones = ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
-            }
+            opciones = tipo === 'ingreso' ? ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"] : ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
         }
-        
+
         opciones.forEach(o => {
             const div = document.createElement('div');
             div.className = 'custom-option';
@@ -86,29 +76,25 @@ function abrirModal(tipo) {
                 hiddenInput.value = o;
                 trigger.innerText = o;
                 wrapper.classList.remove('open');
-                
-                // remove selected from others
                 optionsContainer.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
                 div.classList.add('selected');
-                
-                // Trigger change event manually for description logic
                 hiddenInput.dispatchEvent(new Event('change'));
             });
             optionsContainer.appendChild(div);
         });
     }
-    // reset description
+
     const desc = document.getElementById('descripcion');
-    desc.value = '';
-    desc.dataset.sugerida = 'true';
-    
-    
+    if (desc) {
+        desc.value = '';
+        desc.dataset.sugerida = 'true';
+    }
+
     modal.classList.remove('hidden');
-    // No se añade desenfoque extra al layout para evitar bloquear el formulario
 }
 
 function blurBackground(enable) {
-    // Ya no es necesario, el CSS backdrop-filter del modal maneja el desenfoque del fondo
+    // El CSS del modal ya maneja backdrop-filter; función mantenida para compatibilidad
 }
 
 function cerrarModal() {
@@ -123,7 +109,8 @@ function cerrarModal() {
 function abrirModalAhorro(id_meta) {
     const modal = document.getElementById('modalAhorro');
     if (modal) {
-        document.getElementById('ahorro_id_meta').value = id_meta;
+        const input = document.getElementById('ahorro_id_meta');
+        if (input) input.value = id_meta;
         modal.classList.remove('hidden');
         blurBackground(true);
     }
@@ -158,33 +145,31 @@ function abrirModalCategoria() {
 function abrirModalEditarMovimiento(id, monto, categoria, descripcion, fecha, tipo) {
     const modal = document.getElementById('modalEditarMovimiento');
     if (!modal) return;
-    
+
     document.getElementById('edit_mov_id').value = id;
     document.getElementById('edit_mov_monto').value = monto;
     document.getElementById('edit_mov_descripcion').value = descripcion;
     document.getElementById('edit_mov_fecha').value = fecha;
     document.getElementById('edit_mov_tipo').value = tipo;
-    
+
     const hiddenInput = document.getElementById('edit_mov_categoria');
     const trigger = document.getElementById('customEditMovCategoriaTrigger');
     const optionsContainer = document.getElementById('customEditMovCategoriaOptions');
     const wrapper = document.getElementById('customEditMovCategoriaWrapper');
-    
+
     if (hiddenInput && trigger && optionsContainer && wrapper) {
         hiddenInput.value = categoria;
         trigger.innerText = categoria;
         optionsContainer.innerHTML = '';
         wrapper.classList.remove('open');
-        
+
         let opciones = [];
         if (window.dbCategorias) {
             opciones = window.dbCategorias[tipo] || [];
         } else {
-            opciones = tipo === 'ingreso' ? 
-                ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"] : 
-                ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
+            opciones = tipo === 'ingreso' ? ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"] : ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
         }
-        
+
         opciones.forEach(o => {
             const div = document.createElement('div');
             div.className = 'custom-option';
@@ -200,12 +185,11 @@ function abrirModalEditarMovimiento(id, monto, categoria, descripcion, fecha, ti
             optionsContainer.appendChild(div);
         });
     }
-    
+
     modal.classList.remove('hidden');
 }
 
 const descripcionesSugeridas = {
-    // Ingresos
     "Sueldo": "Cobro de sueldo mensual",
     "Transferencia": "Transferencia recibida de un tercero",
     "Préstamo recibido": "Dinero recibido por préstamo",
@@ -218,7 +202,6 @@ const descripcionesSugeridas = {
     "Freelance / trabajos extra": "Pago por trabajo freelance",
     "Becas / subsidios": "Cobro de beca o ayuda económica",
     "Otros ingresos": "Otro ingreso",
-    // Gastos
     "Alimentos": "Compra en supermercado",
     "Transporte": "Pago de transporte público",
     "Vivienda": "Alquiler o expensas",
@@ -239,33 +222,31 @@ const descripcionesSugeridas = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Custom select toggle
+    initGlobals();
+
+    // Sidebar link behavior (close on mobile)
+    document.querySelectorAll('.sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth <= 900) cerrarMenu();
+        });
+    });
+
+    // Custom select (crear opciones dinámicas cuando se abre el modal)
     const wrapper = document.getElementById('customCategoriaWrapper');
     const trigger = document.getElementById('customCategoriaTrigger');
     if (wrapper && trigger) {
-        trigger.addEventListener('click', () => {
-            wrapper.classList.toggle('open');
-        });
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) {
-                wrapper.classList.remove('open');
-            }
-        });
+        trigger.addEventListener('click', () => wrapper.classList.toggle('open'));
+        document.addEventListener('click', (e) => { if (!wrapper.contains(e.target)) wrapper.classList.remove('open'); });
     }
 
     const editWrapper = document.getElementById('customEditMovCategoriaWrapper');
     const editTrigger = document.getElementById('customEditMovCategoriaTrigger');
     if (editWrapper && editTrigger) {
-        editTrigger.addEventListener('click', () => {
-            editWrapper.classList.toggle('open');
-        });
-        document.addEventListener('click', (e) => {
-            if (!editWrapper.contains(e.target)) {
-                editWrapper.classList.remove('open');
-            }
-        });
+        editTrigger.addEventListener('click', () => editWrapper.classList.toggle('open'));
+        document.addEventListener('click', (e) => { if (!editWrapper.contains(e.target)) editWrapper.classList.remove('open'); });
     }
 
+    // Auto sugerir descripciones según categoría
     const select = document.getElementById('categoria');
     const desc = document.getElementById('descripcion');
     if(select && desc) {
@@ -276,12 +257,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 desc.dataset.sugerida = 'true';
             }
         });
-        desc.addEventListener('input', () => {
-            if(desc.value.trim() !== '') {
-                desc.dataset.sugerida = 'false';
-            } else {
-                desc.dataset.sugerida = 'true';
-            }
-        });
+        desc.addEventListener('input', () => { desc.dataset.sugerida = desc.value.trim() === '' ? 'true' : 'false'; });
+    }
+
+    // THEME: crear botón si no existe y aplicar preferencia
+    const body = document.body;
+    let themeToggleBtn = document.getElementById('theme-toggle');
+    const navbar = document.querySelector('.navbar');
+    if (!themeToggleBtn) {
+        themeToggleBtn = document.createElement('button');
+        themeToggleBtn.id = 'theme-toggle';
+        themeToggleBtn.className = 'btn';
+        themeToggleBtn.setAttribute('aria-label', 'Alternar modo oscuro');
+        themeToggleBtn.style.minWidth = '160px';
+        themeToggleBtn.style.justifyContent = 'center';
+        if (navbar) navbar.appendChild(themeToggleBtn);
+    }
+
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') body.classList.add('dark-mode');
+    updateToggleButton(body.classList.contains('dark-mode'));
+
+    themeToggleBtn.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateToggleButton(isDark);
+    });
+
+    function updateToggleButton(isDark) {
+        if(!themeToggleBtn) return;
+        themeToggleBtn.textContent = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
     }
 });
