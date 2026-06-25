@@ -1,0 +1,328 @@
+/* ===== COMPONENT: FORMS & MODALS ===== */
+
+/* inputs, selects, textareas por defecto */
+input, select, textarea {
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: var(--input-bg);
+    color: var(--input-text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--brand-green-dark);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.15);
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--text-muted);
+}
+
+input:disabled, select:disabled, textarea:disabled {
+    background: var(--bg-hover) !important;
+    color: var(--text-muted) !important;
+    cursor: not-allowed;
+}
+
+/* ===== ESTRUCTURA MODALES (GENÉRICOS) ===== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: var(--bg-modal);
+    padding: 30px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(0) scale(1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border: 1px solid var(--border-color);
+}
+
+.modal.hidden .modal-content {
+    transform: translateY(-20px) scale(0.95);
+}
+
+.modal-content h3 {
+    margin: 0 0 5px 0;
+    color: var(--text-primary);
+    font-size: 1.3rem;
+}
+
+/* Clases específicas para modal index.php */
+.modal-form-content {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.modal-form-select {
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    background: var(--input-bg);
+    color: var(--input-text);
+    margin-bottom: 5px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.modal-actions .btn {
+    flex: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+}
+
+/* ===== CUSTOM SELECT DE MOVIMIENTOS ===== */
+.custom-select-wrapper {
+    position: relative;
+    user-select: none;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.custom-select-trigger::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23084734' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.3s ease;
+}
+
+[data-theme="dark"] .custom-select-trigger::after {
+    /* Usar un tono claro para el SVG de flecha en modo oscuro */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+.custom-select-wrapper.open .custom-select-trigger {
+    border-color: var(--brand-green-dark);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.15);
+}
+
+.custom-select-wrapper.open .custom-select-trigger::after {
+    transform: rotate(180deg);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-modal);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-top: 5px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 1001;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+}
+
+.custom-select-wrapper.open .custom-select-options {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+.custom-option {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    color: var(--text-primary);
+}
+
+.custom-option:hover {
+    background: var(--bg-hover);
+    color: var(--select-option-hover-text);
+    font-weight: 500;
+}
+
+.custom-option.selected {
+    background: var(--bg-active);
+    color: var(--select-option-hover-text);
+    font-weight: 600;
+}
+
+.custom-select-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 10px;
+}
+
+.layout-blur {
+    transition: all 0.3s ease;
+    filter: blur(6px) brightness(0.6);
+}
+
+/* ===== SWEETALERT2 OVERRIDES ===== */
+.swal-trackify {
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+}
+
+.swal-trackify .swal2-title {
+    color: var(--text-primary) !important;
+}
+
+.swal-trackify .swal2-html-container {
+    color: var(--text-secondary) !important;
+}
+
+.swal-btn-primary { 
+    background: var(--brand-green-dark) !important; 
+    color: var(--brand-green-light) !important; 
+}
+
+.swal-btn-danger { 
+    background: var(--brand-purple) !important; 
+    color: white !important; 
+}
+
+.swal-btn-cancel { 
+    background: transparent !important; 
+    border: 1px solid var(--border-color) !important; 
+    color: var(--text-secondary) !important; 
+}
+
+.swal-btn-cancel:hover { 
+    background: var(--bg-hover) !important; 
+    color: var(--text-primary) !important; 
+}
+
+/* SweetAlert2 Cuenta/Zona Peligro específica */
+.swal-trackify-danger {
+    border: 1px solid rgba(234, 115, 245, 0.18) !important;
+    background: var(--bg-card) !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45) !important;
+    border-radius: 24px !important;
+}
+
+.swal-trackify-danger .swal2-title {
+    color: var(--text-primary) !important;
+}
+
+.swal-trackify-danger .swal2-html-container {
+    color: var(--text-secondary) !important;
+}
+
+.swal-trackify-danger .swal2-icon {
+    border-color: rgba(234, 115, 245, 0.65) !important;
+    color: var(--brand-pink) !important;
+}
+
+/* ===== FLATPICKR OVERRIDES ===== */
+.flatpickr-calendar {
+    background: var(--bg-card) !important;
+    box-shadow: var(--shadow-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    font-family: var(--font-family) !important;
+    color: var(--text-primary) !important;
+}
+
+.flatpickr-months {
+    background: var(--brand-green-dark) !important;
+    color: var(--brand-green-light) !important;
+    border-radius: 12px 12px 0 0 !important;
+    padding-top: 5px;
+}
+
+.flatpickr-months .flatpickr-month {
+    color: var(--brand-green-light) !important;
+    fill: var(--brand-green-light) !important;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months, 
+.flatpickr-current-month input.cur-year {
+    color: var(--brand-green-light) !important;
+    background: transparent !important;
+}
+
+.flatpickr-months .flatpickr-prev-month svg, 
+.flatpickr-months .flatpickr-next-month svg {
+    fill: var(--brand-green-light) !important;
+}
+
+.flatpickr-weekday {
+    color: var(--brand-green-dark) !important;
+    font-weight: 600 !important;
+}
+
+[data-theme="dark"] .flatpickr-weekday {
+    color: var(--brand-green-light) !important;
+}
+
+.flatpickr-day {
+    color: var(--text-primary) !important;
+}
+
+.flatpickr-day.selected {
+    background: var(--brand-green-dark) !important;
+    border-color: var(--brand-green-dark) !important;
+    color: var(--brand-green-light) !important;
+}
+
+.flatpickr-day:hover {
+    background: var(--bg-hover) !important;
+}
+
+.flatpickr-day.flatpickr-disabled, 
+.flatpickr-day.flatpickr-disabled:hover {
+    color: var(--text-muted) !important;
+    background: transparent !important;
+}

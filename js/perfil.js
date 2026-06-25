@@ -231,9 +231,29 @@ function attachBorrarHistorialHandler() {
     });
 }
 
+function inicializarControlTema() {
+    const btnOscuro = document.getElementById('btnModoOscuro');
+    if (!btnOscuro) return;
+
+    // Sincronizar el estado del slider con el tema activo actual
+    const temaActual = document.documentElement.getAttribute('data-theme') || 'light';
+    btnOscuro.checked = (temaActual === 'dark');
+
+    // Escuchar cambios en el slider
+    btnOscuro.addEventListener('change', function() {
+        const nuevoTema = btnOscuro.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', nuevoTema);
+        localStorage.setItem('theme', nuevoTema);
+    });
+}
+
 // Attach cuando esté listo el DOM
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachBorrarHistorialHandler);
+    document.addEventListener('DOMContentLoaded', function() {
+        attachBorrarHistorialHandler();
+        inicializarControlTema();
+    });
 } else {
     attachBorrarHistorialHandler();
+    inicializarControlTema();
 }

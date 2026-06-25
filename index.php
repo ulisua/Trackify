@@ -147,7 +147,7 @@ $recomendaciones_fallback = [
     ["icon" => "<img src=\"iconos/generales/dianaconflecha.png\" alt=\"Objetivo\" class=\"icono-inline\">", "titulo" => "Objetivos", "texto" => "Crear objetivos de ahorro te ayuda a mantener el foco. ¡Revisá tus metas en la sección de Objetivos!", "tipo" => "consejo"],
 ];
 
-$extra_css = '';
+$extra_css = '<link rel="stylesheet" href="css/pages/dashboard.css">';
 
 require_once 'includes/header.php';
 ?>
@@ -304,17 +304,18 @@ require_once 'includes/header.php';
         </section>
 
 <?php
-$extra_js = '
+ob_start();
+?>
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 // ── Datos desde PHP (reales de la BD) ─────────────────────────────────────
-const tortaLabels   = ' . $js_torta_labels . ';
-const tortaData     = ' . $js_torta_data . ';
-const barrasLabels  = ' . $js_barras_labels . ';
-const barrasIng     = ' . $js_barras_ing . ';
-const barrasGas     = ' . $js_barras_gas . ';
+const tortaLabels   = <?php echo $js_torta_labels; ?>;
+const tortaData     = <?php echo $js_torta_data; ?>;
+const barrasLabels  = <?php echo $js_barras_labels; ?>;
+const barrasIng     = <?php echo $js_barras_ing; ?>;
+const barrasGas     = <?php echo $js_barras_gas; ?>;
 
 // ── Paleta de colores alineada con Trackify ────────────────────────────────
 const paleta = [
@@ -331,8 +332,9 @@ const paleta = [
 const paletaBordes = paleta.map(c => c + "CC");
 
 // ── Opciones comunes ───────────────────────────────────────────────────────
+const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
 Chart.defaults.font.family = "Inter, sans-serif";
-Chart.defaults.color = "#64748B";
+Chart.defaults.color = isDarkTheme ? "#94A3B8" : "#64748B";
 
 // ── Gráfico de Torta ────────────────────────────────────────────────────────
 const ctxTorta = document.getElementById("graficoTorta").getContext("2d");
@@ -347,7 +349,7 @@ if (tortaData.length === 0) {
             datasets: [{
                 data: tortaData,
                 backgroundColor: paleta.slice(0, tortaLabels.length),
-                borderColor: "#F8FAFC",
+                borderColor: isDarkTheme ? "#1E1B26" : "#F8FAFC",
                 borderWidth: 3,
                 hoverOffset: 8
             }]
@@ -432,7 +434,7 @@ if (barrasLabels.length === 0) {
                 },
                 y: {
                     beginAtZero: true,
-                    grid: { color: "rgba(0,0,0,0.05)" },
+                    grid: { color: isDarkTheme ? "rgba(255, 255, 255, 0.08)" : "rgba(0,0,0,0.05)" },
                     ticks: {
                         font: { size: 11 },
                         callback: val => "$" + val.toLocaleString("es-AR")
@@ -444,6 +446,7 @@ if (barrasLabels.length === 0) {
 }
 </script>
 <script src="js/ia.js?v=2"></script>
-';
+<?php
+$extra_js = ob_get_clean();
 require_once 'includes/footer.php';
 ?>

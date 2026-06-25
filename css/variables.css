@@ -1,0 +1,12 @@
+/* ===== VARIABLES GLOBALES (NO DEPENDIENTES DEL TEMA) ===== */
+:root {
+    /* Paleta Principal Trackify */
+    --brand-dark: #1E1B26;
+    --brand-green-dark: #084734;
+    --brand-green-light: #CFF27C;
+    --brand-pink: #EA73F5;
+    --brand-purple: #700353;
+
+    /* Tipografía */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}

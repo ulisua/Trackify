@@ -1,6 +1,6 @@
 <?php
 $page = 'perfil';
-$extra_css = '<link rel="stylesheet" href="css/perfil.css">';
+$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css">';
 require_once 'conexion.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();

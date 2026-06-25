@@ -1,6 +1,6 @@
 # Plan de Rediseño Visual de Tarjetas de Categorías - Trekify
 
-Este plan detalla el rediseño estético y técnico de las tarjetas de categorías (gastos e ingresos) del proyecto Trekify. Mantendremos la identidad visual oscura existente de la barra lateral (sidebar) y de navegación (navbar), y aplicaremos un diseño de tarjetas limpio, moderno y de alta legibilidad, utilizando paletas de colores pastel/suaves derivadas de la paleta base del proyecto.
+Este plan detalla el rediseño estético y técnico de las tarjetas de categorías (gastos e ingresos) del proyecto Trackify. Mantendremos la identidad visual oscura existente de la barra lateral (sidebar) y de navegación (navbar), y aplicaremos un diseño de tarjetas limpio, moderno y de alta legibilidad, utilizando paletas de colores pastel/suaves derivadas de la paleta base del proyecto.
 
 ## Paleta de Colores Base y Derivaciones
 

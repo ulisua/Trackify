@@ -259,34 +259,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         desc.addEventListener('input', () => { desc.dataset.sugerida = desc.value.trim() === '' ? 'true' : 'false'; });
     }
-
-    // THEME: crear botón si no existe y aplicar preferencia
-    const body = document.body;
-    let themeToggleBtn = document.getElementById('theme-toggle');
-    const navbar = document.querySelector('.navbar');
-    if (!themeToggleBtn) {
-        themeToggleBtn = document.createElement('button');
-        themeToggleBtn.id = 'theme-toggle';
-        themeToggleBtn.className = 'btn';
-        themeToggleBtn.setAttribute('aria-label', 'Alternar modo oscuro');
-        themeToggleBtn.style.minWidth = '160px';
-        themeToggleBtn.style.justifyContent = 'center';
-        if (navbar) navbar.appendChild(themeToggleBtn);
-    }
-
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') body.classList.add('dark-mode');
-    updateToggleButton(body.classList.contains('dark-mode'));
-
-    themeToggleBtn.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const isDark = body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        updateToggleButton(isDark);
-    });
-
-    function updateToggleButton(isDark) {
-        if(!themeToggleBtn) return;
-        themeToggleBtn.textContent = isDark ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
-    }
 });

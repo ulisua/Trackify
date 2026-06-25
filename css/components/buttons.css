@@ -1,0 +1,116 @@
+/* ===== COMPONENT: BUTTONS ===== */
+.btn {
+    padding: 14px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    font-family: inherit;
+    flex: 1;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.4s ease;
+}
+
+.btn:hover::after {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Botones específicos de tipo de transacción */
+.ingreso {
+    background: var(--brand-green-light);
+    color: var(--brand-dark);
+}
+
+.gasto {
+    background: var(--brand-purple);
+    color: white;
+}
+
+.objetivo {
+    background: var(--brand-pink);
+    color: var(--brand-dark);
+}
+
+/* Modales y acciones */
+.modal-actions .btn {
+    background: var(--brand-green-dark);
+    color: var(--brand-green-light);
+}
+
+.modal-actions .cancel {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+.modal-actions .cancel:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    box-shadow: none;
+    transform: none;
+}
+
+/* Botones de acción general */
+.btn-guardar-modal {
+    background: var(--brand-green-dark) !important;
+    color: var(--brand-green-light) !important;
+}
+
+.btn-logout {
+    display: block;
+    width: calc(100% - 40px);
+    margin: 0 20px 20px;
+    padding: 11px;
+    background: rgba(244, 63, 94, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn-logout:hover {
+    background: rgba(244, 63, 94, 0.2);
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+    .btn {
+        width: 100%;
+        padding: 16px 20px;
+        font-size: 1rem;
+    }
+}

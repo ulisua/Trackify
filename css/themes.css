@@ -1,0 +1,91 @@
+/* ===== SISTEMA DE TEMAS ===== */
+
+/* Tema Claro (Por Defecto) */
+:root, [data-theme="light"] {
+    --bg-primary: #F8FAFC;
+    --bg-secondary: #F1F5F9;
+    --text-primary: #1E1B26;
+    --text-secondary: #64748B;
+    --border-color: #E2E8F0;
+    --card-bg: #ffffff;
+    --input-bg: #F8FAFC;
+    --input-text: #1E1B26;
+    --accent: #EA73F5;
+
+    /* Compatibilidad y Variables Auxiliares */
+    --bg-body: var(--bg-primary);
+    --bg-card: var(--card-bg);
+    --bg-input: var(--input-bg);
+    --bg-modal: #ffffff;
+    --bg-hover: var(--bg-secondary);
+    --bg-active: #eef2f5;
+    
+    --text-muted: #94A3B8;
+    --text-inverse: #ffffff;
+
+    --divider-color: #f8fafc;
+
+    --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.18);
+    --shadow-glow: rgba(207, 242, 124, 0.45);
+
+    /* Badges */
+    --badge-activo-bg: #DCFCE7;
+    --badge-activo-text: #16A34A;
+    --badge-pausado-bg: #FEF9C3;
+    --badge-pausado-text: #A16207;
+    --badge-logrado-bg: #E0E7FF;
+    --badge-logrado-text: #4338CA;
+
+    /* Tablas */
+    --table-gastos-thead: #fff1f2;
+    --table-ingresos-thead: #f0fdf4;
+
+    /* Selects */
+    --select-option-hover-text: var(--brand-green-dark);
+}
+
+/* Tema Oscuro */
+[data-theme="dark"] {
+    --bg-primary: #121016; 
+    --bg-secondary: #1E1B26;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --border-color: #383344;
+    --card-bg: #1E1B26;
+    --input-bg: #2A2635;
+    --input-text: #F8FAFC;
+    --accent: #EA73F5;
+
+    /* Compatibilidad y Variables Auxiliares */
+    --bg-body: var(--bg-primary);
+    --bg-card: var(--card-bg);
+    --bg-input: var(--input-bg);
+    --bg-modal: #1E1B26;
+    --bg-hover: #2A2635;
+    --bg-active: #383344;
+    
+    --text-muted: #64748B;
+    --text-inverse: #ffffff;
+
+    --divider-color: #2A2635;
+
+    --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.2);
+    --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.08);
+    --shadow-glow: rgba(207, 242, 124, 0.25);
+
+    /* Badges */
+    --badge-activo-bg: rgba(22, 163, 74, 0.15);
+    --badge-activo-text: #4ade80;
+    --badge-pausado-bg: rgba(161, 98, 7, 0.15);
+    --badge-pausado-text: #facc15;
+    --badge-logrado-bg: rgba(67, 56, 202, 0.15);
+    --badge-logrado-text: #818cf8;
+
+    /* Tablas */
+    --table-gastos-thead: rgba(112, 3, 83, 0.25);
+    --table-ingresos-thead: rgba(8, 71, 52, 0.25);
+
+    /* Selects */
+    --select-option-hover-text: var(--brand-green-light);
+}

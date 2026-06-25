@@ -1,0 +1,87 @@
+/* ===== COMPONENT: CHARTS ===== */
+.graficos-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    margin-bottom: 28px;
+    max-height: 280px;
+}
+
+.grafico-card {
+    flex: 1 1 280px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+    min-width: 0;
+    max-height: 280px;
+    overflow: hidden;
+    padding: 14px 16px 10px;
+}
+
+.grafico-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+    transform: translateY(-2px);
+}
+
+.grafico-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.grafico-icono {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.grafico-titulo {
+    margin: 0 0 2px 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.grafico-subtitulo {
+    margin: 0;
+    font-size: 0.73rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.grafico-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.grafico-wrap canvas {
+    max-height: 190px !important;
+}
+
+.grafico-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 40px 0;
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+    .graficos-container {
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 20px;
+        max-height: none;
+    }
+
+    .grafico-card {
+        padding: 18px 16px 14px;
+        max-height: none;
+    }
+
+    .grafico-wrap canvas {
+        max-height: 220px !important;
+    }
+}

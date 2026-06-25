@@ -1,5 +1,6 @@
 <?php
 $page = 'ia';
+$extra_css = '<link rel="stylesheet" href="css/pages/ia.css">';
 require_once 'includes/header.php';
 ?>
 

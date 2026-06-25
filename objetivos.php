@@ -204,7 +204,7 @@ if(isset($_SESSION['usuario_id'])) {
     }
 }
 
-$extra_css = '<link rel="stylesheet" href="css/objetivos.css">';
+$extra_css = '<link rel="stylesheet" href="css/pages/objetivos.css">';
 require_once 'includes/header.php';
 ?>
 

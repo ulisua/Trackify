@@ -1,6 +1,6 @@
 <?php
 $page = 'categorias';
-$extra_css = '<link rel="stylesheet" href="css/categorias.css">';
+$extra_css = '<link rel="stylesheet" href="css/pages/categorias.css">';
 require_once 'conexion.php';
 require_once 'includes/categorias_meta.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
