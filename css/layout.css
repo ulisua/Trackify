@@ -1,6 +1,8 @@
 /* ===== LAYOUT & GRID ===== */
 .layout {
     display: flex;
+    flex: 1;
+    min-height: 0;
 }
 
 .content {
@@ -41,6 +43,26 @@
     box-shadow: var(--shadow-card);
     overflow: hidden;
     margin-bottom: 30px;
+}
+
+/* Ocultar movimiento-cards (mobile) en desktop por defecto */
+.movimiento-cards {
+    display: none;
+}
+
+/* Contenedor de acciones (botón nuevo ingreso/gasto) */
+.acciones {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+/* Dentro de acciones, el btn no debe expandirse con flex:1 */
+.acciones .btn {
+    flex: none;
+    width: auto;
 }
 
 .tabla {
@@ -126,12 +148,27 @@
     color: #ef4444;
 }
 
+/* ===== ACCIONES + FILTROS: LINEA UNICA ===== */
+.acciones-filtros-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: nowrap;
+}
+
 /* ===== FILTROS ===== */
 .filtros {
     display: flex;
     gap: 12px;
     margin-bottom: 20px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+/* Cuando filtros está dentro de acciones-filtros-bar, no necesita margen propio */
+.acciones-filtros-bar .filtros {
+    margin-bottom: 0;
 }
 
 .filtros input,
@@ -154,23 +191,27 @@
     box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.1);
 }
 
-/* ===== ELEMENTOS GLOW ORBS ===== */
-.glow-orb {
-    position: absolute;
+/* ===== ELEMENTOS GLOW ORBS (layout global – solo para login body) ===== */
+.login-body > .glow-orb {
+    position: fixed;
     border-radius: 50%;
     filter: blur(80px);
     opacity: 0.5;
-    z-index: -1;
     pointer-events: none;
+    z-index: 0;
 }
-.orb-1 {
-    width: 300px;
-    height: 300px;
+.login-body > .orb-1 {
+    width: 500px;
+    height: 500px;
+    top: -150px;
+    left: -150px;
     background: var(--brand-green-light);
 }
-.orb-2 {
-    width: 400px;
-    height: 400px;
+.login-body > .orb-2 {
+    width: 600px;
+    height: 600px;
+    bottom: -200px;
+    right: -200px;
     background: var(--brand-pink);
 }
 
@@ -196,9 +237,19 @@
         display: none;
     }
 
+    /* En mobile las movimiento-cards son visibles */
+    .movimiento-cards {
+        display: block;
+    }
+
+    .acciones-filtros-bar {
+        flex-wrap: wrap;
+    }
+
     .filtros {
         flex-direction: column;
         gap: 10px;
+        flex-wrap: wrap;
     }
 
     .filtros input,

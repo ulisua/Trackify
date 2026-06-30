@@ -61,26 +61,26 @@ while ($row = $res_lista->fetch_assoc()) {
             </div>
         </section>
 
-        <!-- ACCIONES -->
-        <div class="acciones">
-            <button class="btn gasto" onclick="abrirModal('gasto')">+ Nuevo gasto</button>
+        <!-- ACCIONES + FILTROS en una sola línea -->
+        <div class="acciones-filtros-bar">
+            <div class="acciones">
+                <button class="btn gasto" onclick="abrirModal('gasto')">+ Nuevo gasto</button>
+            </div>
+            <div class="filtros">
+                <input type="date" id="filtroFecha">
+                <select id="filtroCategoria">
+                    <option value="Todos">Todas las categorías</option>
+                    <?php
+                    $stmt_cats = $conn->prepare("SELECT DISTINCT nombre FROM categorias WHERE tipo = 'gasto' ORDER BY nombre ASC");
+                    $stmt_cats->execute();
+                    $res_cats = $stmt_cats->get_result();
+                    while ($row_cat = $res_cats->fetch_assoc()) {
+                        echo '<option value="' . htmlspecialchars($row_cat['nombre']) . '">' . htmlspecialchars($row_cat['nombre']) . '</option>';
+                    }
+                    ?>
+                </select>
+            </div>
         </div>
-
-        <!-- FILTROS -->
-        <section class="filtros">
-            <input type="date" id="filtroFecha">
-            <select id="filtroCategoria">
-                <option value="Todos">Todas las categorías</option>
-                <?php
-                $stmt_cats = $conn->prepare("SELECT DISTINCT nombre FROM categorias WHERE tipo = 'gasto' ORDER BY nombre ASC");
-                $stmt_cats->execute();
-                $res_cats = $stmt_cats->get_result();
-                while ($row_cat = $res_cats->fetch_assoc()) {
-                    echo '<option value="' . htmlspecialchars($row_cat['nombre']) . '">' . htmlspecialchars($row_cat['nombre']) . '</option>';
-                }
-                ?>
-            </select>
-        </section>
 
         <!-- TABLA (desktop) / CARDS (mobile) -->
         <section class="tabla-box">

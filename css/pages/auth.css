@@ -9,11 +9,11 @@
     background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-green-dark) 100%);
     color: white;
     font-family: var(--font-family);
+    flex-direction: row; /* Anula el column del body global */
 }
 
-.login-body .glow-orb {
-    pointer-events: none;
-}
+/* Orbs ya definidos en layout.css con posición fixed y tamaño completo */
+/* El auth-card debe quedar por encima de los orbs */
 
 .auth-card {
     background: rgba(30, 27, 38, 0.7);

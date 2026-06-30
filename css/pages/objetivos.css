@@ -141,9 +141,19 @@
     color: var(--text-secondary);
 }
 
+/* Variable de opacidad del fondo verde para objetivos logrados */
+:root {
+    --meta-bg-opacity: 0.25;
+}
+
 .obj-montos {
     text-align: right;
     white-space: nowrap;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
 }
 
 .obj-actual {
@@ -297,6 +307,25 @@
 .obj-card.completado {
     border-color: #BBF7D0;
     background: linear-gradient(135deg, #F0FDF4, var(--bg-card));
+    position: relative;
+    overflow: hidden;
+}
+
+/* Fondo verde superpuesto con opacidad regulable */
+.obj-card.completado::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(134, 239, 172, var(--meta-bg-opacity, 0.25));
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 12px;
+}
+
+/* Asegura que el contenido quede sobre el overlay */
+.obj-card.completado > * {
+    position: relative;
+    z-index: 1;
 }
 
 [data-theme="dark"] .obj-card.completado {
@@ -304,17 +333,23 @@
     background: linear-gradient(135deg, rgba(22, 163, 74, 0.12), var(--bg-card));
 }
 
-.obj-card.completado::before {
+[data-theme="dark"] .obj-card.completado::after {
+    background: rgba(22, 163, 74, var(--meta-bg-opacity, 0.25));
+}
+
+/* Badge ¡Meta alcanzada! - posicionado encima del monto actual */
+.obj-card.completado .obj-montos::before {
     content: '¡Meta alcanzada!';
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    font-size: 0.75rem;
+    display: block;
+    font-size: 0.72rem;
     font-weight: 700;
     color: #16A34A;
     background: rgba(22, 163, 74, 0.15);
     padding: 3px 10px;
     border-radius: 99px;
+    text-align: center;
+    margin-bottom: 4px;
+    white-space: nowrap;
 }
 
 /* Objetivo vencido */
@@ -410,6 +445,7 @@
 
     .obj-montos {
         text-align: left;
+        align-items: flex-start;
     }
 
     .form-row {
@@ -426,9 +462,8 @@
         text-align: center;
     }
 
-    .obj-card.completado::before {
-        position: static;
-        display: inline-block;
-        margin-bottom: 8px;
+    /* Badge en mobile: sigue encima del monto */
+    .obj-card.completado .obj-montos::before {
+        align-self: flex-start;
     }
 }
