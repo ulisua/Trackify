@@ -64,7 +64,7 @@ while ($row = $res_lista->fetch_assoc()) {
         <!-- ACCIONES + FILTROS en una sola línea -->
         <div class="acciones-filtros-bar">
             <div class="acciones">
-                <button class="btn gasto" onclick="abrirModal('gasto')">+ Nuevo gasto</button>
+                <button class="btn gasto btn-nuevo-movimiento" onclick="abrirModal('gasto')">+ Nuevo gasto</button>
             </div>
             <div class="filtros">
                 <input type="date" id="filtroFecha">
@@ -158,44 +158,49 @@ while ($row = $res_lista->fetch_assoc()) {
 document.addEventListener('DOMContentLoaded', () => {
     const filtroFecha = document.getElementById('filtroFecha');
     const filtroCategoria = document.getElementById('filtroCategoria');
-    
+    const filtrosWrapper = document.querySelector('.filtros');
+
     function filtrar() {
-        const fechaVal = filtroFecha.value;
-        const catVal = filtroCategoria.value;
-        
-        const rows = document.querySelectorAll('.tabla-desktop tbody tr');
-        rows.forEach(row => {
+        const fechaVal = filtroFecha ? filtroFecha.value : '';
+        const catVal = filtroCategoria ? filtroCategoria.value : 'Todos';
+
+        document.querySelectorAll('.tabla-desktop tbody tr').forEach(row => {
             if (row.cells.length === 1) return;
-            const rFecha = row.getAttribute('data-fecha');
-            const rCat = row.getAttribute('data-categoria');
-            
-            let matchFecha = !fechaVal || (rFecha === fechaVal);
-            let matchCat = (catVal === 'Todos') || (rCat === catVal);
-            
-            if (matchFecha && matchCat) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            const rFecha = row.getAttribute('data-fecha') || '';
+            const rCat = row.getAttribute('data-categoria') || '';
+            const mostrar = (!fechaVal || rFecha === fechaVal) && (catVal === 'Todos' || rCat === catVal);
+            row.style.display = mostrar ? '' : 'none';
         });
-        
-        const cards = document.querySelectorAll('.movimiento-cards .movimiento-card');
-        cards.forEach(card => {
-            const rFecha = card.getAttribute('data-fecha');
-            const rCat = card.getAttribute('data-categoria');
-            
-            let matchFecha = !fechaVal || (rFecha === fechaVal);
-            let matchCat = (catVal === 'Todos') || (rCat === catVal);
-            
-            if (matchFecha && matchCat) {
-                card.style.display = '';
-            } else {
-                card.style.display = 'none';
-            }
+
+        document.querySelectorAll('.movimiento-cards .movimiento-card').forEach(card => {
+            const rFecha = card.getAttribute('data-fecha') || '';
+            const rCat = card.getAttribute('data-categoria') || '';
+            const mostrar = (!fechaVal || rFecha === fechaVal) && (catVal === 'Todos' || rCat === catVal);
+            card.style.display = mostrar ? '' : 'none';
         });
     }
-    
-    if (filtroFecha) filtroFecha.addEventListener('input', filtrar);
-    if (filtroCategoria) filtroCategoria.addEventListener('change', filtrar);
+
+    function resetDateFilterIfEmpty() {
+        if (filtroFecha && !filtroFecha.value) {
+            filtrar();
+        }
+    }
+
+    if (filtroFecha) {
+        filtroFecha.addEventListener('input', filtrar);
+        filtroFecha.addEventListener('change', filtrar);
+        filtroFecha.addEventListener('blur', resetDateFilterIfEmpty);
+    }
+
+    if (filtroCategoria) {
+        filtroCategoria.addEventListener('change', filtrar);
+    }
+
+    document.addEventListener('click', (event) => {
+        if (!filtroFecha || !filtrosWrapper) return;
+        if (!filtrosWrapper.contains(event.target) && !filtroFecha.value) {
+            resetDateFilterIfEmpty();
+        }
+    });
 });
 </script>

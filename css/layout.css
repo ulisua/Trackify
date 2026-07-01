@@ -50,6 +50,23 @@
     display: none;
 }
 
+/* ===== BOTONES DEL DASHBOARD (Distribución Fluida) ===== */
+.dashboard-acciones {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Controla la distancia exacta entre los botones */
+    width: 100%;
+    margin-bottom: 30px; /* Margen inferior solicitado */
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.dashboard-acciones .btn {
+    flex: 1; /* Esto hace que se estiren equitativamente hacia los costados ocupando todo el ancho */
+    width: auto; /* Elimina el 32% rígido */
+}
+
+/* ===== BOTONES DE ACCION EN LISTADOS (ingresos/gastos) ===== */
 /* Contenedor de acciones (botón nuevo ingreso/gasto) */
 .acciones {
     display: flex;
@@ -59,10 +76,14 @@
     flex-shrink: 0;
 }
 
-/* Dentro de acciones, el btn no debe expandirse con flex:1 */
-.acciones .btn {
+/* Evitar deformación de botones de acción en listados y restaurar ancho/padding original */
+.acciones .btn,
+.acciones-filtros-bar .acciones .btn,
+.btn-nuevo-movimiento {
     flex: none;
-    width: auto;
+    width: auto !important;
+    width: max-content !important;
+    padding: 14px 20px !important;
 }
 
 .tabla {
@@ -127,7 +148,8 @@
     font-weight: 600;
 }
 
-.edit, .delete {
+.edit,
+.delete {
     background: none;
     border: none;
     cursor: pointer;
@@ -192,7 +214,7 @@
 }
 
 /* ===== ELEMENTOS GLOW ORBS (layout global – solo para login body) ===== */
-.login-body > .glow-orb {
+.login-body>.glow-orb {
     position: fixed;
     border-radius: 50%;
     filter: blur(80px);
@@ -200,14 +222,16 @@
     pointer-events: none;
     z-index: 0;
 }
-.login-body > .orb-1 {
+
+.login-body>.orb-1 {
     width: 500px;
     height: 500px;
     top: -150px;
     left: -150px;
     background: var(--brand-green-light);
 }
-.login-body > .orb-2 {
+
+.login-body>.orb-2 {
     width: 600px;
     height: 600px;
     bottom: -200px;
@@ -240,6 +264,16 @@
     /* En mobile las movimiento-cards son visibles */
     .movimiento-cards {
         display: block;
+    }
+
+    .dashboard-acciones {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .dashboard-acciones .btn {
+        width: 100% !important;
+        margin-bottom: 0;
     }
 
     .acciones-filtros-bar {

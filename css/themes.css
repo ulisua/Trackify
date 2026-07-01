@@ -12,6 +12,15 @@
     --input-text: #1E1B26;
     --accent: #EA73F5;
 
+    /* Sidebar theme tokens */
+    --sidebar-bg: linear-gradient(180deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    --sidebar-border: rgba(255, 255, 255, 0.05);
+    --sidebar-link-color: #94a3b8;
+    --sidebar-link-hover-color: var(--brand-green-light);
+    --sidebar-link-hover-bg: rgba(207, 242, 124, 0.08);
+    --sidebar-link-active-bg: linear-gradient(90deg, var(--brand-green-dark), transparent);
+    --sidebar-link-active-border: var(--brand-green-light);
+
     /* Compatibilidad y Variables Auxiliares */
     --bg-body: var(--bg-primary);
     --bg-card: var(--card-bg);
@@ -57,6 +66,15 @@
     --input-text: #F8FAFC;
     --accent: #EA73F5;
 
+    /* Sidebar theme tokens */
+    --sidebar-bg: linear-gradient(180deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    --sidebar-border: rgba(255, 255, 255, 0.05);
+    --sidebar-link-color: #94a3b8;
+    --sidebar-link-hover-color: var(--brand-green-light);
+    --sidebar-link-hover-bg: rgba(207, 242, 124, 0.08);
+    --sidebar-link-active-bg: linear-gradient(90deg, var(--brand-green-dark), transparent);
+    --sidebar-link-active-border: var(--brand-green-light);
+
     /* Compatibilidad y Variables Auxiliares */
     --bg-body: var(--bg-primary);
     --bg-card: var(--card-bg);
@@ -83,9 +101,13 @@
     --badge-logrado-text: #818cf8;
 
     /* Tablas */
-    --table-gastos-thead: rgba(112, 3, 83, 0.25);
+    --table-gastos-thead: rgba(197, 3, 145, 0.25);
     --table-ingresos-thead: rgba(8, 71, 52, 0.25);
 
     /* Selects */
     --select-option-hover-text: var(--brand-green-light);
+}
+
+[data-theme="dark"] img:not([alt="Trackify Icon"]) {
+    filter: drop-shadow(0px 0px 4px rgba(228, 228, 228, 0.76));
 }

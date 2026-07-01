@@ -198,7 +198,7 @@ require_once 'includes/header.php';
         </section>
 
         <!-- BOTONES -->
-        <div class="acciones">
+        <div class="acciones dashboard-acciones">
             <button class="btn ingreso" onclick="abrirModal('ingreso')">+ Ingreso</button>
             <button class="btn gasto" onclick="abrirModal('gasto')">+ Gasto</button>
             <button class="btn objetivo" onclick="abrirModal('objetivo')">+ Objetivo</button>

@@ -1,11 +1,11 @@
 /* ===== COMPONENT: SIDEBAR & HAMBURGER ===== */
 .sidebar {
     width: 220px;
-    background: linear-gradient(180deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    background: var(--sidebar-bg);
     min-height: 100vh;
     position: sticky;
     top: 0;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    border-right: 1px solid var(--sidebar-border);
 }
 
 .sidebar nav {
@@ -16,7 +16,7 @@
 .sidebar a {
     display: block;
     padding: 12px 18px;
-    color: #94a3b8;
+    color: var(--sidebar-link-color);
     border-radius: 6px;
     margin-bottom: 8px;
     cursor: pointer;
@@ -26,15 +26,17 @@
 }
 
 .sidebar a:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: var(--sidebar-link-hover-bg);
+    color: var(--sidebar-link-hover-color);
     transform: translateX(4px);
+    box-shadow: none;
+    text-shadow: none;
 }
 
 .sidebar .active {
-    background: linear-gradient(90deg, var(--brand-green-dark), transparent);
+    background: var(--sidebar-link-active-bg);
     color: white;
-    border-left: 4px solid var(--brand-green-light);
+    border-left: 4px solid var(--sidebar-link-active-border);
     border-radius: 0 6px 6px 0;
 }
 
