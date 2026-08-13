@@ -54,16 +54,19 @@
 .dashboard-acciones {
     display: flex;
     align-items: center;
-    gap: 20px; /* Controla la distancia exacta entre los botones */
+    justify-content: space-evenly;
+    gap: 18px;
     width: 100%;
-    margin-bottom: 30px; /* Margen inferior solicitado */
+    margin-bottom: 30px;
     padding: 0;
     box-sizing: border-box;
 }
 
 .dashboard-acciones .btn {
-    flex: 1; /* Esto hace que se estiren equitativamente hacia los costados ocupando todo el ancho */
-    width: auto; /* Elimina el 32% rígido */
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    max-width: 220px;
 }
 
 /* ===== BOTONES DE ACCION EN LISTADOS (ingresos/gastos) ===== */

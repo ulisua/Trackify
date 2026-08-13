@@ -5,28 +5,62 @@ include 'conexion.php';
 $mensaje = '';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $nombre = $_POST['nombre'];
-    $email = $_POST['email'];
+    $nombre = trim($_POST['nombre'] ?? '');
+    $email = trim($_POST['email'] ?? '');
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
-    // Verificar si ya existe
-    $check = $conn->prepare("SELECT id_usuario, nombre, email, clave FROM usuarios WHERE email=?");
+    $check = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email=?");
     $check->bind_param("s", $email);
     $check->execute();
     $res = $check->get_result();
 
     if($res->num_rows > 0){
-        $mensaje = "El email ya está registrado";
+        $mensaje = "El email ya está registrado.";
     } else {
-        $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro) VALUES (?, ?, ?, NOW())");
-        $query->bind_param("sss", $nombre, $email, $password);
+        $codigo = strval(rand(100000, 999999));
+        $expiracion = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0x0fff) | 0x4000,
+            mt_rand(0, 0x3fff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+        );
+
+        $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro, uuid, email_verificado, codigo_verificacion, codigo_expiracion, Foto_perfil) VALUES (?, ?, ?, NOW(), ?, 0, ?, ?, '')");
+        $query->bind_param("ssssss", $nombre, $email, $password, $uuid, $codigo, $expiracion);
 
         if($query->execute()){
-            $_SESSION['usuario_id'] = $conn->insert_id;
-            $_SESSION['usuario_nombre'] = $nombre;
+            $nuevo_id = $conn->insert_id;
+            require_once 'phpmailer/PHPMailer.php';
+            require_once 'phpmailer/SMTP.php';
+            require_once 'phpmailer/Exception.php';
 
-            header("Location: index.php");
-            exit();
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host = 'sandbox.smtp.mailtrap.io';
+                $mail->SMTPAuth = true;
+                $mail->Username = '6e724e2630cb1b';
+                $mail->Password = 'b4ad1521076737';
+                $mail->SMTPSecure = 'tls';
+                $mail->Port = 2525;
+                $mail->CharSet = 'UTF-8';
+                $mail->setFrom('noreply@trackify.com', 'Trackify');
+                $mail->addAddress($email, $nombre);
+                $mail->Subject = 'Verificá tu cuenta de Trackify';
+                $mail->isHTML(true);
+                $mail->Body = "<div style='font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'><img src='http://localhost/trackify/logo.png' alt='Trackify' style='height:60px;margin-bottom:24px;'><h2 style='color:#1E1B26;margin:0 0 8px;'>Verificá tu email</h2><p style='color:#64748b;margin:0 0 24px;'>Usá el siguiente código para completar tu registro. Vence en 15 minutos.</p><div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>$codigo</div><p style='color:#94a3b8;font-size:.85rem;margin:0;'>Si no creaste una cuenta en Trackify, ignorá este email.</p></div>";
+                $mail->send();
+
+                $_SESSION['verificar_id'] = $nuevo_id;
+                $_SESSION['verificar_email'] = $email;
+                $_SESSION['verificar_nombre'] = $nombre;
+                header('Location: verificar_email.php');
+                exit();
+            } catch (Exception $e) {
+                $mensaje = 'Error al enviar el email: ' . $mail->ErrorInfo;
+            }
         } else {
             $mensaje = "Error al registrar";
         }
@@ -60,12 +94,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <div class="glow-orb orb-2"></div>
 
 <div class="auth-card">
-    <div class="logo" style="text-align: center; margin-bottom: 25px;">
+    <div class="logo" style="text-align: center; margin-bottom: 20px;">
         <img src="logo.png" alt="Trackify Icon" style="height: 100px;">
     </div>
     <p class="subtitle">Crea tu cuenta para comenzar</p>
 
-    <?php if($mensaje) echo "<div class='error-msg'>$mensaje</div>"; ?>
+    <?php if($mensaje) echo "<div class='error-msg'>" . htmlspecialchars($mensaje) . "</div>"; ?>
 
     <form method="POST">
         <div class="form-group">

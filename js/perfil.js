@@ -15,6 +15,7 @@ const secciones = {
 function toggleEditar(id) {
     const s = secciones[id];
     const btn = document.getElementById(s.btn);
+    if (!s || !btn) return;
     s.editando = !s.editando;
 
     s.campos.forEach(c => {
@@ -23,12 +24,11 @@ function toggleEditar(id) {
     });
 
     if (s.editando) {
-        btn.innerHTML = '<img src="ICONO_GUARDAR" alt="Guardar" class="icono-boton"> Guardar';
+        btn.innerHTML = '<img src="iconos/generales/tick.png" alt="Guardar" class="icono-boton"> Guardar';
         btn.classList.add('guardando');
     } else {
-        btn.innerHTML = '<img src="ICONO_EDITAR" alt="Editar" class="icono-boton"> Editar';
+        btn.innerHTML = '<img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar';
         btn.classList.remove('guardando');
-        // Actualizar nombre y email mostrados
         const nom = document.getElementById('inputNombre');
         const ape = document.getElementById('inputApellido');
         const eml = document.getElementById('inputEmail');

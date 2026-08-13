@@ -220,11 +220,18 @@
     // Inicializar Flatpickr
     document.addEventListener('DOMContentLoaded', function() {
         const dateInputs = document.querySelectorAll("input[type='date']");
-        
-        // Asignar placeholders por defecto si no existen
+        const today = new Date().toISOString().split('T')[0];
+
         dateInputs.forEach(input => {
             if (!input.placeholder) {
                 input.placeholder = "Selecciona una fecha";
+            }
+            input.max = today;
+            if (!input.value) {
+                input.value = today;
+            }
+            if (input.value > today) {
+                input.value = today;
             }
         });
 
@@ -233,7 +240,13 @@
             altInput: true,
             altFormat: "d/m/Y",
             locale: "es",
-            disableMobile: "true"
+            disableMobile: "true",
+            maxDate: today,
+            onChange: function(selectedDates, dateStr, instance) {
+                if (dateStr > today) {
+                    instance.setDate(today, true);
+                }
+            }
         });
 
         // Cerrar calendario al hacer scroll en cualquier contenedor

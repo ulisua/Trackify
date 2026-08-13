@@ -5,22 +5,33 @@ $password = "";
 $dbname = "trackify";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
+if ($conn->connect_error) {
+    die("Error de conexión: " . $conn->connect_error);
+}
+$conn->set_charset('utf8mb4');
+
 require_once __DIR__ . '/includes/categorias_meta.php';
 
 // --- MIGRACIONES AUTOMÁTICAS ---
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS uuid VARCHAR(255) DEFAULT NULL");
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_verificado TINYINT(1) NOT NULL DEFAULT 0");
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_verificacion VARCHAR(10) DEFAULT NULL");
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_expiracion DATETIME DEFAULT NULL");
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) DEFAULT NULL");
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS Foto_perfil VARCHAR(255) DEFAULT NULL");
+$conn->query("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS moneda_principal ENUM('ARS','USD') NOT NULL DEFAULT 'ARS'");
 $conn->query("ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) DEFAULT NULL");
 $conn->query("ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS estado ENUM('activo', 'inactivo', 'logrado') DEFAULT 'activo'");
 $conn->query("ALTER TABLE categorias ADD COLUMN IF NOT EXISTS icono VARCHAR(255) DEFAULT NULL");
 $conn->query("ALTER TABLE categorias ADD COLUMN IF NOT EXISTS color VARCHAR(7) DEFAULT NULL");
 
-// Insertar categorías por defecto
 $res = $conn->query("SELECT COUNT(*) as c FROM categorias");
 if ($res) {
     $row = $res->fetch_assoc();
     if ($row['c'] <= 5) {
         $cats_ingreso = ["Sueldo", "Préstamo recibido", "Reintegro", "Ventas", "Inversiones", "Intereses", "Regalos", "Devoluciones", "Freelance / trabajos extra", "Becas / subsidios", "Otros ingresos"];
         $cats_gasto = ["Alimentos", "Transporte", "Vivienda", "Salud", "Educación", "Entretenimiento", "Compras personales", "Deudas", "Impuestos", "Mascotas", "Suscripciones", "Regalos / donaciones", "Ropa", "Tecnología", "Viajes", "Otros gastos"];
-        
+
         $stmt_ins = $conn->prepare("INSERT IGNORE INTO categorias (nombre, tipo, icono, color) VALUES (?, ?, ?, ?)");
         $tipo_ingreso = 'ingreso';
         foreach ($cats_ingreso as $c) {

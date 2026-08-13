@@ -26,6 +26,10 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $categoria_nombre = $_POST['categoria'];
         $descripcion = $_POST['descripcion'];
         $fecha = $_POST['fecha'] ?? date('Y-m-d');
+        $hoy = date('Y-m-d');
+        if ($fecha > $hoy) {
+            $fecha = $hoy;
+        }
 
         // Buscar si existe la categoría para este tipo, si no, crearla
         $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
@@ -61,6 +65,10 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $categoria_nombre = $_POST['categoria'];
         $descripcion = $_POST['descripcion'];
         $fecha = $_POST['fecha'];
+        $hoy = date('Y-m-d');
+        if ($fecha > $hoy) {
+            $fecha = $hoy;
+        }
 
         // Buscar si existe la categoría para este tipo, si no, crearla
         $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");

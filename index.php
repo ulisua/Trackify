@@ -244,7 +244,7 @@ require_once 'includes/header.php';
             <div class="box movimientos-card">
                 <div class="movimientos-header">
                     <h3 class="titulo-con-icono"><img src="iconos/generales/listaultmov1.png" alt="Movimientos" class="icono-titulo"> Últimos movimientos</h3>
-                    <a href="ingresos.php" class="ver-mas-link">Ver todos →</a>
+                    <a href="movimientos.php" class="ver-mas-link">Ver todos →</a>
                 </div>
 
                 <?php if (empty($ultimos_movimientos)): ?>
