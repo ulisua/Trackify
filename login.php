@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'conexion.php';
+require_once 'env.php';
 
 // Si ya está logueado, ir al dashboard
 if(isset($_SESSION['usuario_id'])){
@@ -8,8 +9,8 @@ if(isset($_SESSION['usuario_id'])){
     exit();
 }
 
-define('GOOGLE_CLIENT_ID',     getenv('GOOGLE_CLIENT_ID'));
-define('GOOGLE_REDIRECT_URI', 'http://localhost/trackify/auth/google/callback.php');
+define('GOOGLE_CLIENT_ID',     '936672406949-tqhis3m9sj5g9195pt06394toie25qfp.apps.googleusercontent.com');
+define('GOOGLE_REDIRECT_URI',  'http://localhost/trackify/auth/google/callback.php');
 
 // Generar URL de Google OAuth con state anti-CSRF
 $state = bin2hex(random_bytes(16));

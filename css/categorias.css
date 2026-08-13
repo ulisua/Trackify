@@ -66,8 +66,8 @@
         /* Grid de categorías */
         .cat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
             margin-bottom: 32px;
         }
 
@@ -400,7 +400,8 @@
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
             .cat-grid {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
             }
 
             .resumen-cat-nombre {
@@ -411,8 +412,12 @@
 
         @media (max-width: 480px) {
             .cat-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .cat-card {
+                padding: 14px 12px;
             }
 
             .tabs {

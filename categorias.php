@@ -100,46 +100,6 @@ while ($row = $res->fetch_assoc()) {
 }
 ?>
 
-<!-- MODAL NUEVA CATEGORÍA -->
-<div id="modalNueva" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:380px;margin:16px;display:flex;flex-direction:column;gap:14px;">
-        <h3 style="margin:0;">🏷️ Nueva categoría</h3>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:.85rem;font-weight:600;color:#64748b;">Nombre</label>
-            <input type="text" id="nuevaNombre" placeholder="Ej: Transporte" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:1rem;">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:.85rem;font-weight:600;color:#64748b;">Tipo</label>
-            <select id="nuevaTipo" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:1rem;background:#fff;">
-                <option value="gasto">Gasto</option>
-                <option value="ingreso">Ingreso</option>
-            </select>
-        </div>
-        <p id="nuevaError" style="color:#EF4444;font-size:.85rem;margin:0;display:none;"></p>
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button onclick="cerrarNueva()" style="padding:10px 20px;border:1px solid #E2E8F0;border-radius:8px;background:#fff;cursor:pointer;font-size:.95rem;">Cancelar</button>
-            <button onclick="guardarNueva()" style="padding:10px 20px;border:none;border-radius:8px;background:#084734;color:#CFF27C;cursor:pointer;font-size:.95rem;font-weight:600;">Crear</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL EDITAR CATEGORÍA -->
-<div id="modalEditar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:380px;margin:16px;display:flex;flex-direction:column;gap:14px;">
-        <h3 style="margin:0;">✏️ Editar categoría</h3>
-        <input type="hidden" id="editId">
-        <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:.85rem;font-weight:600;color:#64748b;">Nombre</label>
-            <input type="text" id="editNombre" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:1rem;">
-        </div>
-        <p id="editError" style="color:#EF4444;font-size:.85rem;margin:0;display:none;"></p>
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-            <button onclick="cerrarEditar()" style="padding:10px 20px;border:1px solid #E2E8F0;border-radius:8px;background:#fff;cursor:pointer;font-size:.95rem;">Cancelar</button>
-            <button onclick="guardarEdicion()" style="padding:10px 20px;border:none;border-radius:8px;background:#084734;color:#CFF27C;cursor:pointer;font-size:.95rem;font-weight:600;">Guardar</button>
-        </div>
-    </div>
-</div>
-
             <div class="page-header">
                 <h2>🏷️ Categorías</h2>
                 <button class="btn-nuevo" onclick="abrirNueva()">+ Nueva categoría</button>
@@ -244,6 +204,46 @@ while ($row = $res->fetch_assoc()) {
             </div>
 
         </main>
+
+<!-- MODAL NUEVA CATEGORÍA -->
+<div id="modalNueva" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:380px;margin:16px;display:flex;flex-direction:column;gap:14px;">
+        <h3 style="margin:0;">🏷️ Nueva categoría</h3>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.85rem;font-weight:600;color:#64748b;">Nombre</label>
+            <input type="text" id="nuevaNombre" placeholder="Ej: Transporte" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:1rem;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.85rem;font-weight:600;color:#64748b;">Tipo</label>
+            <select id="nuevaTipo" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:1rem;background:#fff;">
+                <option value="gasto">Gasto</option>
+                <option value="ingreso">Ingreso</option>
+            </select>
+        </div>
+        <p id="nuevaError" style="color:#EF4444;font-size:.85rem;margin:0;display:none;"></p>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="cerrarNueva()" style="padding:10px 20px;border:1px solid #E2E8F0;border-radius:8px;background:#fff;cursor:pointer;font-size:.95rem;">Cancelar</button>
+            <button onclick="guardarNueva()" style="padding:10px 20px;border:none;border-radius:8px;background:#084734;color:#CFF27C;cursor:pointer;font-size:.95rem;font-weight:600;">Crear</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR CATEGORÍA -->
+<div id="modalEditar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:380px;margin:16px;display:flex;flex-direction:column;gap:14px;">
+        <h3 style="margin:0;">✏️ Editar categoría</h3>
+        <input type="hidden" id="editId">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:.85rem;font-weight:600;color:#64748b;">Nombre</label>
+            <input type="text" id="editNombre" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:8px;font-size:1rem;">
+        </div>
+        <p id="editError" style="color:#EF4444;font-size:.85rem;margin:0;display:none;"></p>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button onclick="cerrarEditar()" style="padding:10px 20px;border:1px solid #E2E8F0;border-radius:8px;background:#fff;cursor:pointer;font-size:.95rem;">Cancelar</button>
+            <button onclick="guardarEdicion()" style="padding:10px 20px;border:none;border-radius:8px;background:#084734;color:#CFF27C;cursor:pointer;font-size:.95rem;font-weight:600;">Guardar</button>
+        </div>
+    </div>
+</div>
 
 <script>
 function abrirNueva() {

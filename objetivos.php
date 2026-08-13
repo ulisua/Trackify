@@ -219,8 +219,8 @@ function colorPct($pct) {
                             </div>
                         </div>
                         <div class="obj-montos">
-                            <div class="obj-actual" id="actual-<?= $obj['id_meta'] ?>">$<?= number_format($obj['monto_actual'], 0, ',', '.') ?></div>
-                            <div class="obj-meta">de $<?= number_format($obj['monto_objetivo'], 0, ',', '.') ?></div>
+                            <div class="obj-actual" id="actual-<?= $obj['id_meta'] ?>" data-ars="<?= $obj['monto_actual'] ?>">$<?= number_format($obj['monto_actual'], 0, ',', '.') ?></div>
+                            <div class="obj-meta">de <span data-ars="<?= $obj['monto_objetivo'] ?>">$<?= number_format($obj['monto_objetivo'], 0, ',', '.') ?></span></div>
                         </div>
                     </div>
                     <div class="obj-progress-wrap">

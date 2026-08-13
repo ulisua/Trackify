@@ -42,32 +42,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 
 require_once 'includes/header.php';
 
-// Obtener el mes y año actual
-$mes_actual = date('m');
-$anio_actual = date('Y');
-
-// Variables para cálculos
 $total_mes = 0;
-$cantidad = 0;
-$promedio = 0;
+$cantidad  = 0;
+$promedio  = 0;
 
-// Consulta para totales del mes actual
-$stmt_totales = $conn->prepare("SELECT SUM(monto) as total, COUNT(id_movimiento) as cantidad FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso' AND MONTH(fecha) = ? AND YEAR(fecha) = ?");
-$stmt_totales->bind_param("iii", $user_id, $mes_actual, $anio_actual);
+$stmt_totales = $conn->prepare("SELECT SUM(monto) as total, COUNT(id_movimiento) as cantidad FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso' AND fecha BETWEEN ? AND ?");
+$stmt_totales->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
 $stmt_totales->execute();
 $res_totales = $stmt_totales->get_result();
 
 if ($row = $res_totales->fetch_assoc()) {
     $total_mes = $row['total'] ?? 0;
-    $cantidad = $row['cantidad'] ?? 0;
-    if ($cantidad > 0) {
-        $promedio = $total_mes / $cantidad;
-    }
+    $cantidad  = $row['cantidad'] ?? 0;
+    if ($cantidad > 0) $promedio = $total_mes / $cantidad;
 }
 
-// Consulta para la lista de todos los ingresos (ahora también trae id_categoria)
-$stmt_lista = $conn->prepare("SELECT m.id_movimiento, m.fecha, m.descripcion, m.monto, m.id_categoria, c.nombre as categoria_nombre FROM movimientos m JOIN categorias c ON m.id_categoria = c.id_categoria WHERE m.id_usuario = ? AND m.tipo = 'ingreso' ORDER BY m.fecha DESC");
-$stmt_lista->bind_param("i", $user_id);
+$stmt_lista = $conn->prepare("SELECT m.id_movimiento, m.fecha, m.descripcion, m.monto, m.id_categoria, c.nombre as categoria_nombre FROM movimientos m JOIN categorias c ON m.id_categoria = c.id_categoria WHERE m.id_usuario = ? AND m.tipo = 'ingreso' AND m.fecha BETWEEN ? AND ? ORDER BY m.fecha DESC");
+$stmt_lista->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
 $stmt_lista->execute();
 $res_lista = $stmt_lista->get_result();
 $ingresos = [];
@@ -115,12 +106,18 @@ $categorias = $stmt_cats->get_result()->fetch_all(MYSQLI_ASSOC);
 </div>
 
             <h2>💸 Ingresos</h2>
+            <p style="color:#64748b;font-size:.85rem;margin:-8px 0 16px;">
+                <?php
+                $labels = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 'mes' => 'Este mes'];
+                echo $labels[$periodo_actual] . ' · ' . date('d/m', strtotime($fecha_desde)) . ' — ' . date('d/m', strtotime($fecha_hasta));
+                ?>
+            </p>
 
             <!-- RESUMEN -->
             <section class="cards">
                 <div class="card ingreso-card">
-                    <h4>Total del mes</h4>
-                    <p>$<?php echo number_format($total_mes, 2, ',', '.'); ?></p>
+                    <h4>Total del período</h4>
+                    <p data-ars="<?= $total_mes ?>">$<?php echo number_format($total_mes, 2, ',', '.'); ?></p>
                 </div>
                 <div class="card">
                     <h4>Cantidad</h4>
@@ -128,7 +125,7 @@ $categorias = $stmt_cats->get_result()->fetch_all(MYSQLI_ASSOC);
                 </div>
                 <div class="card">
                     <h4>Promedio</h4>
-                    <p>$<?php echo number_format($promedio, 2, ',', '.'); ?></p>
+                    <p data-ars="<?= $promedio ?>">$<?php echo number_format($promedio, 2, ',', '.'); ?></p>
                 </div>
             </section>
 
@@ -169,7 +166,7 @@ $categorias = $stmt_cats->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <td><?php echo date('d/m', strtotime($ingreso['fecha'])); ?></td>
                                     <td><?php echo htmlspecialchars($ingreso['descripcion']); ?></td>
                                     <td><?php echo htmlspecialchars($ingreso['categoria_nombre']); ?></td>
-                                    <td class="positivo">+$<?php echo number_format($ingreso['monto'], 2, ',', '.'); ?></td>
+                                    <td class="positivo"><span data-ars="<?= $ingreso['monto'] ?>" data-prefijo="+">+$<?php echo number_format($ingreso['monto'], 2, ',', '.'); ?></span></td>
                                     <td>
                                         <button class="edit" onclick="abrirEditar(<?= $ingreso['id_movimiento'] ?>, '<?= addslashes(htmlspecialchars($ingreso['descripcion'])) ?>', <?= $ingreso['monto'] ?>, '<?= $ingreso['fecha'] ?>', <?= $ingreso['id_categoria'] ?>)">✏️</button>
                                         <button class="delete" onclick="eliminar(<?= $ingreso['id_movimiento'] ?>, 'fila-<?= $ingreso['id_movimiento'] ?>')">🗑️</button>
@@ -191,7 +188,7 @@ $categorias = $stmt_cats->get_result()->fetch_all(MYSQLI_ASSOC);
                             <div class="movimiento-card" id="card-<?= $ingreso['id_movimiento'] ?>">
                                 <div class="mc-top">
                                     <span class="mc-desc"><?php echo htmlspecialchars($ingreso['descripcion']); ?></span>
-                                    <span class="mc-monto positivo">+$<?php echo number_format($ingreso['monto'], 2, ',', '.'); ?></span>
+                                    <span class="mc-monto positivo" data-ars="<?= $ingreso['monto'] ?>" data-prefijo="+">+$<?php echo number_format($ingreso['monto'], 2, ',', '.'); ?></span>
                                 </div>
                                 <div class="mc-bottom">
                                     <span class="mc-tag"><?php echo htmlspecialchars($ingreso['categoria_nombre']); ?></span>

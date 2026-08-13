@@ -25,14 +25,13 @@ if (!isset($_SESSION['moneda'])) {
 }
 $moneda_actual = $_SESSION['moneda'];
 
-// ── Período seleccionado ──────────────────────────────────────────────────────
+// ── Período ───────────────────────────────────────────────────────────────────
 $periodos_validos = ['semana', 'quincena', 'mes'];
 if (isset($_GET['periodo']) && in_array($_GET['periodo'], $periodos_validos)) {
     $_SESSION['periodo'] = $_GET['periodo'];
 }
 $periodo_actual = $_SESSION['periodo'] ?? 'mes';
 
-// Calcular fechas según el período
 switch ($periodo_actual) {
     case 'semana':
         $fecha_desde = date('Y-m-d', strtotime('monday this week'));
@@ -40,14 +39,9 @@ switch ($periodo_actual) {
         break;
     case 'quincena':
         $dia = date('j');
-        $fecha_desde = $dia <= 15
-            ? date('Y-m-01')
-            : date('Y-m-16');
-        $fecha_hasta = $dia <= 15
-            ? date('Y-m-15')
-            : date('Y-m-t');
+        $fecha_desde = $dia <= 15 ? date('Y-m-01') : date('Y-m-16');
+        $fecha_hasta = $dia <= 15 ? date('Y-m-15') : date('Y-m-t');
         break;
-    case 'mes':
     default:
         $fecha_desde = date('Y-m-01');
         $fecha_hasta = date('Y-m-t');
@@ -124,7 +118,6 @@ switch ($periodo_actual) {
     </aside>
 
     <main class="content">
-
 <script>
 function cambiarPeriodo(periodo) {
     const url = new URL(window.location.href);

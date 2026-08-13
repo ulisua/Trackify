@@ -5,6 +5,28 @@ if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+// Definir período antes del header para poder calcular totales
+$periodos_validos = ['semana', 'quincena', 'mes'];
+if (isset($_GET['periodo']) && in_array($_GET['periodo'], $periodos_validos)) {
+    $_SESSION['periodo'] = $_GET['periodo'];
+}
+$periodo_actual = $_SESSION['periodo'] ?? 'mes';
+switch ($periodo_actual) {
+    case 'semana':
+        $fecha_desde = date('Y-m-d', strtotime('monday this week'));
+        $fecha_hasta = date('Y-m-d', strtotime('sunday this week'));
+        break;
+    case 'quincena':
+        $dia = date('j');
+        $fecha_desde = $dia <= 15 ? date('Y-m-01') : date('Y-m-16');
+        $fecha_hasta = $dia <= 15 ? date('Y-m-15') : date('Y-m-t');
+        break;
+    default:
+        $fecha_desde = date('Y-m-01');
+        $fecha_hasta = date('Y-m-t');
+        break;
+}
+
 // Procesar el guardado del movimiento directamente en el dashboard
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['tipoMovimiento'])) {
     $user_id = $_SESSION['usuario_id'];
@@ -40,22 +62,21 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
     exit();
 }
 
-// Calcular totales
 $total_ingresos = 0;
-$total_gastos = 0;
+$total_gastos   = 0;
 if(isset($_SESSION['usuario_id'])) {
     $user_id = $_SESSION['usuario_id'];
-    
-    $stmt_ingresos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso'");
-    $stmt_ingresos->bind_param("i", $user_id);
+
+    $stmt_ingresos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso' AND fecha BETWEEN ? AND ?");
+    $stmt_ingresos->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
     $stmt_ingresos->execute();
     $res_ing = $stmt_ingresos->get_result();
     if ($row = $res_ing->fetch_assoc()) {
         $total_ingresos = $row['total'] ?? 0;
     }
 
-    $stmt_gastos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'gasto'");
-    $stmt_gastos->bind_param("i", $user_id);
+    $stmt_gastos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'gasto' AND fecha BETWEEN ? AND ?");
+    $stmt_gastos->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
     $stmt_gastos->execute();
     $res_gas = $stmt_gastos->get_result();
     if ($row = $res_gas->fetch_assoc()) {
@@ -87,15 +108,15 @@ require_once 'includes/header.php';
         <section class="cards">
             <div class="card">
                 <h4>Ingresos</h4>
-                <p id="ingresos">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
+                <p id="ingresos" data-ars="<?= $total_ingresos ?>">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
             </div>
             <div class="card highlight">
                 <h4>Balance</h4>
-                <p id="balance">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
+                <p id="balance" data-ars="<?= $balance ?>">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
             </div>
             <div class="card">
                 <h4>Gastos</h4>
-                <p id="gastos">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
+                <p id="gastos" data-ars="<?= $total_gastos ?>">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
             </div>
         </section>
 

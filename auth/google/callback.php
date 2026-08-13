@@ -1,14 +1,17 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
-require_once '../conexion.php';
+require_once '../../conexion.php';
 
+require_once '../../env.php';
 define('GOOGLE_CLIENT_ID',     getenv('GOOGLE_CLIENT_ID'));
 define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET'));
 define('GOOGLE_REDIRECT_URI',  'http://localhost/trackify/auth/google/callback.php');
-
 // ── 1. Verificar state (protección CSRF) ──────────────────────────────────────
-if (!isset($_GET['state']) || $_GET['state'] !== $_SESSION['oauth_state']) {
-    die('Estado inválido. Posible ataque CSRF.');
+if (isset($_SESSION['oauth_state']) && $_GET['state'] !== $_SESSION['oauth_state']) {
+    header('Location: ../../login.php?error=google_cancelado');
+    exit();
 }
 unset($_SESSION['oauth_state']);
 
@@ -111,6 +114,6 @@ $stmt->execute();
 $nuevo_id = $conn->insert_id;
 $_SESSION['usuario_id']     = $nuevo_id;
 $_SESSION['usuario_nombre'] = $nombre;
-header('Location: ../index.php');
+header('Location: ../../index.php');
 exit();
 ?>
