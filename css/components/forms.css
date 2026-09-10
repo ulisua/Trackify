@@ -317,6 +317,20 @@ input:disabled, select:disabled, textarea:disabled {
     color: var(--brand-green-light) !important;
 }
 
+.flatpickr-day.today:not(.selected) {
+    border-color: var(--brand-pink) !important;
+    color: var(--brand-pink) !important;
+    font-weight: 700;
+    background: rgba(234, 115, 245, 0.12) !important;
+}
+
+.flatpickr-day.today.selected {
+    background: var(--brand-green-dark) !important;
+    border-color: var(--brand-pink) !important;
+    color: var(--brand-green-light) !important;
+    box-shadow: 0 0 0 2px var(--brand-pink);
+}
+
 .flatpickr-day:hover {
     background: var(--bg-hover) !important;
 }

@@ -24,7 +24,7 @@ function toggleEditar(id) {
     });
 
     if (s.editando) {
-        btn.innerHTML = '<img src="iconos/generales/tick.png" alt="Guardar" class="icono-boton"> Guardar';
+        btn.innerHTML = '<img src="iconos/generales/tick.png" alt="Guardar" class="icono-boton" style="filter: brightness(0) invert(1);"> Guardar';
         btn.classList.add('guardando');
     } else {
         btn.innerHTML = '<img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton"> Editar';
@@ -87,57 +87,88 @@ function limpiarLocalStorageTrackify() {
     });
 }
 
-function abrirConfirmacionEliminarCuenta() {
-    Swal.fire({
-        title: '¿Seguro que querés eliminar tu cuenta?',
-        html: '<strong>Esta acción eliminará permanentemente todos tus datos</strong> y no se puede deshacer.',
-        icon: 'warning',
-        iconColor: '#EA73F5',
-        showCancelButton: true,
-        reverseButtons: true,
-        confirmButtonColor: '#BE123C',
-        cancelButtonColor: '#1E293B',
-        confirmButtonText: 'Eliminar cuenta',
-        cancelButtonText: 'Cancelar',
-        buttonsStyling: false,
-        width: 560,
-        padding: '2rem 1.75rem 1.75rem',
-        background: '#2c2c3e',
-        color: '#F8FAFC',
-        customClass: {
-            popup: 'swal-trackify swal-trackify-danger',
-            title: 'swal-trackify-title',
-            htmlContainer: 'swal-trackify-copy',
-            actions: 'swal-trackify-actions',
-            confirmButton: 'btn swal-btn-danger',
-            cancelButton: 'btn swal-btn-cancel'
-        },
-        focusCancel: true
-    }).then((result) => {
-        if (result.isConfirmed) {
-            limpiarLocalStorageTrackify();
-            const form = document.getElementById('formEliminarCuenta');
-            const button = document.getElementById('btnEliminarCuenta');
-            if (button) {
-                button.disabled = true;
-                button.style.opacity = '0.6';
-                button.textContent = 'Eliminando...';
-            }
-            if (form) {
-                form.submit();
-            }
+// ============== ELIMINAR CUENTA (MODAL UNIFICADO) ==============
+
+function abrirModalEliminarCuenta() {
+    const modal = document.getElementById('modalEliminarCuenta');
+    if (modal) {
+        modal.classList.remove('hidden');
+        const input = document.getElementById('inputConfirmacionEliminarCuenta');
+        const btn = document.getElementById('btnConfirmarEliminarCuenta');
+        if (input) input.value = '';
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'not-allowed';
         }
-    });
+        setTimeout(() => input && input.focus(), 100);
+    }
+}
+
+function cerrarModalEliminarCuenta() {
+    const modal = document.getElementById('modalEliminarCuenta');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function validarConfirmacionEliminarCuenta() {
+    const input = document.getElementById('inputConfirmacionEliminarCuenta');
+    const btn = document.getElementById('btnConfirmarEliminarCuenta');
+    if (!input || !btn) return;
+    
+    const valor = input.value.trim();
+    const esValido = (valor === 'ELIMINAR MI CUENTA' || valor === 'SI, ESTOY SEGURO');
+    
+    if (esValido) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+    } else {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+    }
 }
 
 function attachEliminarCuentaHandler() {
     const btnEliminar = document.getElementById('btnEliminarCuenta');
-    if (!btnEliminar) return;
-    btnEliminar.addEventListener('click', function(e) {
-        e.preventDefault();
-        abrirConfirmacionEliminarCuenta();
-    });
+    const inputConfirm = document.getElementById('inputConfirmacionEliminarCuenta');
+    const form = document.getElementById('formEliminarCuentaModal');
+    const btnConfirm = document.getElementById('btnConfirmarEliminarCuenta');
+
+    if (btnEliminar) {
+        btnEliminar.addEventListener('click', function(e) {
+            e.preventDefault();
+            abrirModalEliminarCuenta();
+        });
+    }
+
+    if (inputConfirm) {
+        inputConfirm.addEventListener('input', validarConfirmacionEliminarCuenta);
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const val = inputConfirm ? inputConfirm.value.trim() : '';
+            if (val !== 'ELIMINAR MI CUENTA' && val !== 'SI, ESTOY SEGURO') {
+                e.preventDefault();
+                return;
+            }
+            limpiarLocalStorageTrackify();
+            if (btnConfirm) {
+                btnConfirm.disabled = true;
+                btnConfirm.style.opacity = '0.6';
+                btnConfirm.textContent = 'Eliminando...';
+            }
+        });
+    }
 }
+
+window.abrirModalEliminarCuenta = abrirModalEliminarCuenta;
+window.cerrarModalEliminarCuenta = cerrarModalEliminarCuenta;
+window.abrirModalBorrar = abrirModalBorrar;
+window.cerrarModalBorrar = cerrarModalBorrar;
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {

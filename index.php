@@ -5,6 +5,7 @@ require_once 'includes/movimientos_handler.php';
 if(session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+require_once 'includes/periodo.php';
 
 // Procesar el guardado del objetivo
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -15,6 +16,10 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $desc = $_POST['desc_meta'];
         $monto = floatval($_POST['monto_objetivo']);
         $fecha = $_POST['fecha_limite'];
+        $hoy = date('Y-m-d');
+        if ($fecha < $hoy) {
+            $fecha = $hoy;
+        }
         $monto_actual = 0;
 
         $stmt_obj = $conn->prepare("INSERT INTO metas_ahorro (id_usuario, nombre_meta, descripcion, monto_objetivo, monto_actual, fecha_limite) VALUES (?, ?, ?, ?, ?, ?)");
@@ -41,33 +46,34 @@ $ultimos_movimientos = [];
 if(isset($_SESSION['usuario_id'])) {
     $user_id = $_SESSION['usuario_id'];
     
-    $stmt_ingresos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso'");
-    $stmt_ingresos->bind_param("i", $user_id);
+    // Totales del período actual
+    $stmt_ingresos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso' AND fecha BETWEEN ? AND ?");
+    $stmt_ingresos->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
     $stmt_ingresos->execute();
     $res_ing = $stmt_ingresos->get_result();
     if ($row = $res_ing->fetch_assoc()) {
         $total_ingresos = $row['total'] ?? 0;
     }
 
-    $stmt_gastos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'gasto'");
-    $stmt_gastos->bind_param("i", $user_id);
+    $stmt_gastos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'gasto' AND fecha BETWEEN ? AND ?");
+    $stmt_gastos->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
     $stmt_gastos->execute();
     $res_gas = $stmt_gastos->get_result();
     if ($row = $res_gas->fetch_assoc()) {
         $total_gastos = $row['total'] ?? 0;
     }
 
-    // ── Gráfico de torta: gastos por categoría ──────────────────────────────
+    // ── Gráfico de torta: gastos por categoría en el período ──────────────────────────────
     $stmt_torta = $conn->prepare(
         "SELECT c.nombre, SUM(m.monto) as total
          FROM movimientos m
          JOIN categorias c ON m.id_categoria = c.id_categoria
-         WHERE m.id_usuario = ? AND m.tipo = 'gasto'
+         WHERE m.id_usuario = ? AND m.tipo = 'gasto' AND m.fecha BETWEEN ? AND ?
          GROUP BY c.id_categoria, c.nombre
          ORDER BY total DESC
          LIMIT 8"
     );
-    $stmt_torta->bind_param("i", $user_id);
+    $stmt_torta->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
     $stmt_torta->execute();
     $res_torta = $stmt_torta->get_result();
     while ($row = $res_torta->fetch_assoc()) {
@@ -172,15 +178,15 @@ require_once 'includes/header.php';
         <section class="cards">
             <div class="card">
                 <h4>Ingresos</h4>
-                <p id="ingresos">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
+                <p id="ingresos" data-ars="<?php echo $total_ingresos; ?>">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
             </div>
             <div class="card highlight">
                 <h4>Balance</h4>
-                <p id="balance">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
+                <p id="balance" data-ars="<?php echo $balance; ?>">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
             </div>
             <div class="card">
                 <h4>Gastos</h4>
-                <p id="gastos">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
+                <p id="gastos" data-ars="<?php echo $total_gastos; ?>">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
             </div>
         </section>
 
@@ -194,7 +200,7 @@ require_once 'includes/header.php';
             ?>
             <div class="card">% gasto <p id="porcentaje"><?php echo $pct_gasto; ?>%</p></div>
             <div class="card">Mayor categoría <p id="categoriaTop"><?php echo htmlspecialchars($nombre_cat_top); ?></p></div>
-            <div class="card">Gasto mensual <p id="gastoMensual">$<?php echo number_format($gasto_mensual, 0, ',', '.'); ?></p></div>
+            <div class="card">Gasto mensual <p id="gastoMensual" data-ars="<?php echo $gasto_mensual; ?>">$<?php echo number_format($gasto_mensual, 0, ',', '.'); ?></p></div>
         </section>
 
         <!-- BOTONES -->
@@ -269,7 +275,7 @@ require_once 'includes/header.php';
                                     <span class="mov-desc"><?php echo htmlspecialchars($mv['descripcion']); ?></span>
                                     <span class="mov-cat"><?php echo htmlspecialchars($mv['categoria']); ?> · <?php echo $fecha_fmt; ?></span>
                                 </div>
-                                <span class="mov-monto <?php echo $clase_tipo; ?>"><?php echo $signo . $monto_fmt; ?></span>
+                                <span class="mov-monto <?php echo $clase_tipo; ?>" data-ars="<?php echo $mv['monto']; ?>" data-prefijo="<?php echo $signo; ?>"><?php echo $signo . $monto_fmt; ?></span>
                             </li>
                         <?php endforeach; ?>
                     </ul>

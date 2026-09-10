@@ -5,12 +5,22 @@
 
 <!-- MODAL -->
 <div id="modal" class="modal hidden">
-    <form class="modal-content modal-form-content" method="POST" action="index.php">
+    <form class="modal-content modal-form-content" method="POST" action="includes/movimientos_handler.php" onsubmit="return convertirAntesDeGuardar()">
         <input type="hidden" id="tipoMovimiento" name="tipoMovimiento" value="">
+        <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'], ENT_QUOTES); ?>">
         <h3 id="modalTitulo">Nuevo</h3>
         
-        <input type="number" step="0.01" id="monto" name="monto" placeholder="Monto ($)" required>
-        
+        <!-- Selector de moneda del movimiento -->
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px;">
+            <input type="number" step="0.01" id="monto" placeholder="Monto" required style="flex:1;">
+            <select id="monedaIngreso" style="padding:14px 12px;border:1px solid var(--border-color, #E2E8F0);border-radius:6px;font-size:1rem;font-family:inherit;background:var(--input-bg, #F8FAFC);color:var(--input-text, #1E1B26);outline:none;min-width:95px;">
+                <option value="ARS">🇦🇷 ARS</option>
+                <option value="USD">🇺🇸 USD</option>
+            </select>
+        </div>
+        <!-- Monto ya convertido a ARS que se envía al servidor -->
+        <input type="hidden" id="montoARS" name="monto">
+
         <div class="custom-select-wrapper" id="customCategoriaWrapper">
             <div class="custom-select-trigger" id="customCategoriaTrigger">Selecciona una categoría</div>
             <div class="custom-select-options" id="customCategoriaOptions"></div>
@@ -20,6 +30,9 @@
         <input type="text" id="descripcion" name="descripcion" placeholder="Breve descripción" required>
         
         <input type="date" id="fecha" name="fecha" value="<?php echo date('Y-m-d'); ?>" required>
+
+        <!-- Conversión estimada en tiempo real -->
+        <p id="previewConversion" style="font-size:.85rem;color:var(--text-secondary, #64748b);margin:0 0 6px;min-height:18px;"></p>
         
         <div class="modal-actions">
             <button type="submit" class="btn btn-guardar-modal">Guardar</button>
@@ -185,7 +198,7 @@
         
         <form id="formBorrarHistorial" method="POST" action="includes/movimientos_handler.php" style="display:flex; flex-direction:column; gap:16px;">
             <input type="hidden" name="form_type" value="borrar_historial_completo">
-            <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($_SERVER['PHP_SELF'], ENT_QUOTES); ?>">
+            <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'], ENT_QUOTES); ?>">
             
             <input 
                 type="text" 
@@ -205,6 +218,41 @@
     </div>
 </div>
 
+<!-- MODAL ELIMINAR CUENTA (IDÉNTICO EN ESTRUCTURA A BORRAR HISTORIAL) -->
+<div id="modalEliminarCuenta" class="modal hidden">
+    <div class="modal-content modal-confirmacion" style="max-width:480px;">
+        <h3 style="color:#BE123C; margin-bottom:16px;">Eliminar cuenta</h3>
+        
+        <div style="background:#FFF1F2; border-left:4px solid #BE123C; padding:12px; border-radius:6px; margin-bottom:20px;">
+            <p style="margin:0; color:#BE123C; font-size:0.9rem; font-weight:500;">⚠️ Advertencia crítica</p>
+            <p style="margin:8px 0 0 0; color:#7F1D1D; font-size:0.85rem;">Esta acción eliminará <strong>permanentemente tu cuenta</strong> y todos tus movimientos y objetivos.</p>
+            <p style="margin:4px 0 0 0; color:#7F1D1D; font-size:0.85rem;"><strong>No se puede deshacer.</strong></p>
+        </div>
+        
+        <p style="color:#475569; font-size:0.9rem; margin-bottom:20px;">Para confirmar, escribí "ELIMINAR MI CUENTA" en el campo de abajo:</p>
+        
+        <form id="formEliminarCuentaModal" method="POST" action="includes/movimientos_handler.php" style="display:flex; flex-direction:column; gap:16px;">
+            <input type="hidden" name="form_type" value="eliminar_cuenta">
+            <input type="hidden" name="return_url" value="login.php">
+            
+            <input 
+                type="text" 
+                id="inputConfirmacionEliminarCuenta" 
+                name="confirmacion_eliminar"
+                placeholder="ELIMINAR MI CUENTA" 
+                style="padding:12px; border:2px solid #E2E8F0; border-radius:6px; font-size:0.95rem; font-family:inherit; color:#1E1B26; background:#F8FAFC; outline:none; transition:all 0.2s;"
+                autocomplete="off"
+                required
+            >
+            
+            <div class="modal-actions" style="gap:12px;">
+                <button type="button" class="btn cancel" onclick="cerrarModalEliminarCuenta()" style="flex:1;">Cancelar</button>
+                <button type="submit" class="btn" id="btnConfirmarEliminarCuenta" disabled style="flex:1; background:#BE123C; color:white; cursor:not-allowed; opacity:0.6;">Eliminar cuenta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <footer class="footer">
     <p>Trackify © 2026</p>
 </footer>
@@ -217,47 +265,136 @@
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 
 <script>
-    // Inicializar Flatpickr
+    // Inicializar Flatpickr separando Objetivos de Movimientos
     document.addEventListener('DOMContentLoaded', function() {
-        const dateInputs = document.querySelectorAll("input[type='date']");
         const today = new Date().toISOString().split('T')[0];
 
-        dateInputs.forEach(input => {
-            if (!input.placeholder) {
-                input.placeholder = "Selecciona una fecha";
-            }
-            input.max = today;
-            if (!input.value) {
-                input.value = today;
-            }
-            if (input.value > today) {
-                input.value = today;
-            }
+        // 1. Inputs de Objetivos (fecha_limite): PERMITE HOY Y FECHAS FUTURAS (bloquea pasadas)
+        const objDateInputs = document.querySelectorAll("input[name='fecha_limite'], #fecha_limite, #edit_fecha_limite");
+        objDateInputs.forEach(input => {
+            input.min = today;
+            input.removeAttribute('max');
+            if (!input.placeholder) input.placeholder = "Selecciona fecha límite";
+            if (!input.value || input.value < today) input.value = today;
         });
 
-        flatpickr(dateInputs, {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d/m/Y",
-            locale: "es",
-            disableMobile: "true",
-            maxDate: today,
-            onChange: function(selectedDates, dateStr, instance) {
-                if (dateStr > today) {
-                    instance.setDate(today, true);
+        if (objDateInputs.length > 0 && window.flatpickr) {
+            flatpickr(objDateInputs, {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                locale: "es",
+                disableMobile: "true",
+                minDate: today,
+                maxDate: null,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr < today) {
+                        instance.setDate(today, true);
+                    }
                 }
-            }
+            });
+        }
+
+        // 2. Inputs de Movimientos (fecha): PERMITE PASADAS Y HOY (BLOQUEA FUTURAS)
+        const movDateInputs = document.querySelectorAll("#fecha, #edit_mov_fecha");
+        movDateInputs.forEach(input => {
+            input.max = today;
+            input.removeAttribute('min');
+            if (!input.placeholder) input.placeholder = "Selecciona una fecha";
+            if (!input.value) input.value = today;
+            if (input.value > today) input.value = today;
         });
+
+        if (movDateInputs.length > 0 && window.flatpickr) {
+            flatpickr(movDateInputs, {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                locale: "es",
+                disableMobile: "true",
+                maxDate: today,
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr > today) {
+                        instance.setDate(today, true);
+                    }
+                }
+            });
+        }
 
         // Cerrar calendario al hacer scroll en cualquier contenedor
         window.addEventListener('scroll', function() {
-            dateInputs.forEach(input => {
+            document.querySelectorAll("input[type='date']").forEach(input => {
                 if(input._flatpickr && input._flatpickr.isOpen) {
                     input._flatpickr.close();
                 }
             });
         }, true);
     });
+
+    // ── Conversión en el modal de nuevo movimiento ──────────────────────────────
+    const monedaSelect  = document.getElementById('monedaIngreso');
+    const montoInput    = document.getElementById('monto');
+    const montoARSInput = document.getElementById('montoARS');
+    const previewEl     = document.getElementById('previewConversion');
+
+    // Preseleccionar la moneda del usuario en el modal
+    const selectorGlobal = document.getElementById('selectorMoneda');
+    if (selectorGlobal && monedaSelect) {
+        monedaSelect.value = selectorGlobal.value;
+    }
+
+    async function actualizarPreview() {
+        if (!montoInput || !monedaSelect || !previewEl || !montoARSInput) return;
+        const monto  = parseFloat(montoInput.value) || 0;
+        const moneda = monedaSelect.value;
+        const tc     = window.obtenerTipoCambio ? await window.obtenerTipoCambio() : parseFloat(localStorage.getItem('trackify_tc') || '1000');
+
+        if (!monto) {
+            previewEl.textContent = '';
+            montoARSInput.value = '';
+            return;
+        }
+
+        if (moneda === 'USD') {
+            if (tc > 0) {
+                const ars = monto * tc;
+                previewEl.textContent = `= $${ars.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2})} ARS`;
+                montoARSInput.value = ars.toFixed(2);
+            } else {
+                previewEl.textContent = 'Cargando tipo de cambio...';
+                montoARSInput.value = '';
+            }
+        } else {
+            previewEl.textContent = '';
+            montoARSInput.value = monto.toFixed(2);
+        }
+    }
+
+    async function convertirAntesDeGuardar() {
+        if (!montoInput || !monedaSelect || !montoARSInput) return true;
+        const monto  = parseFloat(montoInput.value) || 0;
+        const moneda = monedaSelect.value;
+        const tc     = window.obtenerTipoCambio ? await window.obtenerTipoCambio() : parseFloat(localStorage.getItem('trackify_tc') || '1000');
+
+        if (!monto || monto <= 0) {
+            alert('Ingresá un monto válido.');
+            return false;
+        }
+
+        if (moneda === 'USD') {
+            if (tc <= 0) {
+                alert('No se pudo obtener el tipo de cambio. Intentá de nuevo.');
+                return false;
+            }
+            montoARSInput.value = (monto * tc).toFixed(2);
+        } else {
+            montoARSInput.value = monto.toFixed(2);
+        }
+        return true;
+    }
+
+    if (montoInput)   montoInput.addEventListener('input', actualizarPreview);
+    if (monedaSelect) monedaSelect.addEventListener('change', actualizarPreview);
 
     // Función global para confirmaciones con SweetAlert2
     function confirmarEliminacion(e, mensaje) {
@@ -315,6 +452,7 @@
 </script>
 
 <script src="js/main.js?v=4"></script>
+<script src="js/moneda.js"></script>
 <?php if(isset($extra_js)) echo $extra_js; ?>
 
 </body>

@@ -20,40 +20,11 @@ $nombreUsuario = $_SESSION['usuario_nombre'] ?? 'Usuario';
 $pagina_actual = $page ?? '';
 $titulo = $titulo_pagina ?? 'Trackify';
 
-if (!isset($_SESSION['moneda'])) {
-    $stmt_m = $conn->prepare("SELECT moneda_principal FROM usuarios WHERE id_usuario = ?");
-    $stmt_m->bind_param("i", $_SESSION['usuario_id']);
-    $stmt_m->execute();
-    $row_m = $stmt_m->get_result()->fetch_assoc();
-    $_SESSION['moneda'] = $row_m['moneda_principal'] ?? 'ARS';
-}
-$moneda_actual = $_SESSION['moneda'];
-
-$periodos_validos = ['semana', 'quincena', 'mes'];
-if (isset($_GET['periodo']) && in_array($_GET['periodo'], $periodos_validos)) {
-    $_SESSION['periodo'] = $_GET['periodo'];
-}
-$periodo_actual = $_SESSION['periodo'] ?? 'mes';
-
-switch ($periodo_actual) {
-    case 'semana':
-        $fecha_desde = date('Y-m-d', strtotime('monday this week'));
-        $fecha_hasta = date('Y-m-d', strtotime('sunday this week'));
-        break;
-    case 'quincena':
-        $dia = date('j');
-        $fecha_desde = $dia <= 15 ? date('Y-m-01') : date('Y-m-16');
-        $fecha_hasta = $dia <= 15 ? date('Y-m-15') : date('Y-m-t');
-        break;
-    default:
-        $fecha_desde = date('Y-m-01');
-        $fecha_hasta = date('Y-m-t');
-        break;
-}
+require_once __DIR__ . '/periodo.php';
 
 // Cargar categorías dinámicamente para JS
 $dbCategorias = ['ingreso' => [], 'gasto' => []];
-if (isset($conn)) {
+if (isset($conn) && $conn instanceof mysqli) {
     $res = $conn->query("SELECT nombre, tipo FROM categorias ORDER BY nombre ASC");
     if ($res) {
         while($r = $res->fetch_assoc()){
@@ -87,6 +58,12 @@ if (isset($conn)) {
     
     <script>
         window.dbCategorias = <?php echo json_encode($dbCategorias); ?>;
+
+        function cambiarPeriodo(periodo) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('periodo', periodo);
+            window.location.href = url.toString();
+        }
     </script>
     
     <?php if(isset($extra_css)) echo $extra_css; ?>
