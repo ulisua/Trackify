@@ -39,6 +39,7 @@ trackify/
         ├── ia.css                   #    Vista completa de IA con Glassmorphism y orbes
         ├── objetivos.css            #    Metas de ahorro, barras .fill-* y tarjetas vencidas
         └── perfil.css               #    Formularios de perfil, avatar y zona de peligro
+    └── responsive.css               # 7. Sistema responsive centralizado (escalado móvil compactado)
 ```
 
 ### Orden Estricto de Importación en `styles.css`
@@ -61,6 +62,9 @@ trackify/
 @import url('css/components/forms.css');
 @import url('css/components/buttons.css');
 @import url('css/components/charts.css');
+
+/* 4. Sistema Responsive Centralizado */
+@import url('css/responsive.css');
 ```
 
 > [!NOTE]
