@@ -36,21 +36,62 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
     if($result->num_rows === 1){
         $user = $result->fetch_assoc();
 
-        if (isset($user['email_verificado']) && (int)$user['email_verificado'] === 0) {
-            $_SESSION['verificar_id'] = $user['id_usuario'];
-            $_SESSION['verificar_email'] = $user['email'];
+        // Primero verificar la contraseña
+        if (empty($user['clave']) || !password_verify($password, $user['clave'])) {
+            $mensaje = "Contraseña incorrecta";
+        } elseif (isset($user['email_verificado']) && (int)$user['email_verificado'] === 0) {
+            // Contraseña correcta pero email no verificado → generar y enviar código
+            $codigo     = strval(rand(100000, 999999));
+            $expiracion = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+
+            $stmt_cod = $conn->prepare("UPDATE usuarios SET codigo_verificacion=?, codigo_expiracion=? WHERE id_usuario=?");
+            $stmt_cod->bind_param("ssi", $codigo, $expiracion, $user['id_usuario']);
+            $stmt_cod->execute();
+
+            require_once 'phpmailer/PHPMailer.php';
+            require_once 'phpmailer/SMTP.php';
+            require_once 'phpmailer/Exception.php';
+
+            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host       = 'sandbox.smtp.mailtrap.io';
+                $mail->SMTPAuth   = true;
+                $mail->Username   = '6e724e2630cb1b';
+                $mail->Password   = 'b4ad1521076737';
+                $mail->SMTPSecure = 'tls';
+                $mail->Port       = 2525;
+                $mail->CharSet    = 'UTF-8';
+                $mail->setFrom('noreply@trackify.com', 'Trackify');
+                $mail->addAddress($user['email'], $user['nombre']);
+                $mail->Subject = 'Verificá tu cuenta de Trackify';
+                $mail->isHTML(true);
+                $mail->Body = "
+                    <div style='font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'>
+                        <h2 style='color:#1E1B26;margin:0 0 8px;'>Verificá tu email</h2>
+                        <p style='color:#64748b;margin:0 0 24px;'>Usá este código para completar tu acceso. Vence en 15 minutos.</p>
+                        <div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>
+                            $codigo
+                        </div>
+                        <p style='color:#94a3b8;font-size:.85rem;margin:0;'>Si no intentaste iniciar sesión en Trackify, ignorá este email.</p>
+                    </div>
+                ";
+                $mail->send();
+            } catch (Exception $e) {
+                // Si falla el envío igual redirige, el usuario puede usar "Reenviar"
+            }
+
+            $_SESSION['verificar_id']     = $user['id_usuario'];
+            $_SESSION['verificar_email']  = $user['email'];
             $_SESSION['verificar_nombre'] = $user['nombre'];
             header('Location: verificar_email.php');
             exit();
-        }
-
-        if(!empty($user['clave']) && password_verify($password, $user['clave'])){
-            $_SESSION['usuario_id'] = $user['id_usuario'];
+        } else {
+            // Todo OK → iniciar sesión
+            $_SESSION['usuario_id']     = $user['id_usuario'];
             $_SESSION['usuario_nombre'] = $user['nombre'];
             header("Location: index.php");
             exit();
-        } else {
-            $mensaje = "Contraseña incorrecta";
         }
     } else {
         $mensaje = "Usuario no encontrado";
