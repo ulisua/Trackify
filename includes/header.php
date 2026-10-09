@@ -117,6 +117,7 @@ if (isset($conn) && $conn instanceof mysqli) {
             <a href="categorias.php" <?php echo ($pagina_actual == 'categorias') ? 'class="active"' : ''; ?>>Categorías</a>
             <a href="objetivos.php" <?php echo ($pagina_actual == 'objetivos') ? 'class="active"' : ''; ?>>Objetivos</a>
             <a href="perfil.php" <?php echo ($pagina_actual == 'perfil') ? 'class="active"' : ''; ?>>Perfil</a>
+            <a href="cambiar_password.php" <?php echo ($pagina_actual == 'perfil') ? 'class="active"' : ''; ?>>Contraseña</a>
             <a href="logout.php">Cerrar sesión</a>
         </nav>
     </aside>
