@@ -8,7 +8,7 @@ if(isset($_SESSION['usuario_id'])){
     exit();
 }
 
-$google_client_id = getenv('GOOGLE_CLIENT_ID') ?: '936672406949-tqhis3m9sj5g9195pt06394toie25qfp.apps.googleusercontent.com';
+  $google_client_id = getenv('GOOGLE_CLIENT_ID');
 $google_redirect_uri = 'http://localhost/trackify/auth/google/callback.php';
 $state = bin2hex(random_bytes(16));
 $_SESSION['oauth_state'] = $state;
