@@ -8,7 +8,7 @@
 .content {
     flex: 1;
     min-width: 0;
-    padding: 25px;
+    padding: 45px;
     overflow-x: hidden;
 }
 
@@ -77,6 +77,8 @@
     margin: 0;
     padding: 0;
     flex-shrink: 0;
+    margin-bottom:30px;
+    justify-content: space-between;
 }
 
 /* Evitar deformación de botones de acción en listados y restaurar ancho/padding original */
@@ -84,9 +86,9 @@
 .acciones-filtros-bar .acciones .btn,
 .btn-nuevo-movimiento {
     flex: none;
-    width: auto !important;
-    width: max-content !important;
-    padding: 14px 20px !important;
+    width: 100% !important;
+    /*width: max-content !important;*/
+    padding: 14px 70px !important;
 }
 
 .tabla {
