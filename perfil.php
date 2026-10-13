@@ -143,6 +143,7 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                                 Editar</button>
                         </div>
                         <div class="seccion-body">
+                            <a href="cambiar_password.php" id="btnCambiarPass" style="align-self:flex-start;display:inline-flex;align-items:center;padding:10px 18px;background:#084734;color:#CFF27C;border:1px solid #084734;border-radius:6px;font-weight:600;font-size:.9rem;font-family:inherit;text-decoration:none;cursor:pointer;">Cambiar contraseña</a>
                             <div class="campo">
                                 <label>Contraseña actual</label>
                                 <input type="password" id="inputPassActual" value="••••••••" disabled>

@@ -1,265 +1,383 @@
 <?php
-// api/cambiar_password.php
-// Endpoint JSON para:
-//   accion=cambiar        -> cambiar la contraseña (cuentas que ya tienen una)
-//   accion=enviar_codigo  -> cuentas de Google sin contraseña: enviar código por email
-//   accion=crear          -> cuentas de Google sin contraseña: crear la contraseña con el código
-
-header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store');
-
+$page = 'perfil';
+$titulo_pagina = 'Cambiar contraseña - Trackify';
+$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css">';
+require_once 'conexion.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+require_once 'includes/header.php'; // redirige al login si no hay sesión
 
-const PW_MIN          = 8;    // largo mínimo
-const PW_MAX_BYTES    = 72;   // límite real de bcrypt (PASSWORD_DEFAULT)
-const CODIGO_MINUTOS  = 15;   // vigencia del código por email
-const CODIGO_INTENTOS = 5;    // intentos de código por sesión
-const CODIGO_ESPERA   = 60;   // segundos entre envíos de código
+$user_id = (int) $_SESSION['usuario_id'];
 
-function responder(int $http, array $datos): void
-{
-    http_response_code($http);
-    echo json_encode($datos, JSON_UNESCAPED_UNICODE);
-    exit();
+// Token CSRF: se genera una sola vez por sesión y se reutiliza
+if (empty($_SESSION['csrf'])) {
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
 }
+$csrf = $_SESSION['csrf'];
 
-function fallo(int $http, string $mensaje, array $extra = []): void
-{
-    responder($http, array_merge(['ok' => false, 'error' => $mensaje], $extra));
-}
+$stmt = $conn->prepare('SELECT nombre, email, clave FROM usuarios WHERE id_usuario = ?');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$usuario = $stmt->get_result()->fetch_assoc();
 
-function post_texto(string $clave): string
-{
-    $valor = $_POST[$clave] ?? '';
-    return is_string($valor) ? $valor : '';
-}
+$email       = $usuario['email'] ?? '';
+$tiene_clave = !empty($usuario['clave']); // las cuentas de Google no tienen contraseña
 
 function mascara_email(string $email): string
 {
     [$local, $dominio] = array_pad(explode('@', $email, 2), 2, '');
     return mb_substr($local, 0, 2) . str_repeat('*', max(mb_strlen($local) - 2, 1)) . '@' . $dominio;
 }
+?>
 
-// Reglas de la contraseña nueva. Devuelve el mensaje de error o null si está bien.
-function validar_nueva(string $nueva, string $confirmar, string $nombre, string $email, ?string $actual): ?string
-{
-    if ($nueva !== $confirmar) {
-        return 'La confirmación no coincide con la contraseña nueva.';
+<style>
+    .pw-card { max-width: 560px; }
+    .pw-intro { margin: 0; font-size: .92rem; line-height: 1.5; color: #64748B; }
+    .pw-form { display: flex; flex-direction: column; gap: 16px; }
+    .pw-form[hidden] { display: none; }
+    .pw-oculto { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+    .pw-volver { text-decoration: none; }
+
+    .pw-wrap { position: relative; }
+    .campo .pw-wrap input { width: 100%; box-sizing: border-box; padding-right: 84px; }
+    .campo input.pw-codigo { text-align: center; letter-spacing: .45em; font-size: 1.3rem; font-weight: 700; }
+    .pw-toggle {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        padding: 6px 10px; border: none; border-radius: 6px; background: transparent;
+        font: inherit; font-size: .8rem; font-weight: 600; color: #64748B; cursor: pointer;
     }
-    if (strlen($nueva) < PW_MIN) {
-        return 'La contraseña nueva debe tener al menos ' . PW_MIN . ' caracteres.';
+    .pw-toggle:hover { color: #084734; }
+    .pw-toggle:focus-visible, .pw-btn:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+    .pw-fuerza { height: 6px; margin-top: 8px; border-radius: 99px; background: rgba(148, 163, 184, .25); overflow: hidden; }
+    .pw-fuerza > span { display: block; width: 0; height: 100%; border-radius: 99px; transition: width .2s ease, background-color .2s ease; }
+    .pw-fuerza-txt { min-height: 1.2em; margin-top: 4px; font-size: .8rem; color: #64748B; }
+
+    .pw-reqs { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: .85rem; color: #64748B; }
+    .pw-reqs li::before { content: '○'; display: inline-block; width: 1.4em; }
+    .pw-reqs li.ok { color: #16A34A; }
+    .pw-reqs li.ok::before { content: '✓'; }
+
+    .pw-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .pw-btn {
+        padding: 12px 20px; border: 1px solid #084734; border-radius: 6px; background: #084734; color: #CFF27C;
+        font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; transition: opacity .15s;
     }
-    if (strlen($nueva) > PW_MAX_BYTES) {
-        return 'La contraseña nueva no puede superar los ' . PW_MAX_BYTES . ' caracteres.';
+    .pw-btn:hover:not(:disabled) { opacity: .88; }
+    .pw-btn:disabled { opacity: .55; cursor: not-allowed; }
+    .pw-btn-sec { background: transparent; border-color: rgba(148, 163, 184, .55); color: inherit; }
+
+    .pw-msg { padding: 11px 14px; border: 1px solid transparent; border-radius: 6px; font-size: .9rem; line-height: 1.4; }
+    .pw-msg[hidden] { display: none; }
+    .pw-msg.error { background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .35); color: #DC2626; }
+    .pw-msg.ok { background: rgba(22, 163, 74, .12); border-color: rgba(22, 163, 74, .35); color: #16A34A; }
+</style>
+
+            <div class="page-header">
+                <h2 class="titulo-con-icono"><img src="iconos/generales/candado.png" alt="" class="icono-titulo"> <?= $tiene_clave ? 'Cambiar contraseña' : 'Crear contraseña' ?></h2>
+            </div>
+
+            <div class="seccion-card pw-card">
+                <div class="seccion-header">
+                    <h3>Tu contraseña</h3>
+                    <a href="perfil.php" class="btn-editar-seccion pw-volver">Volver al perfil</a>
+                </div>
+
+                <div class="seccion-body">
+                    <div class="pw-msg" id="pwMsg" role="alert" hidden></div>
+
+<?php if ($tiene_clave): ?>
+                    <p class="pw-intro">Por seguridad, primero ingresá tu contraseña actual.</p>
+
+                    <form id="formCambiar" class="pw-form" novalidate>
+                        <input type="text" class="pw-oculto" name="username" value="<?= htmlspecialchars($email) ?>" autocomplete="username" readonly tabindex="-1" aria-hidden="true">
+
+                        <div class="campo">
+                            <label for="pwActual">Contraseña actual</label>
+                            <div class="pw-wrap">
+                                <input type="password" id="pwActual" autocomplete="current-password">
+                                <button type="button" class="pw-toggle" data-target="pwActual" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+                            </div>
+                        </div>
+
+                        <div class="campo">
+                            <label for="pwNueva">Contraseña nueva</label>
+                            <div class="pw-wrap">
+                                <input type="password" id="pwNueva" autocomplete="new-password">
+                                <button type="button" class="pw-toggle" data-target="pwNueva" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+                            </div>
+                            <div class="pw-fuerza" aria-hidden="true"><span id="pwFuerzaBarra"></span></div>
+                            <div class="pw-fuerza-txt" id="pwFuerzaTxt" aria-live="polite"></div>
+                        </div>
+
+                        <div class="campo">
+                            <label for="pwConf">Confirmar contraseña nueva</label>
+                            <div class="pw-wrap">
+                                <input type="password" id="pwConf" autocomplete="new-password">
+                                <button type="button" class="pw-toggle" data-target="pwConf" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+                            </div>
+                        </div>
+
+                        <ul class="pw-reqs">
+                            <li id="reqLargo">Al menos 8 caracteres</li>
+                            <li id="reqDistinta">Distinta de la contraseña actual</li>
+                            <li id="reqCoincide">Coincide con la confirmación</li>
+                        </ul>
+
+                        <div class="pw-acciones">
+                            <button type="submit" class="pw-btn" id="btnGuardar">Guardar contraseña</button>
+                        </div>
+                    </form>
+
+<?php else: ?>
+                    <div id="pwPaso1">
+                        <p class="pw-intro">Entraste con Google, así que tu cuenta todavía no tiene contraseña. Para crear una, primero confirmamos que sos vos con un código de 6 dígitos que vamos a enviar a <strong><?= htmlspecialchars(mascara_email($email)) ?></strong>.</p>
+                        <div class="pw-acciones" style="margin-top:16px;">
+                            <button type="button" class="pw-btn" id="btnEnviarCodigo">Enviar código</button>
+                            <button type="button" class="pw-btn pw-btn-sec" id="btnYaTengoCodigo">Ya tengo un código</button>
+                        </div>
+                    </div>
+
+                    <form id="formCrear" class="pw-form" hidden novalidate>
+                        <input type="text" class="pw-oculto" name="username" value="<?= htmlspecialchars($email) ?>" autocomplete="username" readonly tabindex="-1" aria-hidden="true">
+
+                        <div class="campo">
+                            <label for="pwCodigo">Código de 6 dígitos</label>
+                            <input type="text" id="pwCodigo" class="pw-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                        </div>
+
+                        <div class="campo">
+                            <label for="pwNueva">Contraseña nueva</label>
+                            <div class="pw-wrap">
+                                <input type="password" id="pwNueva" autocomplete="new-password">
+                                <button type="button" class="pw-toggle" data-target="pwNueva" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+                            </div>
+                            <div class="pw-fuerza" aria-hidden="true"><span id="pwFuerzaBarra"></span></div>
+                            <div class="pw-fuerza-txt" id="pwFuerzaTxt" aria-live="polite"></div>
+                        </div>
+
+                        <div class="campo">
+                            <label for="pwConf">Confirmar contraseña nueva</label>
+                            <div class="pw-wrap">
+                                <input type="password" id="pwConf" autocomplete="new-password">
+                                <button type="button" class="pw-toggle" data-target="pwConf" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+                            </div>
+                        </div>
+
+                        <ul class="pw-reqs">
+                            <li id="reqLargo">Al menos 8 caracteres</li>
+                            <li id="reqCoincide">Coincide con la confirmación</li>
+                        </ul>
+
+                        <div class="pw-acciones">
+                            <button type="submit" class="pw-btn" id="btnCrear">Crear contraseña</button>
+                            <button type="button" class="pw-btn pw-btn-sec" id="btnReenviar">Reenviar código</button>
+                        </div>
+                    </form>
+<?php endif; ?>
+                </div>
+            </div>
+
+        </main>
+
+<script>
+(() => {
+    const CSRF = <?= json_encode($csrf) ?>;
+    const API  = 'api/cambiar_password.php';
+    const $    = (id) => document.getElementById(id);
+    const msg  = $('pwMsg');
+
+    function mostrar(tipo, texto) {
+        msg.className = 'pw-msg ' + tipo;
+        msg.textContent = texto;
+        msg.hidden = false;
     }
-    if ($actual !== null && hash_equals($actual, $nueva)) {
-        return 'La contraseña nueva debe ser distinta de la actual.';
-    }
+    function ocultar() { msg.hidden = true; }
 
-    $bajo  = mb_strtolower($nueva);
-    $local = mb_strtolower(explode('@', $email)[0]);
-    if (mb_strlen($local) >= 4 && str_contains($bajo, $local)) {
-        return 'La contraseña no puede contener tu email.';
-    }
-    $nom = mb_strtolower(trim($nombre));
-    if (mb_strlen($nom) >= 4 && str_contains($bajo, $nom)) {
-        return 'La contraseña no puede contener tu nombre.';
-    }
-    return null;
-}
-
-// ── 1. Solo POST y solo con sesión iniciada ──────────────────────────────────
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    header('Allow: POST');
-    fallo(405, 'Método no permitido.');
-}
-if (empty($_SESSION['usuario_id'])) {
-    fallo(401, 'Tu sesión expiró. Iniciá sesión de nuevo.');
-}
-
-// ── 2. Token CSRF ────────────────────────────────────────────────────────────
-if (empty($_SESSION['csrf']) || !hash_equals($_SESSION['csrf'], post_texto('csrf'))) {
-    fallo(403, 'La solicitud no es válida. Recargá la página e intentá de nuevo.');
-}
-
-require_once __DIR__ . '/../conexion.php';
-require_once __DIR__ . '/../env.php';
-
-$user_id = (int) $_SESSION['usuario_id'];
-$accion  = post_texto('accion');
-
-try {
-    $stmt = $conn->prepare('SELECT nombre, email, clave, codigo_verificacion, codigo_expiracion FROM usuarios WHERE id_usuario = ?');
-    $stmt->bind_param('i', $user_id);
-    $stmt->execute();
-    $usuario = $stmt->get_result()->fetch_assoc();
-    if (!$usuario) {
-        fallo(404, 'No encontramos tu cuenta.');
-    }
-    $tiene_clave = !empty($usuario['clave']);
-
-    // ── Cuentas con contraseña: cambiar ──────────────────────────────────────
-    if ($accion === 'cambiar') {
-        if (!$tiene_clave) {
-            fallo(409, 'Tu cuenta todavía no tiene contraseña. Creala con el código que te enviamos por email.');
-        }
-        $actual    = post_texto('actual');
-        $nueva     = post_texto('nueva');
-        $confirmar = post_texto('confirmar');
-
-        if ($actual === '') {
-            fallo(422, 'Ingresá tu contraseña actual.');
-        }
-        // 3. Verificar la contraseña actual contra el hash guardado
-        if (!password_verify($actual, $usuario['clave'])) {
-            fallo(422, 'La contraseña actual no es correcta.');
-        }
-        // 4. Validar la nueva en el servidor
-        $error = validar_nueva($nueva, $confirmar, $usuario['nombre'], $usuario['email'], $actual);
-        if ($error !== null) {
-            fallo(422, $error);
-        }
-        // 5. Guardar solo el hash
-        $hash = password_hash($nueva, PASSWORD_DEFAULT);
-        $upd  = $conn->prepare('UPDATE usuarios SET clave = ? WHERE id_usuario = ?');
-        $upd->bind_param('si', $hash, $user_id);
-        $upd->execute();
-
-        // 6. Renovar el identificador de sesión (se conservan los datos, incluido el CSRF)
-        session_regenerate_id(true);
-        responder(200, ['ok' => true, 'mensaje' => 'Contraseña guardada.']);
-    }
-
-    // ── Cuentas de Google sin contraseña: enviar código ──────────────────────
-    if ($accion === 'enviar_codigo') {
-        if ($tiene_clave) {
-            fallo(409, 'Tu cuenta ya tiene contraseña. Para cambiarla usá tu contraseña actual.');
-        }
-        $espera = CODIGO_ESPERA - (time() - (int) ($_SESSION['pw_codigo_enviado'] ?? 0));
-        if ($espera > 0) {
-            fallo(429, "Esperá $espera segundos para pedir otro código.", ['espera' => $espera]);
-        }
-
-        $smtp_host = getenv('SMTP_HOST');
-        $smtp_user = getenv('SMTP_USER');
-        $smtp_pass = getenv('SMTP_PASS');
-        if (!$smtp_host || !$smtp_user || !$smtp_pass) {
-            error_log('cambiar_password: faltan SMTP_HOST / SMTP_USER / SMTP_PASS en el .env');
-            fallo(500, 'No pudimos enviar el código porque el correo del servidor no está configurado.');
-        }
-
-        $codigo = (string) random_int(100000, 999999);
-        $expira = date('Y-m-d H:i:s', time() + CODIGO_MINUTOS * 60);
-        $upd = $conn->prepare('UPDATE usuarios SET codigo_verificacion = ?, codigo_expiracion = ? WHERE id_usuario = ?');
-        $upd->bind_param('ssi', $codigo, $expira, $user_id);
-        $upd->execute();
-
-        require_once __DIR__ . '/../phpmailer/PHPMailer.php';
-        require_once __DIR__ . '/../phpmailer/SMTP.php';
-        require_once __DIR__ . '/../phpmailer/Exception.php';
-
+    async function enviar(datos, boton, textoCargando) {
+        const fd = new FormData();
+        fd.append('csrf', CSRF);
+        Object.keys(datos).forEach((k) => fd.append(k, datos[k]));
+        const etiqueta = boton.textContent;
+        boton.disabled = true;
+        boton.textContent = textoCargando;
         try {
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host       = $smtp_host;
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $smtp_user;
-            $mail->Password   = $smtp_pass;
-            $mail->SMTPSecure = getenv('SMTP_SECURE') ?: 'tls';
-            $mail->Port       = (int) (getenv('SMTP_PORT') ?: 2525);
-            $mail->CharSet    = 'UTF-8';
-            $mail->setFrom(getenv('MAIL_FROM') ?: 'noreply@trackify.com', 'Trackify');
-            $mail->addAddress($usuario['email'], $usuario['nombre']);
-            $mail->Subject = 'Código para crear tu contraseña - Trackify';
-            $mail->isHTML(true);
-            $nombre_html = htmlspecialchars($usuario['nombre'], ENT_QUOTES, 'UTF-8');
-            $mail->Body = "
-                <div style='font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'>
-                    <h2 style='color:#1E1B26;margin:0 0 8px;'>Hola, $nombre_html</h2>
-                    <p style='color:#64748b;margin:0 0 24px;'>Usá este código para crear la contraseña de tu cuenta. Vence en " . CODIGO_MINUTOS . " minutos.</p>
-                    <div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>$codigo</div>
-                    <p style='color:#94a3b8;font-size:.85rem;margin:0;'>Si no pediste este código, ignorá este email y no lo compartas con nadie.</p>
-                </div>";
-            $mail->AltBody = "Tu código para crear la contraseña es $codigo. Vence en " . CODIGO_MINUTOS . " minutos.";
-            $mail->send();
-        } catch (\Throwable $e) {
-            error_log('cambiar_password: error al enviar el email: ' . $e->getMessage());
-            fallo(500, 'No pudimos enviar el código. Intentá de nuevo en unos minutos.');
+            const res = await fetch(API, { method: 'POST', body: fd, credentials: 'same-origin' });
+            let data = null;
+            try { data = await res.json(); } catch (e) { /* la respuesta no era JSON */ }
+            return data || { ok: false, error: 'El servidor respondió algo inesperado. Intentá de nuevo.' };
+        } catch (e) {
+            return { ok: false, error: 'No pudimos conectarnos con el servidor. Revisá tu conexión.' };
+        } finally {
+            boton.disabled = false;
+            boton.textContent = etiqueta;
         }
-
-        $_SESSION['pw_codigo_enviado']  = time();
-        $_SESSION['pw_codigo_intentos'] = 0;
-        responder(200, [
-            'ok'      => true,
-            'mensaje' => 'Te enviamos un código de 6 dígitos a ' . mascara_email($usuario['email']) . '.',
-            'espera'  => CODIGO_ESPERA,
-        ]);
     }
 
-    // ── Cuentas de Google sin contraseña: crearla con el código ──────────────
-    if ($accion === 'crear') {
-        if ($tiene_clave) {
-            fallo(409, 'Tu cuenta ya tiene contraseña. Para cambiarla usá tu contraseña actual.');
-        }
-        $codigo    = post_texto('codigo');
-        $nueva     = post_texto('nueva');
-        $confirmar = post_texto('confirmar');
+    // ── Mostrar / ocultar contraseña ─────────────────────────────────────────
+    document.querySelectorAll('.pw-toggle').forEach((b) => {
+        b.addEventListener('click', () => {
+            const input = $(b.dataset.target);
+            const visible = input.type === 'text';
+            input.type = visible ? 'password' : 'text';
+            b.textContent = visible ? 'Mostrar' : 'Ocultar';
+            b.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+            b.setAttribute('aria-pressed', visible ? 'false' : 'true');
+        });
+    });
 
-        $guardado = (string) ($usuario['codigo_verificacion'] ?? '');
-        if ($guardado === '' || empty($usuario['codigo_expiracion'])) {
-            fallo(422, 'Primero pedí un código por email.');
-        }
+    // ── Fuerza y requisitos en vivo ──────────────────────────────────────────
+    const actualInput = $('pwActual');           // solo existe si la cuenta ya tiene contraseña
+    const nuevaInput  = $('pwNueva');
+    const confInput   = $('pwConf');
+    const barra       = $('pwFuerzaBarra');
+    const fuerzaTxt   = $('pwFuerzaTxt');
+    const NIVELES = ['Muy débil', 'Débil', 'Aceptable', 'Buena', 'Fuerte'];
+    const COLORES = ['#DC2626', '#EA580C', '#CA8A04', '#65A30D', '#16A34A'];
 
-        $intentos = (int) ($_SESSION['pw_codigo_intentos'] ?? 0);
-        if ($intentos >= CODIGO_INTENTOS) {
-            $inv = $conn->prepare('UPDATE usuarios SET codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ?');
-            $inv->bind_param('i', $user_id);
-            $inv->execute();
-            fallo(429, 'Superaste los ' . CODIGO_INTENTOS . ' intentos. Pedí un código nuevo.');
+    function puntaje(p) {
+        let s = 0;
+        if (p.length >= 8) s++;
+        if (p.length >= 12) s++;
+        if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
+        if (/\d/.test(p)) s++;
+        if (/[^A-Za-z0-9]/.test(p)) s++;
+        return Math.min(s, 4);
+    }
+    function marcar(id, ok) {
+        const li = $(id);
+        if (li) li.classList.toggle('ok', ok);
+    }
+    function actualizar() {
+        const n = nuevaInput.value;
+        const c = confInput.value;
+        const a = actualInput ? actualInput.value : '';
+        if (n.length === 0) {
+            barra.style.width = '0';
+            fuerzaTxt.textContent = '';
+        } else {
+            const nivel = puntaje(n);
+            barra.style.width = ((nivel + 1) * 20) + '%';
+            barra.style.backgroundColor = COLORES[nivel];
+            fuerzaTxt.textContent = 'Seguridad: ' + NIVELES[nivel].toLowerCase();
         }
-        if (time() > strtotime($usuario['codigo_expiracion'])) {
-            fallo(422, 'El código venció. Pedí uno nuevo.');
+        marcar('reqLargo', n.length >= 8);
+        marcar('reqDistinta', n.length > 0 && (a === '' || n !== a));
+        marcar('reqCoincide', n.length > 0 && n === c);
+    }
+    [actualInput, nuevaInput, confInput].forEach((el) => { if (el) el.addEventListener('input', actualizar); });
+
+    // El servidor repite estas reglas: esto solo evita un viaje innecesario.
+    function validarLocal(n, c, a) {
+        const bytes = new TextEncoder().encode(n).length;
+        if (n.length < 8) return 'La contraseña nueva debe tener al menos 8 caracteres.';
+        if (bytes > 72) return 'La contraseña nueva no puede superar los 72 caracteres.';
+        if (a && n === a) return 'La contraseña nueva debe ser distinta de la actual.';
+        if (n !== c) return 'La confirmación no coincide con la contraseña nueva.';
+        return null;
+    }
+
+    let terminado = false;
+    function volverAlPerfil() {
+        terminado = true;
+        setTimeout(() => { window.location.href = 'perfil.php'; }, 2200);
+    }
+
+    // ── Cuentas con contraseña: cambiarla ────────────────────────────────────
+    const formCambiar = $('formCambiar');
+    if (formCambiar) {
+        formCambiar.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            ocultar();
+            const actual = actualInput.value;
+            const nueva  = nuevaInput.value;
+            const conf   = confInput.value;
+            if (!actual) return mostrar('error', 'Ingresá tu contraseña actual.');
+            const error = validarLocal(nueva, conf, actual);
+            if (error) return mostrar('error', error);
+
+            const r = await enviar({ accion: 'cambiar', actual, nueva, confirmar: conf }, $('btnGuardar'), 'Guardando…');
+            if (!r.ok) return mostrar('error', r.error || 'No pudimos guardar la contraseña.');
+
+            formCambiar.reset();
+            actualizar();
+            $('btnGuardar').disabled = true;
+            mostrar('ok', (r.mensaje || 'Contraseña guardada.') + ' Volvemos a tu perfil…');
+            volverAlPerfil();
+        });
+    }
+
+    // ── Cuentas de Google: crear la contraseña con código por email ──────────
+    const formCrear = $('formCrear');
+    if (formCrear) {
+        const btnReenviar = $('btnReenviar');
+        const codigoInput = $('pwCodigo');
+
+        codigoInput.addEventListener('input', () => {
+            codigoInput.value = codigoInput.value.replace(/\D/g, '');
+        });
+
+        function mostrarPaso2() {
+            $('pwPaso1').hidden = true;
+            formCrear.hidden = false;
+            codigoInput.focus();
         }
-        if (!preg_match('/^\d{6}$/', $codigo)) {
-            fallo(422, 'El código tiene 6 dígitos.');
+        function iniciarEspera(segundos, etiqueta) {
+            let s = segundos;
+            btnReenviar.disabled = true;
+            btnReenviar.textContent = etiqueta + ' (' + s + ' s)';
+            const t = setInterval(() => {
+                s--;
+                if (terminado) { clearInterval(t); return; }
+                if (s <= 0) {
+                    clearInterval(t);
+                    btnReenviar.disabled = false;
+                    btnReenviar.textContent = etiqueta;
+                } else {
+                    btnReenviar.textContent = etiqueta + ' (' + s + ' s)';
+                }
+            }, 1000);
         }
-        if (!hash_equals($guardado, $codigo)) {
-            $intentos++;
-            $_SESSION['pw_codigo_intentos'] = $intentos;
-            $restan = CODIGO_INTENTOS - $intentos;
-            if ($restan <= 0) {
-                $inv = $conn->prepare('UPDATE usuarios SET codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ?');
-                $inv->bind_param('i', $user_id);
-                $inv->execute();
-                fallo(429, 'Código incorrecto. Superaste los ' . CODIGO_INTENTOS . ' intentos: pedí un código nuevo.');
+        async function pedirCodigo(boton, textoCargando) {
+            ocultar();
+            const r = await enviar({ accion: 'enviar_codigo' }, boton, textoCargando);
+            if (!r.ok) {
+                mostrar('error', r.error || 'No pudimos enviar el código.');
+                if (r.espera) { mostrarPaso2(); iniciarEspera(r.espera, 'Reenviar código'); }
+                return;
             }
-            fallo(422, "Código incorrecto. Te quedan $restan " . ($restan === 1 ? 'intento.' : 'intentos.'));
+            mostrar('ok', r.mensaje);
+            mostrarPaso2();
+            iniciarEspera(r.espera || 60, 'Reenviar código');
         }
 
-        $error = validar_nueva($nueva, $confirmar, $usuario['nombre'], $usuario['email'], null);
-        if ($error !== null) {
-            fallo(422, $error);
-        }
+        $('btnEnviarCodigo').addEventListener('click', () => pedirCodigo($('btnEnviarCodigo'), 'Enviando…'));
+        btnReenviar.addEventListener('click', () => pedirCodigo(btnReenviar, 'Enviando…'));
+        $('btnYaTengoCodigo').addEventListener('click', () => { ocultar(); mostrarPaso2(); });
 
-        // El código demuestra que el email es del usuario, por eso queda verificado.
-        $hash = password_hash($nueva, PASSWORD_DEFAULT);
-        $upd  = $conn->prepare("UPDATE usuarios SET clave = ?, email_verificado = 1, codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ? AND (clave IS NULL OR clave = '')");
-        $upd->bind_param('si', $hash, $user_id);
-        $upd->execute();
-        if ($upd->affected_rows !== 1) {
-            fallo(409, 'No pudimos crear la contraseña. Recargá la página e intentá de nuevo.');
-        }
+        formCrear.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            ocultar();
+            const codigo = codigoInput.value.trim();
+            const nueva  = nuevaInput.value;
+            const conf   = confInput.value;
+            if (!/^\d{6}$/.test(codigo)) return mostrar('error', 'El código tiene 6 dígitos.');
+            const error = validarLocal(nueva, conf, '');
+            if (error) return mostrar('error', error);
 
-        unset($_SESSION['pw_codigo_intentos'], $_SESSION['pw_codigo_enviado']);
-        session_regenerate_id(true);
-        responder(200, ['ok' => true, 'mensaje' => 'Contraseña creada. Ahora también podés entrar con tu email y contraseña.']);
+            const r = await enviar({ accion: 'crear', codigo, nueva, confirmar: conf }, $('btnCrear'), 'Creando…');
+            if (!r.ok) return mostrar('error', r.error || 'No pudimos crear la contraseña.');
+
+            formCrear.reset();
+            actualizar();
+            $('btnCrear').disabled = true;
+            btnReenviar.disabled = true;
+            mostrar('ok', (r.mensaje || 'Contraseña creada.') + ' Volvemos a tu perfil…');
+            volverAlPerfil();
+        });
     }
+})();
+</script>
 
-    fallo(400, 'Acción no válida.');
-
-} catch (\Throwable $e) {
-    error_log('cambiar_password: ' . $e->getMessage());
-    fallo(500, 'Ocurrió un error en el servidor. Intentá de nuevo más tarde.');
-}
+<?php require_once 'includes/footer.php'; ?>
