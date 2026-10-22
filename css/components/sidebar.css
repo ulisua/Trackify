@@ -1,28 +1,32 @@
 /* ===== COMPONENT: SIDEBAR & HAMBURGER ===== */
 .sidebar {
-    width: 220px;
+    width: 230px;
     background: var(--sidebar-bg);
-    min-height: 100vh;
+    min-height: calc(100vh - 74px);
     position: sticky;
-    top: 0;
+    top: 74px;
     border-right: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
 }
 
 .sidebar nav {
-    padding-top: 25px;
-    padding-bottom: 25px;
+    padding: 24px 14px;
 }
 
 .sidebar a {
-    display: block;
-    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
     color: var(--sidebar-link-color);
-    border-radius: 6px;
-    margin-bottom: 8px;
+    border-radius: 8px;
+    margin-bottom: 6px;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     font-weight: 500;
+    font-size: 0.95rem;
+    min-height: 44px;
+    box-sizing: border-box;
 }
 
 .sidebar a:hover {
@@ -30,14 +34,14 @@
     color: var(--sidebar-link-hover-color);
     transform: translateX(4px);
     box-shadow: none;
-    text-shadow: none;
 }
 
 .sidebar .active {
     background: var(--sidebar-link-active-bg);
-    color: white;
+    color: #ffffff;
     border-left: 4px solid var(--sidebar-link-active-border);
-    border-radius: 0 6px 6px 0;
+    border-radius: 0 8px 8px 0;
+    font-weight: 600;
 }
 
 /* ===== BOTÓN HAMBURGUESA ===== */
@@ -45,25 +49,29 @@
     display: none;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
     gap: 5px;
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
     cursor: pointer;
-    background: none;
+    background: transparent;
     border: none;
-    padding: 4px;
-    border-radius: 6px;
+    padding: 8px;
+    border-radius: 8px;
     transition: background 0.2s ease;
     z-index: 200;
+    box-sizing: border-box;
 }
 
 .menu-toggle:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .menu-toggle span {
     display: block;
-    width: 100%;
+    width: 22px;
     height: 2px;
     background: var(--brand-green-light);
     border-radius: 2px;
@@ -95,14 +103,16 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: 260px;
+        width: min(280px, 82vw);
         height: 100dvh;
-        z-index: 99;
+        min-height: 100dvh;
+        z-index: 2000;
         transform: translateX(-100%);
         transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        padding-top: 70px;
-        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.35);
+        padding-top: 76px;
+        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.45);
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .sidebar.open {

@@ -18,20 +18,25 @@
 
 .btn-nuevo {
     padding: 12px 22px;
+    min-height: 44px;
     background: var(--brand-green-dark);
     color: var(--brand-green-light);
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s ease;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .btn-nuevo:hover {
-    opacity: 0.88;
+    opacity: 0.9;
     transform: translateY(-1px);
 }
 
@@ -41,29 +46,35 @@
     gap: 6px;
     margin-bottom: 24px;
     background: var(--bg-hover);
-    padding: 5px;
-    border-radius: 8px;
+    padding: 4px;
+    border-radius: 10px;
     width: fit-content;
+    box-sizing: border-box;
 }
 
 .tab {
-    padding: 9px 20px;
-    border-radius: 6px;
+    padding: 10px 22px;
+    min-height: 42px;
+    border-radius: 8px;
     border: none;
     background: transparent;
     font-family: inherit;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .tab.active {
     background: var(--bg-card);
     color: var(--text-primary);
     font-weight: 600;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 /* ===== VARIABLES DE COLOR POR TARJETA ===== */
@@ -229,25 +240,38 @@
 
 .cat-acciones {
     display: flex;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 8px;
+    margin-top: 6px;
+    align-items: center;
 }
 
 .cat-acciones button {
     background: var(--card-btn-bg, var(--bg-hover));
     border: 1px solid var(--card-btn-border, var(--border-color));
-    border-radius: 6px;
-    padding: 5px 10px;
-    font-size: 0.8rem;
+    border-radius: 8px;
+    padding: 8px 14px;
+    min-height: 38px;
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
     font-family: inherit;
     color: var(--card-btn-color, var(--text-secondary));
     transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
 }
 
 .cat-acciones button:hover {
     filter: brightness(0.92);
     transform: translateY(-1px);
+}
+
+.cat-acciones .btn-del {
+    padding: 8px 10px;
+    min-width: 38px;
+    justify-content: center;
 }
 
 .cat-acciones .btn-del:hover {

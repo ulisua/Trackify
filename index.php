@@ -362,15 +362,15 @@ if (tortaData.length === 0) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             cutout: "60%",
             plugins: {
                 legend: {
                     position: "bottom",
                     labels: {
-                        padding: 14,
+                        padding: 12,
                         boxWidth: 12,
-                        font: { size: 12 }
+                        font: { size: 11, family: "'Inter', sans-serif" }
                     }
                 },
                 tooltip: {
@@ -421,11 +421,11 @@ if (barrasLabels.length === 0) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: "bottom",
-                    labels: { padding: 16, font: { size: 12 } }
+                    labels: { padding: 12, boxWidth: 12, font: { size: 11, family: "'Inter', sans-serif" } }
                 },
                 tooltip: {
                     callbacks: {
@@ -433,16 +433,28 @@ if (barrasLabels.length === 0) {
                     }
                 }
             },
+            layout: {
+                padding: {
+                    left: 2,
+                    right: 4,
+                    top: 4,
+                    bottom: 0
+                }
+            },
             scales: {
                 x: {
                     grid: { display: false },
-                    ticks: { font: { size: 12 } }
+                    ticks: {
+                        font: { size: 11, family: "'Inter', sans-serif" },
+                        maxRotation: 0,
+                        autoSkip: true
+                    }
                 },
                 y: {
                     beginAtZero: true,
                     grid: { color: isDarkTheme ? "rgba(255, 255, 255, 0.08)" : "rgba(0,0,0,0.05)" },
                     ticks: {
-                        font: { size: 11 },
+                        font: { size: 10, family: "'Inter', sans-serif" },
                         callback: val => "$" + val.toLocaleString("es-AR")
                     }
                 }

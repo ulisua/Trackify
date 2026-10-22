@@ -13,7 +13,7 @@
         <!-- Selector de moneda del movimiento -->
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px;">
             <input type="number" step="0.01" id="monto" placeholder="Monto" required style="flex:1;">
-            <select id="monedaIngreso" style="padding:14px 12px;border:1px solid var(--border-color, #E2E8F0);border-radius:6px;font-size:1rem;font-family:inherit;background:var(--input-bg, #F8FAFC);color:var(--input-text, #1E1B26);outline:none;min-width:95px;">
+            <select id="monedaIngreso" style="padding:10px 12px;min-height:44px;border:1px solid var(--border-color);border-radius:8px;font-size:0.95rem;font-family:inherit;background:var(--input-bg);color:var(--input-text);outline:none;min-width:95px;">
                 <option value="ARS">🇦🇷 ARS</option>
                 <option value="USD">🇺🇸 USD</option>
             </select>
@@ -86,7 +86,7 @@
         <input type="text" id="edit_desc_meta" name="desc_meta" placeholder="Breve descripción" required>
         <input type="number" step="0.01" id="edit_monto_objetivo" name="monto_objetivo" placeholder="Monto objetivo ($)" required>
         <input type="date" id="edit_fecha_limite" name="fecha_limite" required>
-        <select id="edit_estado" name="estado" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26;">
+        <select id="edit_estado" name="estado" style="padding: 12px 14px; min-height: 44px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; background: var(--input-bg); color: var(--input-text);">
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
             <option value="logrado">Logrado</option>
@@ -106,18 +106,18 @@
         <h3>Nueva categoría</h3>
         
         <input type="text" id="nombre_categoria" name="nombre_categoria" placeholder="Nombre de la categoría" required>
-        <select id="tipo_categoria" name="tipo_categoria" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26;">
+        <select id="tipo_categoria" name="tipo_categoria" style="padding: 12px 14px; min-height: 44px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; background: var(--input-bg); color: var(--input-text);">
             <option value="gasto">Gasto</option>
             <option value="ingreso">Ingreso</option>
         </select>
-        <select id="icono_categoria" name="icono" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26; margin-top: 12px;">
+        <select id="icono_categoria" name="icono" style="padding: 12px 14px; min-height: 44px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; background: var(--input-bg); color: var(--input-text); margin-top: 4px;">
             <?php foreach (obtenerOpcionesIconoCategoria() as $ruta => $nombreIcono): ?>
                 <option value="<?php echo htmlspecialchars($ruta); ?>"><?php echo htmlspecialchars($nombreIcono); ?></option>
             <?php endforeach; ?>
         </select>
-        <label style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; color:#475569; margin-top:12px;">
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; color:var(--text-secondary); margin-top:6px;">
             Color de acento
-            <input type="color" id="color_categoria" name="color" value="#EA73F5" style="width:100%; height:44px; border:none; padding:0; background:#fff; border-radius:8px; cursor:pointer;">
+            <input type="color" id="color_categoria" name="color" value="#EA73F5" style="width:100%; height:44px; border:none; padding:0; background:transparent; border-radius:8px; cursor:pointer;">
         </label>
         
         <div class="modal-actions">
@@ -135,18 +135,18 @@
         <h3>Editar categoría</h3>
         
         <input type="text" id="edit_nombre_categoria" name="nombre_categoria" placeholder="Nombre de la categoría" required>
-        <select id="edit_tipo_categoria" name="tipo_categoria" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26;">
+        <select id="edit_tipo_categoria" name="tipo_categoria" style="padding: 12px 14px; min-height: 44px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; background: var(--input-bg); color: var(--input-text);">
             <option value="gasto">Gasto</option>
             <option value="ingreso">Ingreso</option>
         </select>
-        <select id="edit_icono_categoria" name="icono" style="padding: 14px 16px; border: 1px solid #E2E8F0; border-radius: 6px; font-size: 1rem; font-family: inherit; outline: none; background: #F8FAFC; color: #1E1B26; margin-top: 12px;">
+        <select id="edit_icono_categoria" name="icono" style="padding: 12px 14px; min-height: 44px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.95rem; font-family: inherit; outline: none; background: var(--input-bg); color: var(--input-text); margin-top: 4px;">
             <?php foreach (obtenerOpcionesIconoCategoria() as $ruta => $nombreIcono): ?>
                 <option value="<?php echo htmlspecialchars($ruta); ?>"><?php echo htmlspecialchars($nombreIcono); ?></option>
             <?php endforeach; ?>
         </select>
-        <label style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; color:#475569; margin-top:12px;">
+        <label style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem; color:var(--text-secondary); margin-top:6px;">
             Color de acento
-            <input type="color" id="edit_color_categoria" name="color" value="#EA73F5" style="width:100%; height:44px; border:none; padding:0; background:#fff; border-radius:8px; cursor:pointer;">
+            <input type="color" id="edit_color_categoria" name="color" value="#EA73F5" style="width:100%; height:44px; border:none; padding:0; background:transparent; border-radius:8px; cursor:pointer;">
         </label>
         
         <div class="modal-actions">
@@ -205,7 +205,7 @@
                 id="inputConfirmacionBorrar" 
                 name="confirmacion_borrar"
                 placeholder="SI, ESTOY SEGURO" 
-                style="padding:12px; border:2px solid #E2E8F0; border-radius:6px; font-size:0.95rem; font-family:inherit; color:#1E1B26; background:#F8FAFC; outline:none; transition:all 0.2s;"
+                style="padding:12px 14px; min-height:44px; border:2px solid var(--border-color); border-radius:8px; font-size:0.95rem; font-family:inherit; color:var(--input-text); background:var(--input-bg); outline:none; transition:all 0.2s;"
                 autocomplete="off"
                 required
             >
@@ -240,7 +240,7 @@
                 id="inputConfirmacionEliminarCuenta" 
                 name="confirmacion_eliminar"
                 placeholder="ELIMINAR MI CUENTA" 
-                style="padding:12px; border:2px solid #E2E8F0; border-radius:6px; font-size:0.95rem; font-family:inherit; color:#1E1B26; background:#F8FAFC; outline:none; transition:all 0.2s;"
+                style="padding:12px 14px; min-height:44px; border:2px solid var(--border-color); border-radius:8px; font-size:0.95rem; font-family:inherit; color:var(--input-text); background:var(--input-bg); outline:none; transition:all 0.2s;"
                 autocomplete="off"
                 required
             >

@@ -168,36 +168,6 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                         <div class="seccion-body">
                             <div class="toggle-row">
                                 <div class="toggle-info">
-                                    <strong>Notificaciones de objetivos</strong>
-                                    <span>Alertas cuando te acercás a tu meta</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-row">
-                                <div class="toggle-info">
-                                    <strong>Resumen mensual por email</strong>
-                                    <span>Recibís un reporte el 1° de cada mes</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-row">
-                                <div class="toggle-info">
-                                    <strong>Sugerencias de la IA</strong>
-                                    <span>La IA analiza tus patrones y sugiere mejoras</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-row">
-                                <div class="toggle-info">
                                     <strong>Modo oscuro</strong>
                                 </div>
                                 <label class="switch">

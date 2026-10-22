@@ -75,23 +75,25 @@ if (isset($conn) && $conn instanceof mysqli) {
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="cerrarMenu()"></div>
 
 <header class="navbar">
-    <div class="logo">
-        <img src="logo.png" alt="Trackify Icon" style="height: 60px; transform: scale(1.1); transform-origin: left center;">
-    </div>
-
     <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()" aria-label="Abrir menú">
         <span></span>
         <span></span>
         <span></span>
     </button>
 
-    <div class="header-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+    <div class="logo">
+        <a href="index.php" class="logo-link" aria-label="Trackify Inicio">
+            <img src="logo.png" alt="Trackify Icon" class="logo-img">
+        </a>
+    </div>
+
+    <div class="header-controls">
         <div class="moneda-selector">
             <select id="selectorMoneda" title="Cambiar moneda" data-moneda-actual="<?= htmlspecialchars($moneda_actual) ?>">
                 <option value="ARS" <?= $moneda_actual === 'ARS' ? 'selected' : '' ?>>🇦🇷 ARS</option>
                 <option value="USD" <?= $moneda_actual === 'USD' ? 'selected' : '' ?>>🇺🇸 USD</option>
             </select>
-            <span id="tipoCambioInfo" style="font-size:.75rem;color:#94a3b8;white-space:nowrap;"></span>
+            <span id="tipoCambioInfo"></span>
         </div>
         <div class="moneda-selector">
             <select id="selectorPeriodo" title="Cambiar período" onchange="cambiarPeriodo(this.value)">
@@ -102,7 +104,7 @@ if (isset($conn) && $conn instanceof mysqli) {
         </div>
     </div>
 
-    <div class="user">Hola, <span id="usuarioNombre" style="color: #EA73F5; font-weight: 600;"><?php echo htmlspecialchars($nombreUsuario); ?></span></div>
+    <div class="user">Hola, <span id="usuarioNombre"><?php echo htmlspecialchars($nombreUsuario); ?></span></div>
 </header>
 
 <div class="layout">

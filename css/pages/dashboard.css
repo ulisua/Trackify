@@ -352,7 +352,18 @@
 
 .mc-acciones {
     display: flex;
-    gap: 4px;
+    gap: 6px;
+    align-items: center;
+}
+
+.mc-acciones button {
+    min-width: 38px;
+    min-height: 38px;
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 /* ===== BOTON FLOTANTE DE IA ===== */
