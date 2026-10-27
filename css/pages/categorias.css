@@ -1,20 +1,6 @@
 /* ===== PAGE: CATEGORÍAS ===== */
 
-.page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-    gap: 13px;
-}
 
-.page-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--text-primary);
-}
 
 .btn-nuevo {
     padding: 12px 22px;
@@ -230,7 +216,8 @@
 .cat-monto {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--card-accent, var(--text-primary));
+    /* El acento de la categoría puede ser muy oscuro o muy claro: el monto usa el color de texto de la tarjeta */
+    color: var(--card-text, var(--text-primary));
 }
 
 .cat-cant {
@@ -540,44 +527,24 @@
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .cat-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    }
 
-    .resumen-cat-nombre {
-        min-width: 110px;
-        font-size: 0.88rem;
-    }
+
+/* Categorías predeterminadas: compartidas, sin edición */
+.cat-badge-sistema {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--card-text-muted, var(--text-secondary));
+    background: var(--card-btn-bg, var(--bg-hover));
+    border: 1px solid var(--card-btn-border, var(--border-color));
 }
 
-@media (max-width: 480px) {
-    .cat-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-
-    .tabs {
-        width: 100%;
-    }
-
-    .tab {
-        flex: 1;
-        text-align: center;
-        padding: 9px 10px;
-    }
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .btn-nuevo {
-        width: 100%;
-        text-align: center;
-    }
-
-    .resumen-barra {
-        display: none;
-    }
+.resumen-cats .texto-vacio {
+    text-align: left;
+    padding: 4px 0 0;
 }

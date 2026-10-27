@@ -31,7 +31,8 @@ trackify/
     │   ├── cards.css                #    Tarjetas genéricas, cajas .box y estados glow
     │   ├── forms.css                #    Inputs, custom select dropdowns, Flatpickr y modales
     │   ├── buttons.css              #    Botones de acción, variantes y hover states
-    │   └── charts.css               #    Contenedores de gráficos Chart.js
+    │   ├── charts.css               #    Contenedores de gráficos Chart.js
+    │   └── chat.css                 #    Chat del asistente IA (página ia.php y panel flotante del dashboard)
     └── pages/                       # 6. Hojas de estilo específicas por página (carga diferida)
         ├── auth.css                 #    Login, Registro y Verificación (orbes de luz, tarjetas auth)
         ├── categorias.css           #    Grid de categorías, tabs y las 7 paletas pastel
@@ -62,13 +63,37 @@ trackify/
 @import url('css/components/forms.css');
 @import url('css/components/buttons.css');
 @import url('css/components/charts.css');
-
-/* 4. Sistema Responsive Centralizado */
-@import url('css/responsive.css');
+@import url('css/components/chat.css');
 ```
+
+### Orden real de carga en el `<head>` (`includes/header.php`)
+
+```
+1. flatpickr.min.css (CDN)        ← librerías primero, para poder sobrescribirlas
+2. styles.css                     ← tokens, base, layout y componentes
+3. moneda.css                     ← selectores de moneda/período
+4. css/pages/<pagina>.css         ← $extra_css de cada página
+5. css/responsive.css             ← SIEMPRE al final
+```
+
+> [!IMPORTANT]
+> `css/responsive.css` **no se importa en `styles.css`**: se enlaza al final del `<head>` (en `header.php` y en las páginas de acceso). Así sus media queries ganan sobre las hojas de página por orden de cascada, sin necesidad de `!important`.
+> Antes se importaba dentro de `styles.css`, quedaba antes que `css/pages/` y perdía contra ellas: por eso había acumulado más de 200 `!important`.
 
 > [!NOTE]
 > Las hojas de `css/pages/` **NO se importan en `styles.css`**. Se inyectan bajo demanda en el `<head>` mediante la variable PHP `$extra_css` dentro de cada página específica (ej. `$extra_css = '<link rel="stylesheet" href="css/pages/dashboard.css">';`).
+
+### Puntos de corte (todos en `css/responsive.css`)
+
+| Corte | Qué cambia |
+| :--- | :--- |
+| `≤1100px` | Menú lateral más angosto, perfil en 1 columna, tablas compactas, filtros de movimientos en 2 columnas |
+| `≤1000px` | Tablas → tarjetas de movimiento |
+| `≤900px` | Menú lateral como cajón (hamburguesa), logo centrado, selectores de moneda/período **dentro del menú**, grillas a 1 columna |
+| `≤600px` | Teléfono: tarjetas de métricas a todo el ancho, botones del dashboard en fila de 3, filtros apilados, modales compactos |
+| `≤360px` | Teléfono angosto: grillas de categorías/objetivos a 1 columna |
+
+Los componentes (`css/components/`) y las páginas (`css/pages/`) **no definen media queries propias**.
 
 ---
 
@@ -133,13 +158,22 @@ El aspecto visual se conmuta mediante el atributo `data-theme` en la etiqueta `<
    document.documentElement.setAttribute('data-theme', nuevoTema);
    localStorage.setItem('theme', nuevoTema);
    ```
-3. **Resaltado de Iconos en Modo Oscuro:**
-   En `themes.css`, todas las imágenes e iconos PNG (excepto el logo institucional) reciben automáticamente un filtro de resplandor sutil para maximizar visibilidad sobre fondos oscuros:
+3. **Íconos en Modo Oscuro:**
+   Los PNG de `iconos/` son de trazo negro. En `themes.css` reciben el token `--icon-filter`: ninguno en claro e `invert(1)` en oscuro, así se ven en claro sobre fondos oscuros (antes solo tenían un resplandor gris y el trazo seguía negro).
    ```css
-   [data-theme="dark"] img:not([alt="Trackify Icon"]) {
-       filter: drop-shadow(0px 0px 4px rgba(228, 228, 228, 0.76));
-   }
+   img[src*="iconos/"] { filter: var(--icon-filter); }
    ```
+   Los íconos sobre fondos oscuros fijos (botón de IA, `.ia-btn-chat`, botones verdes de los modales) se invierten siempre. `--icon-aura` agrega un halo más marcado (se usa en la página de movimientos).
+
+### Tokens agregados
+| Token | Uso |
+| :--- | :--- |
+| `--color-positivo` / `--color-negativo` | Montos de ingreso / gasto (legibles en ambos temas) |
+| `--color-peligro`, `--bg-peligro`, `--texto-peligro`, `--borde-peligro` | Avisos y botones destructivos |
+| `--table-gastos-text` / `--table-ingresos-text` | Encabezados de tabla por tipo |
+| `--badge-vencido-bg` / `--badge-vencido-text` | Objetivos vencidos |
+| `--select-chevron` | Flecha de marca de todos los `<select>` |
+| `--icon-filter` / `--icon-aura` | Íconos PNG según tema |
 
 ---
 
@@ -221,7 +255,10 @@ Sobrescrito con tema Trackify:
 | **Fondo general o color de texto claro/oscuro** | `css/themes.css` | `--bg-primary`, `--text-primary` en `[data-theme="..."]` |
 | **Estilo o ancho de la barra lateral** | `css/components/sidebar.css` | `.sidebar`, `.sidebar a` |
 | **Barra de navegación superior o logo** | `css/components/navbar.css` | `.navbar`, `.navbar .logo` |
-| **Diseño del selector ARS/USD del header** | `moneda.css` | `.moneda-selector select` |
+| **Diseño del selector ARS/USD del header** | `moneda.css` | `.selector-header select` |
+| **Título y subtítulo de cada página** | `css/layout.css` | `.page-header`, `.page-subtitle` |
+| **Cualquier comportamiento por tamaño de pantalla** | `css/responsive.css` | bloque del punto de corte correspondiente |
+| **Listado de movimientos y sus filtros** | `css/pages/movimientos.css` | `.filtros-movimientos`, `.badge-tipo` |
 | **Efectos de tarjetas (sombra, elevación, glow)** | `css/components/cards.css` | `.card:hover`, `.box:hover` |
 | **Inputs, selects o modales de formularios** | `css/components/forms.css` | `.input`, `.modal-content`, `.custom-select-*` |
 | **Aspecto de los botones (Nuevo ingreso/gasto)** | `css/components/buttons.css` | `.btn`, `.btn.ingreso`, `.btn.gasto` |
@@ -239,4 +276,7 @@ Sobrescrito con tema Trackify:
 1. **PROHIBIDO escribir estilos masivos en `styles.css`:** Este archivo debe contener exclusivamente `@import`. Todo estilo nuevo debe colocarse en su componente correspondiente o en su página respectiva.
 2. **NUNCA usar colores hexadecimales "hardcodeados" dentro de los componentes:** Utiliza siempre variables (`var(--bg-card)`, `var(--text-primary)`, `var(--border-color)`). De lo contrario, romperás el modo oscuro.
 3. **No contaminar con estilos inline en PHP:** No escribas `style="background: #123456;"` en bucles de PHP. Utiliza clases CSS declaradas (como `.card-mint` o `.fill-teal`).
-4. **Si creas una página nueva:** Crea su correspondiente archivo dentro de `css/pages/nombre_pagina.css` y cárgalo en el archivo PHP mediante la variable `$extra_css` antes de invocar `includes/header.php`.
+4. **Si creas una página nueva:** Crea su correspondiente archivo dentro de `css/pages/nombre_pagina.css` y cárgalo en el archivo PHP mediante la variable `$extra_css` antes de invocar `includes/header.php`. Empezá el contenido con un `.page-header` para que el título quede alineado con el resto.
+5. **Media queries solo en `css/responsive.css`**, en el bloque del punto de corte que corresponda. No agregues `!important` para ganarle a una hoja de página: `responsive.css` ya se carga después.
+6. **No fuerces el tamaño de un `<canvas>` de Chart.js con CSS:** la altura se fija en `.grafico-wrap`; forzar `width/height` del canvas deja el gráfico vacío o diminuto.
+7. **Reglas de dos clases que compiten** (`.acciones` vs `.dashboard-acciones`, `.tabla td` vs `.negativo`): revisá especificidad y orden antes de agregar otra regla.

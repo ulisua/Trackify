@@ -1,9 +1,14 @@
-// Tabs
+// Tabs: alterna grilla y resumen entre gastos e ingresos
 function switchTab(tipo, btn) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('gridGastos').style.display = tipo === 'gastos' ? 'grid' : 'none';
-    document.getElementById('gridIngresos').style.display = tipo === 'ingresos' ? 'grid' : 'none';
+    const esGastos = tipo === 'gastos';
+    document.getElementById('gridGastos').hidden = !esGastos;
+    document.getElementById('gridIngresos').hidden = esGastos;
+    const resumenGastos = document.getElementById('resumenGastos');
+    const resumenIngresos = document.getElementById('resumenIngresos');
+    if (resumenGastos) resumenGastos.hidden = !esGastos;
+    if (resumenIngresos) resumenIngresos.hidden = esGastos;
 }
 
 // Modal Editar Categoría

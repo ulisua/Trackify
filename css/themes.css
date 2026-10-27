@@ -28,7 +28,7 @@
     --bg-modal: #ffffff;
     --bg-hover: var(--bg-secondary);
     --bg-active: #eef2f5;
-    
+
     --text-muted: #94A3B8;
     --text-inverse: #ffffff;
 
@@ -38,6 +38,14 @@
     --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.18);
     --shadow-glow: rgba(207, 242, 124, 0.45);
 
+    /* Montos y estados */
+    --color-positivo: #15803D;
+    --color-negativo: var(--brand-purple);
+    --color-peligro: #BE123C;
+    --bg-peligro: #FFF1F2;
+    --texto-peligro: #7F1D1D;
+    --borde-peligro: #FECDD3;
+
     /* Badges */
     --badge-activo-bg: #DCFCE7;
     --badge-activo-text: #16A34A;
@@ -45,21 +53,30 @@
     --badge-pausado-text: #A16207;
     --badge-logrado-bg: #E0E7FF;
     --badge-logrado-text: #4338CA;
+    --badge-vencido-bg: #FEF2F2;
+    --badge-vencido-text: #DC2626;
 
     /* Tablas */
     --table-gastos-thead: #fff1f2;
+    --table-gastos-text: var(--brand-purple);
     --table-ingresos-thead: #f0fdf4;
+    --table-ingresos-text: var(--brand-green-dark);
 
     /* Selects */
     --select-option-hover-text: var(--brand-green-dark);
+    --select-chevron: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23084734' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+
+    /* Íconos PNG (trazo negro): sin filtro en tema claro */
+    --icon-filter: none;
+    --icon-aura: drop-shadow(0 0 2px rgba(100, 116, 139, 0.55));
 }
 
 /* Tema Oscuro */
 [data-theme="dark"] {
-    --bg-primary: #121016; 
+    --bg-primary: #121016;
     --bg-secondary: #1E1B26;
     --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
+    --text-secondary: #A5B0C2;
     --border-color: #383344;
     --card-bg: #1E1B26;
     --input-bg: #2A2635;
@@ -82,8 +99,8 @@
     --bg-modal: #1E1B26;
     --bg-hover: #2A2635;
     --bg-active: #383344;
-    
-    --text-muted: #64748B;
+
+    --text-muted: #7C879A;
     --text-inverse: #ffffff;
 
     --divider-color: #2A2635;
@@ -92,6 +109,14 @@
     --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.08);
     --shadow-glow: rgba(207, 242, 124, 0.25);
 
+    /* Montos y estados */
+    --color-positivo: #4ADE80;
+    --color-negativo: #F0A3F8;
+    --color-peligro: #FB7185;
+    --bg-peligro: rgba(190, 18, 60, 0.14);
+    --texto-peligro: #FECDD3;
+    --borde-peligro: rgba(251, 113, 133, 0.35);
+
     /* Badges */
     --badge-activo-bg: rgba(22, 163, 74, 0.15);
     --badge-activo-text: #4ade80;
@@ -99,15 +124,36 @@
     --badge-pausado-text: #facc15;
     --badge-logrado-bg: rgba(67, 56, 202, 0.15);
     --badge-logrado-text: #818cf8;
+    --badge-vencido-bg: rgba(220, 38, 38, 0.15);
+    --badge-vencido-text: #FCA5A5;
 
     /* Tablas */
-    --table-gastos-thead: rgba(197, 3, 145, 0.25);
-    --table-ingresos-thead: rgba(8, 71, 52, 0.25);
+    --table-gastos-thead: rgba(197, 3, 145, 0.22);
+    --table-gastos-text: #F0A3F8;
+    --table-ingresos-thead: rgba(8, 71, 52, 0.35);
+    --table-ingresos-text: var(--brand-green-light);
 
     /* Selects */
     --select-option-hover-text: var(--brand-green-light);
+    --select-chevron: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+
+    /* Íconos PNG (trazo negro): se invierten a claro para que se vean sobre fondo oscuro */
+    --icon-filter: invert(1) brightness(0.92);
+    --icon-aura: invert(1) brightness(1) drop-shadow(0 0 3px rgba(207, 242, 124, 0.45));
 }
 
-[data-theme="dark"] img:not([alt="Trackify Icon"]) {
-    filter: drop-shadow(0px 0px 4px rgba(228, 228, 228, 0.76));
+/* Íconos de la interfaz (todos los PNG de iconos/ son de trazo negro).
+   El logo y los íconos sobre fondos oscuros fijos tienen sus propias reglas. */
+img[src*="iconos/"] {
+    filter: var(--icon-filter);
+}
+
+/* Sobre fondos oscuros que no cambian con el tema, el ícono siempre va en claro */
+.icono-sobre-oscuro,
+.boton-ia img,
+.chat-header img,
+.ia-btn-chat img,
+.btn-guardar-modal img,
+.btn-editar-seccion.guardando img {
+    filter: invert(1) brightness(1.05);
 }

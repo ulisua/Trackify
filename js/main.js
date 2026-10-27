@@ -30,19 +30,44 @@ function cerrarMenu() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         cerrarMenu();
+        document.querySelectorAll('.selector-pill.abierto').forEach(p => p.classList.remove('abierto'));
         if(typeof cerrarModal === 'function') cerrarModal();
     }
 });
 
+// Deja un formulario con monto/moneda listo para cargar (ver js/moneda.js)
+function prepararFormularioMoneda(form, monedaInicial) {
+    if (!form) return;
+    form.querySelectorAll('.js-monto-ars').forEach(el => el.value = '');
+    form.querySelectorAll('.js-preview-conversion').forEach(el => el.textContent = '');
+    const select = form.querySelector('.js-moneda-form');
+    if (select && monedaInicial) select.value = monedaInicial;
+}
+
+function monedaPreferida() {
+    return typeof window.monedaActual === 'function' ? window.monedaActual() : 'ARS';
+}
+
 function abrirModal(tipo) {
     if(tipo === 'objetivo') {
         const modalObj = document.getElementById('modalObjetivo');
-        if (modalObj) modalObj.classList.remove('hidden');
+        if (modalObj) {
+            const form = modalObj.querySelector('form');
+            if (form) {
+                form.querySelectorAll('input[type="text"], .js-monto-visible').forEach(el => el.value = '');
+                prepararFormularioMoneda(form, monedaPreferida());
+            }
+            modalObj.classList.remove('hidden');
+        }
         return;
     }
 
     const modal = document.getElementById('modal');
     if (!modal) return;
+
+    const montoVisible = document.getElementById('monto');
+    if (montoVisible) montoVisible.value = '';
+    prepararFormularioMoneda(modal.querySelector('form'), monedaPreferida());
 
     const modalTitulo = document.getElementById('modalTitulo');
     const tipoMovimiento = document.getElementById('tipoMovimiento');
@@ -98,7 +123,7 @@ function blurBackground(enable) {
 }
 
 function cerrarModal() {
-    const modales = ['modal', 'modalObjetivo', 'modalAhorro', 'modalEditarObjetivo', 'modalCategoria', 'modalEditarCategoria', 'modalEditarMovimiento'];
+    const modales = ['modal', 'modalObjetivo', 'modalAhorro', 'modalEditarObjetivo', 'modalCategoria', 'modalEditarCategoria', 'modalEditarMovimiento', 'modalBorrarHistorial', 'modalEliminarCuenta'];
     modales.forEach(id => {
         const m = document.getElementById(id);
         if (m) m.classList.add('hidden');
@@ -111,6 +136,9 @@ function abrirModalAhorro(id_meta) {
     if (modal) {
         const input = document.getElementById('ahorro_id_meta');
         if (input) input.value = id_meta;
+        const monto = document.getElementById('monto_ahorro');
+        if (monto) monto.value = '';
+        prepararFormularioMoneda(modal.querySelector('form'), monedaPreferida());
         modal.classList.remove('hidden');
         blurBackground(true);
     }
@@ -123,6 +151,7 @@ function abrirModalEditarObj(id, nombre, desc, monto, fecha, estado) {
         document.getElementById('edit_nombre_meta').value = nombre;
         document.getElementById('edit_desc_meta').value = desc;
         document.getElementById('edit_monto_objetivo').value = monto;
+        prepararFormularioMoneda(modal.querySelector('form'), 'ARS');
         document.getElementById('edit_fecha_limite').value = fecha;
         document.getElementById('edit_estado').value = estado;
         modal.classList.remove('hidden');
@@ -148,6 +177,9 @@ function abrirModalEditarMovimiento(id, monto, categoria, descripcion, fecha, ti
 
     document.getElementById('edit_mov_id').value = id;
     document.getElementById('edit_mov_monto').value = monto;
+    prepararFormularioMoneda(modal.querySelector('form'), 'ARS');
+    const titulo = document.getElementById('modalEditarMovimientoTitulo');
+    if (titulo) titulo.textContent = tipo === 'ingreso' ? 'Editar ingreso' : 'Editar gasto';
     document.getElementById('edit_mov_descripcion').value = descripcion;
     document.getElementById('edit_mov_fecha').value = fecha;
     document.getElementById('edit_mov_tipo').value = tipo;
@@ -221,8 +253,69 @@ const descripcionesSugeridas = {
     "Otros gastos": "Otro gasto"
 };
 
+// ── Selectores de moneda/período con desplegable propio ─────────────────────
+// El popup nativo de <select> lo dibuja el sistema (en móvil no respeta los estilos).
+// Se muestra un botón + lista con la estética de Trackify; el <select> original queda
+// oculto y sigue siendo la fuente de verdad (se le dispara 'change' al elegir).
+function mejorarSelectoresHeader() {
+    document.querySelectorAll('.selector-header select').forEach(select => {
+        if (select.dataset.mejorado) return;
+        select.dataset.mejorado = '1';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'selector-pill';
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'selector-pill-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.setAttribute('aria-label', select.getAttribute('aria-label') || '');
+        const lista = document.createElement('ul');
+        lista.className = 'selector-pill-opciones';
+        lista.setAttribute('role', 'listbox');
+
+        const refrescar = () => {
+            trigger.textContent = select.options[select.selectedIndex]?.text || '';
+            lista.querySelectorAll('li').forEach(li => li.classList.toggle('seleccionada', li.dataset.valor === select.value));
+        };
+        const cerrar = () => { wrap.classList.remove('abierto'); trigger.setAttribute('aria-expanded', 'false'); };
+
+        Array.from(select.options).forEach(op => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.dataset.valor = op.value;
+            li.textContent = op.text;
+            li.addEventListener('click', () => {
+                cerrar();
+                if (select.value === op.value) return;
+                select.value = op.value;
+                refrescar();
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            lista.appendChild(li);
+        });
+
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const abrir = !wrap.classList.contains('abierto');
+            document.querySelectorAll('.selector-pill.abierto').forEach(p => p.classList.remove('abierto'));
+            wrap.classList.toggle('abierto', abrir);
+            trigger.setAttribute('aria-expanded', String(abrir));
+        });
+        document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) cerrar(); });
+        // La otra copia del selector (navbar ↔ menú) cambia el valor sin evento: se resincroniza
+        document.addEventListener('trackify:moneda', refrescar);
+
+        select.after(wrap);
+        wrap.append(trigger, lista);
+        select.hidden = true;
+        refrescar();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initGlobals();
+    mejorarSelectoresHeader();
 
     // Sidebar link behavior (close on mobile)
     document.querySelectorAll('.sidebar a').forEach(link => {

@@ -1,68 +1,60 @@
 <?php
 session_start();
 include 'conexion.php';
+require_once 'includes/mailer.php';
 
 $mensaje = '';
+$nombre = '';
+$email = '';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
     $nombre = trim($_POST['nombre'] ?? '');
     $email = trim($_POST['email'] ?? '');
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $clave = $_POST['password'] ?? '';
 
-    $check = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email=?");
-    $check->bind_param("s", $email);
-    $check->execute();
-    $res = $check->get_result();
-
-    if($res->num_rows > 0){
-        $mensaje = "El email ya está registrado.";
+    if ($nombre === '' || mb_strlen($nombre) > 50) {
+        $mensaje = "Ingresá tu nombre (máximo 50 caracteres).";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 100) {
+        $mensaje = "Ingresá un email válido.";
+    } elseif (mb_strlen($clave) < 8) {
+        $mensaje = "La contraseña debe tener al menos 8 caracteres.";
     } else {
-        $codigo = strval(rand(100000, 999999));
-        $expiracion = date('Y-m-d H:i:s', strtotime('+15 minutes'));
-        $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0x0fff) | 0x4000,
-            mt_rand(0, 0x3fff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
-        );
+        $check = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email=?");
+        $check->bind_param("s", $email);
+        $check->execute();
 
-        $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro, uuid, email_verificado, codigo_verificacion, codigo_expiracion, Foto_perfil) VALUES (?, ?, ?, NOW(), ?, 0, ?, ?, '')");
-        $query->bind_param("ssssss", $nombre, $email, $password, $uuid, $codigo, $expiracion);
+        if($check->get_result()->num_rows > 0){
+            $mensaje = "El email ya está registrado.";
+        } else {
+            $password = password_hash($clave, PASSWORD_DEFAULT);
+            $codigo = generarCodigoVerificacion();
+            $expiracion = date('Y-m-d H:i:s', strtotime('+15 minutes'));
+            $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                random_int(0, 0xffff), random_int(0, 0xffff),
+                random_int(0, 0xffff),
+                random_int(0, 0x0fff) | 0x4000,
+                random_int(0, 0x3fff) | 0x8000,
+                random_int(0, 0xffff), random_int(0, 0xffff), random_int(0, 0xffff)
+            );
 
-        if($query->execute()){
-            $nuevo_id = $conn->insert_id;
-            require_once 'phpmailer/PHPMailer.php';
-            require_once 'phpmailer/SMTP.php';
-            require_once 'phpmailer/Exception.php';
+            $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro, uuid, email_verificado, codigo_verificacion, codigo_expiracion, Foto_perfil) VALUES (?, ?, ?, NOW(), ?, 0, ?, ?, '')");
+            $query->bind_param("ssssss", $nombre, $email, $password, $uuid, $codigo, $expiracion);
 
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            try {
-                $mail->isSMTP();
-                $mail->Host = 'sandbox.smtp.mailtrap.io';
-                $mail->SMTPAuth = true;
-                $mail->Username = '6e724e2630cb1b';
-                $mail->Password = 'b4ad1521076737';
-                $mail->SMTPSecure = 'tls';
-                $mail->Port = 2525;
-                $mail->CharSet = 'UTF-8';
-                $mail->setFrom('noreply@trackify.com', 'Trackify');
-                $mail->addAddress($email, $nombre);
-                $mail->Subject = 'Verificá tu cuenta de Trackify';
-                $mail->isHTML(true);
-                $mail->Body = "<div style='font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'><img src='http://localhost/trackify/logo.png' alt='Trackify' style='height:60px;margin-bottom:24px;'><h2 style='color:#1E1B26;margin:0 0 8px;'>Verificá tu email</h2><p style='color:#64748b;margin:0 0 24px;'>Usá el siguiente código para completar tu registro. Vence en 15 minutos.</p><div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>$codigo</div><p style='color:#94a3b8;font-size:.85rem;margin:0;'>Si no creaste una cuenta en Trackify, ignorá este email.</p></div>";
-                $mail->send();
+            if($query->execute()){
+                // Si el email falla, el usuario puede pedir otro código desde la pantalla de verificación
+                $enviado = enviarCodigoVerificacion($email, $nombre, $codigo, 'Verificá tu cuenta de Trackify', 'Usá el siguiente código para completar tu registro. Vence en 15 minutos.');
 
-                $_SESSION['verificar_id'] = $nuevo_id;
+                session_regenerate_id(true);
+                $_SESSION['verificar_id'] = $conn->insert_id;
                 $_SESSION['verificar_email'] = $email;
                 $_SESSION['verificar_nombre'] = $nombre;
-                header('Location: verificar_email.php');
+                $_SESSION['verificar_intentos'] = 0;
+                $_SESSION['verificar_ultimo_envio'] = time();
+                header('Location: verificar_email.php' . ($enviado ? '' : '?error=envio'));
                 exit();
-            } catch (Exception $e) {
-                $mensaje = 'Error al enviar el email: ' . $mail->ErrorInfo;
+            } else {
+                $mensaje = "Error al registrar. Intentá de nuevo.";
             }
-        } else {
-            $mensaje = "Error al registrar";
         }
     }
 }
@@ -73,12 +65,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <head>
 <script>
     (function() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
+        let savedTheme = null;
+        try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
+        document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
     })();
 </script>
 <meta charset="UTF-8">
@@ -87,6 +76,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="css/pages/auth.css">
+<link rel="stylesheet" href="css/responsive.css">
 </head>
 <body class="login-body">
 
@@ -94,28 +84,28 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 <div class="glow-orb orb-2"></div>
 
 <div class="auth-card">
-    <div class="logo" style="text-align: center; margin-bottom: 20px;">
-        <img src="logo.png" alt="Trackify Icon" style="height: 100px;">
+    <div class="auth-logo">
+        <img src="logo.png" alt="Trackify Icon">
     </div>
-    <p class="subtitle">Crea tu cuenta para comenzar</p>
+    <p class="subtitle">Creá tu cuenta para comenzar</p>
 
     <?php if($mensaje) echo "<div class='error-msg'>" . htmlspecialchars($mensaje) . "</div>"; ?>
 
     <form method="POST">
         <div class="form-group">
-            <input type="text" name="nombre" placeholder="Nombre completo" required>
+            <input type="text" name="nombre" placeholder="Nombre completo" maxlength="50" value="<?php echo htmlspecialchars($nombre); ?>" autocomplete="name" required>
         </div>
         <div class="form-group">
-            <input type="email" name="email" placeholder="Email" required>
+            <input type="email" name="email" placeholder="Email" maxlength="100" value="<?php echo htmlspecialchars($email); ?>" autocomplete="email" required>
         </div>
         <div class="form-group">
-            <input type="password" name="password" placeholder="Contraseña" required>
+            <input type="password" name="password" placeholder="Contraseña (mínimo 8 caracteres)" minlength="8" autocomplete="new-password" required>
         </div>
         <button type="submit" class="btn btn-primary">Registrarse</button>
     </form>
 
     <div class="footer-links">
-        ¿Ya tienes cuenta? <a href="login.php">Inicia sesión</a>
+        ¿Ya tenés cuenta? <a href="login.php">Iniciá sesión</a>
     </div>
 </div>
 

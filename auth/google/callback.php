@@ -1,19 +1,19 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 session_start();
 require_once '../../conexion.php';
 require_once '../../env.php';
 
 define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID'));
 define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET'));
-define('GOOGLE_REDIRECT_URI', 'http://localhost/trackify/auth/google/callback.php');
+define('GOOGLE_REDIRECT_URI', getenv('GOOGLE_REDIRECT_URI') ?: 'http://localhost/trackify/auth/google/callback.php');
 
-if (isset($_SESSION['oauth_state']) && $_GET['state'] !== $_SESSION['oauth_state']) {
+// El parámetro state es obligatorio y debe coincidir con el generado en login.php (anti-CSRF)
+$state_esperado = $_SESSION['oauth_state'] ?? '';
+unset($_SESSION['oauth_state']);
+if ($state_esperado === '' || !hash_equals($state_esperado, (string)($_GET['state'] ?? ''))) {
     header('Location: ../../login.php?error=google_cancelado');
     exit();
 }
-unset($_SESSION['oauth_state']);
 
 if (isset($_GET['error'])) {
     header('Location: ../../login.php?error=google_cancelado');
@@ -58,10 +58,24 @@ if (!isset($user_info['id']) || !isset($user_info['email'])) {
     exit();
 }
 
+// Solo se vincula/crea una cuenta con un email que Google confirma como verificado
+if (empty($user_info['verified_email'])) {
+    header('Location: ../../login.php?error=email_no_verificado');
+    exit();
+}
+
 $google_id = $user_info['id'];
 $email     = $user_info['email'];
-$nombre    = $user_info['name'] ?? explode('@', $email)[0];
+$nombre    = mb_substr($user_info['name'] ?? explode('@', $email)[0], 0, 50);
 $foto      = $user_info['picture'] ?? '';
+
+function iniciarSesionGoogle($id, $nombre) {
+    session_regenerate_id(true);
+    $_SESSION['usuario_id']     = $id;
+    $_SESSION['usuario_nombre'] = $nombre;
+    header('Location: ../../index.php');
+    exit();
+}
 
 $stmt = $conn->prepare("SELECT id_usuario, nombre FROM usuarios WHERE google_id = ?");
 $stmt->bind_param("s", $google_id);
@@ -69,10 +83,7 @@ $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 
 if ($user) {
-    $_SESSION['usuario_id']     = $user['id_usuario'];
-    $_SESSION['usuario_nombre'] = $user['nombre'];
-    header('Location: ../../index.php');
-    exit();
+    iniciarSesionGoogle($user['id_usuario'], $user['nombre']);
 }
 
 $stmt = $conn->prepare("SELECT id_usuario, nombre FROM usuarios WHERE email = ?");
@@ -81,31 +92,24 @@ $stmt->execute();
 $user = $stmt->get_result()->fetch_assoc();
 
 if ($user) {
-    $stmt = $conn->prepare("UPDATE usuarios SET google_id = ?, Foto_perfil = ? WHERE id_usuario = ?");
+    // Google verificó el email: se vincula la cuenta y se marca como verificada
+    $stmt = $conn->prepare("UPDATE usuarios SET google_id = ?, Foto_perfil = ?, email_verificado = 1 WHERE id_usuario = ?");
     $stmt->bind_param("ssi", $google_id, $foto, $user['id_usuario']);
     $stmt->execute();
-
-    $_SESSION['usuario_id']     = $user['id_usuario'];
-    $_SESSION['usuario_nombre'] = $user['nombre'];
-    header('Location: ../../index.php');
-    exit();
+    iniciarSesionGoogle($user['id_usuario'], $user['nombre']);
 }
 
 $uuid = sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
-    mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-    mt_rand(0, 0xffff),
-    mt_rand(0, 0x0fff) | 0x4000,
-    mt_rand(0, 0x3fff) | 0x8000,
-    mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    random_int(0, 0xffff), random_int(0, 0xffff),
+    random_int(0, 0xffff),
+    random_int(0, 0x0fff) | 0x4000,
+    random_int(0, 0x3fff) | 0x8000,
+    random_int(0, 0xffff), random_int(0, 0xffff), random_int(0, 0xffff)
 );
 
-$stmt = $conn->prepare("INSERT INTO usuarios (nombre, Foto_perfil, email, clave, fecha_registro, uuid, google_id) VALUES (?, ?, ?, NULL, NOW(), ?, ?)");
+// clave es NOT NULL: las cuentas de Google se crean sin contraseña ('')
+$stmt = $conn->prepare("INSERT INTO usuarios (nombre, Foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, '', NOW(), ?, ?, 1)");
 $stmt->bind_param("sssss", $nombre, $foto, $email, $uuid, $google_id);
 $stmt->execute();
 
-$nuevo_id = $conn->insert_id;
-$_SESSION['usuario_id']     = $nuevo_id;
-$_SESSION['usuario_nombre'] = $nombre;
-header('Location: ../../index.php');
-exit();
-?>
+iniciarSesionGoogle($conn->insert_id, $nombre);

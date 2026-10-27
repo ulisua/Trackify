@@ -1,4 +1,5 @@
 /* ===== LAYOUT & GRID ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 .layout {
     display: flex;
     flex: 1;
@@ -9,7 +10,7 @@
 .content {
     flex: 1;
     min-width: 0;
-    padding: 36px 44px;
+    padding: 48px 44px 40px;
     max-width: 1440px;
     margin: 0 auto;
     width: 100%;
@@ -20,11 +21,53 @@
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 22px;
+    gap: 20px;
     margin-bottom: 28px;
     width: 100%;
     min-width: 0;
     box-sizing: border-box;
+}
+
+/* ===== ENCABEZADO DE PÁGINA (común a todas las vistas) =====
+   Todas las páginas abren con .page-header para que el título quede siempre
+   a la misma altura y con el mismo tamaño. */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin: 0 0 24px 0;
+    min-height: 48px;
+}
+
+.page-header-texto {
+    min-width: 0;
+}
+
+.page-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+}
+
+.page-header .icono-titulo {
+    width: 26px;
+    height: 26px;
+}
+
+.page-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.page-header-acciones {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 /* OVERLAY (menú responsivo) */
@@ -50,7 +93,9 @@
     border-radius: 12px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-card);
-    overflow: hidden;
+    /* Si una tabla no entra, se desplaza horizontalmente dentro de la caja en vez de cortarse */
+    overflow-x: auto;
+    overflow-y: hidden;
     margin-bottom: 28px;
     width: 100%;
     min-width: 0;
@@ -62,26 +107,26 @@
     display: none;
 }
 
-/* ===== BOTONES DEL DASHBOARD (Distribución Fluida) ===== */
+/* ===== BOTONES DEL DASHBOARD =====
+   Usan la misma grilla de 3 columnas que las tarjetas de arriba, así cada botón
+   mide exactamente lo mismo que la tarjeta que tiene encima. */
 .dashboard-acciones {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
     width: 100%;
-    margin-bottom: 28px;
+    margin: 4px 0 36px;
     padding: 0;
     box-sizing: border-box;
 }
 
 .dashboard-acciones .btn {
-    flex: 0 1 220px;
+    width: 100%;
     min-width: 0;
-    height: 48px;
-    min-height: 48px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border-radius: 8px;
+    height: 54px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 10px;
     justify-content: center;
     box-sizing: border-box;
 }
@@ -101,8 +146,6 @@
 .acciones {
     display: flex;
     align-items: center;
-    margin: 0;
-    padding: 0;
     flex-shrink: 0;
 }
 
@@ -127,30 +170,8 @@
 
 .filtros input,
 .filtros select {
-    padding: 11px 14px;
-    min-height: 44px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 0.92rem;
-    font-family: inherit;
-    background: var(--input-bg);
-    color: var(--input-text);
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    min-width: 180px;
     cursor: pointer;
-    box-sizing: border-box;
-}
-
-.filtros input:focus,
-.filtros select:focus {
-    border-color: var(--brand-green-dark);
-    box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.12);
-}
-
-.filtro-fecha-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
 }
 
 .btn-reset-filtros {
@@ -161,6 +182,27 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.btn-reset-filtros:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--brand-green-light);
+}
+
+.btn-reset-filtros:disabled {
+    opacity: 0.5;
+    cursor: default;
 }
 
 /* ===== TABLA DESKTOP ===== */
@@ -186,19 +228,19 @@
 }
 
 .tabla.tabla-gastos thead {
-    background: var(--table-gastos-thead, #fff1f2);
+    background: var(--table-gastos-thead);
 }
 
 .tabla.tabla-gastos th {
-    color: var(--brand-purple);
+    color: var(--table-gastos-text);
 }
 
 .tabla.tabla-ingresos thead {
-    background: var(--table-ingresos-thead, #f0fdf4);
+    background: var(--table-ingresos-thead);
 }
 
 .tabla.tabla-ingresos th {
-    color: var(--brand-green-dark);
+    color: var(--table-ingresos-text);
 }
 
 .tabla td {
@@ -215,13 +257,26 @@
     background: var(--bg-hover);
 }
 
+.tabla .fila-vacia td,
+.tabla .fila-vacia:hover {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 32px 20px;
+    background: transparent;
+}
+
+.celda-acciones {
+    white-space: nowrap;
+    text-align: right;
+}
+
 .positivo {
-    color: #16a34a;
+    color: var(--color-positivo);
     font-weight: 600;
 }
 
 .negativo {
-    color: var(--brand-purple);
+    color: var(--color-negativo);
     font-weight: 600;
 }
 
@@ -245,12 +300,10 @@
 
 .edit:hover {
     background: var(--bg-hover);
-    color: #3b82f6;
 }
 
 .delete:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
 }
 
 /* ===== GLOW ORBS ===== */
@@ -279,99 +332,102 @@
     background: var(--brand-pink);
 }
 
-/* ===== RESPONSIVE TABLET & MOBILE ===== */
-@media (max-width: 1024px) {
-    .content {
-        padding: 28px 24px;
-    }
+/* ===== CARDS DE MOVIMIENTOS (MOBILE) ===== */
+.movimiento-card {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-@media (max-width: 900px) {
-    .layout {
-        flex-direction: column;
-    }
-
-    .content {
-        padding: 22px 18px;
-        min-width: 0;
-    }
-
-    .grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        margin-bottom: 22px;
-    }
-
-    .tabla-desktop {
-        display: none;
-    }
-
-    .movimiento-cards {
-        display: block;
-    }
+.movimiento-card:last-child {
+    border-bottom: none;
 }
 
-@media (max-width: 768px) {
-    .content {
-        padding: 20px 16px;
-    }
-
-    /* En móvil, los botones de acción del dashboard se apilan verticalmente a ancho completo */
-    .dashboard-acciones {
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 22px;
-    }
-
-    .dashboard-acciones .btn {
-        width: 100%;
-        max-width: none;
-        flex: none;
-        min-height: 48px;
-        font-size: 1rem;
-        margin: 0;
-    }
-
-    /* En móvil, los botones de nuevo ingreso/gasto ocupan el ancho útil respetando los márgenes */
-    .acciones-filtros-bar {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 14px;
-        margin-bottom: 20px;
-    }
-
-    .acciones {
-        width: 100%;
-    }
-
-    .btn-nuevo-movimiento {
-        width: 100% !important;
-        min-height: 48px;
-        font-size: 1rem;
-        padding: 12px 16px;
-    }
-
-    .filtros {
-        flex-direction: column;
-        width: 100%;
-        gap: 10px;
-    }
-
-    .filtros input,
-    .filtros select,
-    .filtro-fecha-wrap,
-    .btn-reset-filtros {
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    .filtro-fecha-wrap input {
-        width: 100%;
-    }
+.mc-top {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
 }
 
-@media (max-width: 360px) {
-    .content {
-        padding: 16px 12px;
-    }
+.mc-desc {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.mc-monto {
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.mc-bottom {
+    flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mc-tag {
+    background: var(--bg-hover);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.mc-fecha {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-left: auto;
+}
+
+.mc-acciones {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.mc-acciones button {
+    min-width: 38px;
+    min-height: 38px;
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+
+/* Las celdas de monto conservan su color (gana sobre .tabla td) */
+.tabla td.positivo {
+    color: var(--color-positivo);
+}
+
+.tabla td.negativo {
+    color: var(--color-negativo);
+}
+
+/* Páginas cuyo título no está dentro de .page-header (ia.php): mismo tamaño y posición */
+.content > h2.titulo-con-icono:first-child {
+    display: flex;
+    margin: 0 0 24px 0;
+    min-height: 48px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+}
+
+.content > h2.titulo-con-icono:first-child .icono-titulo {
+    width: 26px;
+    height: 26px;
 }

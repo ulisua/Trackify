@@ -1,4 +1,5 @@
 /* ===== COMPONENT: FORMS & MODALS ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 
 /* inputs, selects, textareas por defecto */
 input, select, textarea {
@@ -25,10 +26,147 @@ input::placeholder, textarea::placeholder {
     color: var(--text-muted);
 }
 
+/* Select con la flecha de marca (verde en claro, lima en oscuro) */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 38px;
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+    cursor: pointer;
+}
+
+select:focus {
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+}
+
+select option,
+select optgroup {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
 input:disabled, select:disabled, textarea:disabled {
-    background: var(--bg-hover) !important;
-    color: var(--text-muted) !important;
+    background-color: var(--bg-hover);
+    color: var(--text-secondary);
     cursor: not-allowed;
+}
+
+/* ===== CAMPOS DE LOS MODALES ===== */
+/* Monto + selector de moneda en una fila */
+.monto-moneda {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.monto-moneda input {
+    flex: 1;
+    min-width: 0;
+}
+
+.monto-moneda select {
+    flex: 0 0 auto;
+    min-width: 96px;
+}
+
+.preview-conversion {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: -6px 0 0;
+    min-height: 0;
+}
+
+.preview-conversion:empty {
+    display: none;
+}
+
+.modal-ayuda {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+}
+
+.campo-color {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.campo-color input[type="color"] {
+    width: 100%;
+    height: 44px;
+    padding: 4px;
+    cursor: pointer;
+}
+
+/* ===== MODALES DE CONFIRMACIÓN DESTRUCTIVA ===== */
+.modal-confirmacion {
+    max-width: 480px;
+}
+
+.modal-peligro-titulo {
+    color: var(--color-peligro);
+}
+
+.modal-content h3.modal-peligro-titulo {
+    color: var(--color-peligro);
+}
+
+.aviso-peligro {
+    background: var(--bg-peligro);
+    border-left: 4px solid var(--color-peligro);
+    padding: 12px 14px;
+    border-radius: 6px;
+}
+
+.aviso-peligro p {
+    margin: 6px 0 0;
+    color: var(--texto-peligro);
+    font-size: 0.86rem;
+}
+
+.aviso-peligro .aviso-peligro-titulo {
+    margin: 0;
+    color: var(--color-peligro);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-confirmacion {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.input-confirmacion {
+    border-width: 2px;
+}
+
+.form-confirmacion .modal-actions .btn {
+    flex: 1;
+}
+
+.modal-actions .btn.btn-peligro-solido {
+    background: #BE123C;
+    color: #ffffff;
+}
+
+.modal-actions .btn.btn-peligro-solido:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* ===== ESTRUCTURA MODALES (GENÉRICOS) ===== */
@@ -119,28 +257,6 @@ input:disabled, select:disabled, textarea:disabled {
     padding: 12px 22px;
     border-radius: 8px;
     min-height: 44px;
-}
-
-@media (max-width: 480px) {
-    .modal {
-        padding: 12px;
-    }
-
-    .modal-content {
-        padding: 20px 16px;
-        gap: 12px;
-        max-height: calc(100dvh - 24px);
-    }
-
-    .modal-actions {
-        width: 100%;
-    }
-
-    .modal-actions .btn {
-        flex: 1 1 0;
-        min-width: 0;
-        padding: 12px 10px;
-    }
 }
 
 /* ===== CUSTOM SELECT DE MOVIMIENTOS ===== */
@@ -342,6 +458,45 @@ input:disabled, select:disabled, textarea:disabled {
 }
 
 /* ===== FLATPICKR OVERRIDES ===== */
+/* Los controles internos del calendario (mes y año) heredaban el estilo global de
+   input/select (padding 12px y alto mínimo 44px) y quedaban cortados en el encabezado. */
+.flatpickr-calendar input,
+.flatpickr-calendar select {
+    min-height: 0;
+    padding: 0 0 0 0.5ch;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background-image: none;
+    font-size: inherit;
+}
+
+.flatpickr-current-month {
+    padding-top: 6px;
+    font-size: 1rem;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    height: auto;
+    padding: 2px 4px;
+    margin: 0;
+    font-weight: 600;
+}
+
+.flatpickr-current-month .numInputWrapper {
+    width: 7ch;
+}
+
+.flatpickr-current-month input.cur-year {
+    padding: 0 0 0 0.5ch;
+    font-weight: 600;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+    background: var(--brand-dark);
+    color: #F8FAFC;
+}
+
 .flatpickr-calendar {
     background: var(--bg-card) !important;
     box-shadow: var(--shadow-card), 0 10px 25px rgba(0, 0, 0, 0.15) !important;
@@ -419,15 +574,4 @@ input:disabled, select:disabled, textarea:disabled {
 .flatpickr-day.flatpickr-disabled:hover {
     color: var(--text-muted) !important;
     background: transparent !important;
-}
-
-@media (max-width: 360px) {
-    .flatpickr-calendar {
-        font-size: 0.85rem !important;
-    }
-    .flatpickr-day {
-        max-width: 34px !important;
-        height: 34px !important;
-        line-height: 34px !important;
-    }
 }

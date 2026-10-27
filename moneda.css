@@ -1,94 +1,159 @@
-/* ===== TRACKIFY: MONEDA Y PERÍODO SELECTORS ===== */
+/* ===== TRACKIFY: SELECTORES DE MONEDA Y PERÍODO =====
+   Se usan en el navbar (escritorio) y dentro del menú lateral (móvil).
+   Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     margin-left: auto;
 }
 
-.moneda-selector {
+.selector-header {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 6px;
-    position: relative;
+    margin: 0;
 }
 
-.moneda-selector select {
+.selector-header-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Píldora con los colores de marca: fondo translúcido, borde y flecha lima */
+.selector-header select,
+.selector-pill-trigger {
     appearance: none;
     -webkit-appearance: none;
-    -moz-appearance: none;
-    padding: 8px 28px 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.10);
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    padding: 8px 34px 8px 16px;
+    min-height: 40px;
+    min-width: 104px;
+    border: 1px solid rgba(207, 242, 124, 0.35);
+    border-radius: 999px;
+    background-color: rgba(207, 242, 124, 0.08);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right 9px center;
+    background-position: right 13px center;
     background-size: 13px 13px;
     color: #ffffff;
-    font-size: 0.86rem;
+    font-size: 0.88rem;
     font-family: inherit;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: 0.02em;
     cursor: pointer;
     outline: none;
-    min-height: 38px;
-    line-height: 1.2;
+    box-shadow: none;
     transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
-    box-sizing: border-box;
 }
 
-.moneda-selector select:hover {
+.selector-header select:hover,
+.selector-pill-trigger:hover,
+.selector-pill.abierto .selector-pill-trigger {
     border-color: var(--brand-green-light);
-    background-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(207, 242, 124, 0.16);
 }
 
-.moneda-selector select:focus {
+.selector-header select:focus,
+.selector-pill-trigger:focus-visible {
     border-color: var(--brand-green-light);
-    box-shadow: 0 0 0 2px rgba(207, 242, 124, 0.25);
+    background-color: rgba(207, 242, 124, 0.16);
+    box-shadow: 0 0 0 3px rgba(207, 242, 124, 0.25);
 }
 
-.moneda-selector select option {
-    background: #1E1B26;
+.selector-header select option {
+    background: var(--brand-dark);
     color: #F8FAFC;
-    padding: 10px 14px;
-    font-size: 0.9rem;
+}
+
+/* Dentro del menú lateral ocupan todo el ancho */
+.sidebar-controles .selector-header select,
+.sidebar-controles .selector-pill,
+.sidebar-controles .selector-pill-trigger {
+    width: 100%;
+    min-height: 44px;
 }
 
 #tipoCambioInfo {
     font-size: 0.75rem;
-    color: #94A3B8;
+    color: rgba(255, 255, 255, 0.6);
     white-space: nowrap;
 }
 
-@media (max-width: 900px) {
-    .header-controls {
-        gap: 6px;
-    }
-
-    .moneda-selector select {
-        padding: 6px 24px 6px 9px;
-        font-size: 0.8rem;
-        min-height: 36px;
-        background-position: right 7px center;
-        background-size: 12px 12px;
-        border-radius: 7px;
-    }
-
-    #tipoCambioInfo {
-        display: none !important;
-    }
+/* ===== DESPLEGABLE PROPIO (js/main.js → mejorarSelectoresHeader) ===== */
+.selector-pill {
+    position: relative;
 }
 
-@media (max-width: 360px) {
-    .header-controls {
-        gap: 4px;
-    }
+.selector-pill-trigger {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    line-height: 1.2;
+}
 
-    .moneda-selector select {
-        padding: 5px 20px 5px 6px;
-        font-size: 0.75rem;
-        min-height: 34px;
-        background-position: right 5px center;
-        background-size: 11px 11px;
-    }
+.selector-pill.abierto .selector-pill-trigger {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 15 12 9 18 15'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+.selector-pill-opciones {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 100%;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--brand-dark);
+    border: 1px solid rgba(207, 242, 124, 0.3);
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+    z-index: 3000;
+    box-sizing: border-box;
+}
+
+.selector-pill.abierto .selector-pill-opciones {
+    display: block;
+    animation: fadeIn 0.16s ease;
+}
+
+.selector-pill-opciones li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #F8FAFC;
+    font-size: 0.9rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.selector-pill-opciones li:hover {
+    background: rgba(207, 242, 124, 0.12);
+    color: var(--brand-green-light);
+}
+
+.selector-pill-opciones li.seleccionada {
+    background: rgba(207, 242, 124, 0.16);
+    color: var(--brand-green-light);
+}
+
+.selector-pill-opciones li.seleccionada::after {
+    content: '';
+    width: 14px;
+    height: 14px;
+    background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") no-repeat center / contain;
+}
+
+/* En el navbar las opciones se alinean a la derecha del botón para no salirse de la pantalla */
+.header-controls .selector-pill-opciones {
+    left: auto;
+    right: 0;
 }

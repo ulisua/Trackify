@@ -9,146 +9,138 @@ if (!isset($conn)) {
 
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     global $conn;
-    $user_id = $_SESSION['usuario_id'];
-    $return_url = '';
-    if (!empty($_POST['return_url'])) {
-        $return_url = trim($_POST['return_url']);
-    } elseif (!empty($_SERVER['HTTP_REFERER'])) {
-        $return_url = trim($_SERVER['HTTP_REFERER']);
-    } else {
-        $return_url = 'index.php';
-    }
+    $user_id = (int)$_SESSION['usuario_id'];
+    $return_url = urlRetornoSegura($_POST['return_url'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
+
+    // Valida los datos comunes de alta/edición. Devuelve un array o null (y deja un mensaje flash).
+    // El monto llega SIEMPRE en ARS: la conversión desde USD se hace en el formulario (js/moneda.js).
+    $validarMovimiento = function ($tipo) use ($conn, $user_id) {
+        if (!in_array($tipo, ['ingreso', 'gasto'], true)) {
+            flash('Tipo de movimiento inválido.');
+            return null;
+        }
+        $monto = montoValido($_POST['monto'] ?? '');
+        if ($monto === null) {
+            flash('Ingresá un monto mayor a cero.');
+            return null;
+        }
+        $fecha = fechaValida($_POST['fecha'] ?? '') ?? date('Y-m-d');
+        if ($fecha > date('Y-m-d')) {
+            $fecha = date('Y-m-d');
+        }
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        if ($descripcion === '' || mb_strlen($descripcion) > 255) {
+            flash('La descripción es obligatoria (máximo 255 caracteres).');
+            return null;
+        }
+        $id_categoria = buscarCategoriaVisible($conn, $user_id, trim($_POST['categoria'] ?? ''), $tipo);
+        if ($id_categoria === null) {
+            flash('Elegí una categoría válida.');
+            return null;
+        }
+        return ['monto' => $monto, 'fecha' => $fecha, 'descripcion' => $descripcion, 'id_categoria' => $id_categoria];
+    };
 
     // 1. Guardar nuevo movimiento
     if(isset($_POST['tipoMovimiento']) && $_POST['tipoMovimiento'] !== '') {
         $tipo = $_POST['tipoMovimiento']; // 'ingreso' o 'gasto'
-        $monto = floatval($_POST['monto']);
-        $categoria_nombre = $_POST['categoria'];
-        $descripcion = $_POST['descripcion'];
-        $fecha = $_POST['fecha'] ?? date('Y-m-d');
-        $hoy = date('Y-m-d');
-        if ($fecha > $hoy) {
-            $fecha = $hoy;
-        }
+        $datos = $validarMovimiento($tipo);
 
-        // Buscar si existe la categoría para este tipo, si no, crearla
-        $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
-        $stmt_cat->bind_param("ss", $categoria_nombre, $tipo);
-        $stmt_cat->execute();
-        $res_cat = $stmt_cat->get_result();
-        
-        if ($res_cat->num_rows > 0) {
-            $row_cat = $res_cat->fetch_assoc();
-            $id_categoria = $row_cat['id_categoria'];
-        } else {
-            $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
-            $stmt_ins_cat->bind_param("ss", $categoria_nombre, $tipo);
-            $stmt_ins_cat->execute();
-            $id_categoria = $stmt_ins_cat->insert_id;
+        if ($datos) {
+            $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt_mov->bind_param("iidsss", $user_id, $datos['id_categoria'], $datos['monto'], $tipo, $datos['descripcion'], $datos['fecha']);
+            $stmt_mov->execute();
+            flash(($tipo === 'ingreso' ? 'Ingreso' : 'Gasto') . ' guardado.', 'success');
         }
-
-        // Insertar el Movimiento en la base de datos
-        $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt_mov->bind_param("iidsss", $user_id, $id_categoria, $monto, $tipo, $descripcion, $fecha);
-        $stmt_mov->execute();
 
         // Redirigir a la página de origen
         header("Location: " . $return_url);
         exit();
     }
-    
-    // 2. Editar movimiento
+
+    // 2. Editar movimiento (el tipo se toma de la base, no del formulario)
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'editar_movimiento') {
-        $id_movimiento = intval($_POST['id_movimiento']);
-        $tipo = $_POST['tipo'];
-        $monto = floatval($_POST['monto']);
-        $categoria_nombre = $_POST['categoria'];
-        $descripcion = $_POST['descripcion'];
-        $fecha = $_POST['fecha'];
-        $hoy = date('Y-m-d');
-        if ($fecha > $hoy) {
-            $fecha = $hoy;
+        $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
+
+        $stmt_actual = $conn->prepare("SELECT tipo FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?");
+        $stmt_actual->bind_param("ii", $id_movimiento, $user_id);
+        $stmt_actual->execute();
+        $actual = $stmt_actual->get_result()->fetch_assoc();
+
+        if (!$actual) {
+            flash('El movimiento no existe.');
+        } elseif ($datos = $validarMovimiento($actual['tipo'])) {
+            $stmt_mov = $conn->prepare("UPDATE movimientos SET id_categoria = ?, monto = ?, descripcion = ?, fecha = ? WHERE id_movimiento = ? AND id_usuario = ?");
+            $stmt_mov->bind_param("idssii", $datos['id_categoria'], $datos['monto'], $datos['descripcion'], $datos['fecha'], $id_movimiento, $user_id);
+            $stmt_mov->execute();
+            flash('Movimiento actualizado.', 'success');
         }
 
-        // Buscar si existe la categoría para este tipo, si no, crearla
-        $stmt_cat = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? LIMIT 1");
-        $stmt_cat->bind_param("ss", $categoria_nombre, $tipo);
-        $stmt_cat->execute();
-        $res_cat = $stmt_cat->get_result();
-        
-        if ($res_cat->num_rows > 0) {
-            $row_cat = $res_cat->fetch_assoc();
-            $id_categoria = $row_cat['id_categoria'];
-        } else {
-            $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo) VALUES (?, ?)");
-            $stmt_ins_cat->bind_param("ss", $categoria_nombre, $tipo);
-            $stmt_ins_cat->execute();
-            $id_categoria = $stmt_ins_cat->insert_id;
-        }
-
-        // Actualizar el Movimiento en la base de datos
-        $stmt_mov = $conn->prepare("UPDATE movimientos SET id_categoria = ?, monto = ?, descripcion = ?, fecha = ? WHERE id_movimiento = ? AND id_usuario = ?");
-        $stmt_mov->bind_param("idssii", $id_categoria, $monto, $descripcion, $fecha, $id_movimiento, $user_id);
-        $stmt_mov->execute();
-
-        // Redirigir a la página de origen
         header("Location: " . $return_url);
         exit();
     }
 
     // 3. Eliminar movimiento
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'eliminar_movimiento') {
-        $id_movimiento = intval($_POST['id_movimiento']);
-        
+        $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
+
         $stmt_del = $conn->prepare("DELETE FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?");
         $stmt_del->bind_param("ii", $id_movimiento, $user_id);
         $stmt_del->execute();
+        if ($stmt_del->affected_rows > 0) {
+            flash('Movimiento eliminado.', 'success');
+        }
 
-        // Redirigir a la página de origen
         header("Location: " . $return_url);
         exit();
     }
 
     // 4. Borrar TODO el historial del usuario
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'borrar_historial_completo') {
-        // Validación adicional: confirmar que el usuario realmente quiere eliminar
         $confirmacion = isset($_POST['confirmacion_borrar']) ? trim($_POST['confirmacion_borrar']) : '';
-        
+
         if ($confirmacion === 'SI, ESTOY SEGURO') {
-            // Eliminar todos los movimientos del usuario (validación: solo del usuario logueado)
             $stmt_del = $conn->prepare("DELETE FROM movimientos WHERE id_usuario = ?");
             $stmt_del->bind_param("i", $user_id);
-            $result = $stmt_del->execute();
-            
-            if ($result) {
-                // Redirigir a la página de origen o al dashboard si no hay origen
-                header("Location: " . $return_url);
-                exit();
-            } else {
-                // Si hay error, volver a la página anterior
-                header("Location: " . $return_url);
-                exit();
-            }
+            $stmt_del->execute();
+            flash('Se borró todo tu historial de movimientos.', 'success');
         } else {
-            // Confirmación no válida, volver sin hacer nada
-            header("Location: " . $return_url);
-            exit();
+            flash('Confirmación incorrecta: no se borró nada.');
         }
+        header("Location: " . $return_url);
+        exit();
     }
 
-    // 5. Eliminar cuenta
+    // 5. Eliminar cuenta (requiere la frase de confirmación también en el servidor)
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'eliminar_cuenta') {
-        $stmt_del_mov = $conn->prepare("DELETE FROM movimientos WHERE id_usuario = ?");
-        $stmt_del_mov->bind_param("i", $user_id);
-        $stmt_del_mov->execute();
+        $confirmacion = trim($_POST['confirmacion_eliminar'] ?? '');
+        if ($confirmacion !== 'ELIMINAR MI CUENTA') {
+            flash('Confirmación incorrecta: tu cuenta no se eliminó.');
+            header("Location: " . urlRetornoSegura($_SERVER['HTTP_REFERER'] ?? '', 'perfil.php'));
+            exit();
+        }
 
-        $stmt_del_meta = $conn->prepare("DELETE FROM metas_ahorro WHERE id_usuario = ?");
-        $stmt_del_meta->bind_param("i", $user_id);
-        $stmt_del_meta->execute();
-
-        $stmt_del_user = $conn->prepare("DELETE FROM usuarios WHERE id_usuario = ?");
-        $stmt_del_user->bind_param("i", $user_id);
-        $stmt_del_user->execute();
+        $conn->begin_transaction();
+        try {
+            foreach ([
+                "DELETE FROM movimientos WHERE id_usuario = ?",
+                "DELETE FROM metas_ahorro WHERE id_usuario = ?",
+                "DELETE FROM consejos_ia WHERE id_usuario = ?",
+                "DELETE FROM categorias WHERE id_usuario = ?",
+                "DELETE FROM usuarios WHERE id_usuario = ?",
+            ] as $sql) {
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("i", $user_id);
+                $stmt->execute();
+            }
+            $conn->commit();
+        } catch (mysqli_sql_exception $e) {
+            $conn->rollback();
+            error_log('Trackify: error al eliminar cuenta: ' . $e->getMessage());
+            flash('No se pudo eliminar la cuenta. Intentá de nuevo.');
+            header("Location: " . urlRetornoSegura($_SERVER['HTTP_REFERER'] ?? '', 'perfil.php'));
+            exit();
+        }
 
         // Destruir sesión limpia y eliminar cookie de sesión si existe
         $_SESSION = [];

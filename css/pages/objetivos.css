@@ -1,19 +1,6 @@
 /* ===== PAGE: OBJETIVOS ===== */
 
-.page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
 
-.page-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--text-primary);
-}
 
 .btn-nuevo {
     padding: 12px 22px;
@@ -441,52 +428,22 @@
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .obj-stats {
-        grid-template-columns: repeat(3, 1fr);
-    }
+
+
+.badge-vencido {
+    background: var(--badge-vencido-bg);
+    color: var(--badge-vencido-text);
+    border: 1px solid var(--borde-peligro);
 }
 
-@media (max-width: 600px) {
-    .obj-stats {
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
-    }
+/* En un objetivo vencido el único botón es eliminar, con color de peligro */
+.btn-eliminar-obj.btn-eliminar-vencido {
+    background: var(--bg-peligro);
+    border-color: var(--borde-peligro);
+    color: var(--color-peligro);
+    font-weight: 600;
+}
 
-    .obj-stat {
-        padding: 14px 12px;
-    }
-
-    .obj-stat-num {
-        font-size: 1.4rem;
-    }
-
-    .obj-card-top {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .obj-montos {
-        text-align: left;
-        align-items: flex-start;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .btn-nuevo {
-        width: 100%;
-        text-align: center;
-    }
-
-    /* Badge en mobile: sigue encima del monto */
-    .obj-card.completado .obj-montos::before {
-        align-self: flex-start;
-    }
+.obj-lista .texto-vacio {
+    grid-column: 1 / -1;
 }

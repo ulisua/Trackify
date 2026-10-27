@@ -3,7 +3,7 @@
 /* Layout de dos columnas */
 .perfil-layout {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 300px minmax(0, 1fr);
     gap: 20px;
     align-items: start;
 }
@@ -175,7 +175,7 @@
 /* Campos del formulario */
 .campo-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
 }
 
@@ -387,41 +387,21 @@
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .perfil-layout {
-        grid-template-columns: 1fr;
-    }
 
-    .perfil-sidebar-card {
-        position: static;
-    }
 
-    .perfil-user-stats {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 14px;
-    }
-
-    .perfil-user-stat {
-        flex-direction: column;
-        gap: 2px;
-        min-width: 100px;
-    }
+.campo-ayuda {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
 }
 
-@media (max-width: 540px) {
-    .campo-row {
-        grid-template-columns: 1fr;
-    }
+.perfil-logout-wrap {
+    padding: 16px 20px 0;
+}
 
-    .peligro-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .btn-peligro {
-        width: 100%;
-        text-align: center;
-    }
+.btn-peligro.btn-peligro-fuerte {
+    border-color: var(--color-peligro);
+    background: var(--bg-peligro);
+    color: var(--color-peligro);
 }

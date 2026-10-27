@@ -4,11 +4,34 @@ function toggleChat() {
     chat.classList.toggle("oculto");
 }
 
+// ===== OCULTAR BOTÓN FLOTANTE =====
+// Se oculta durante la sesión del navegador; el asistente sigue disponible en la página IA.
+const CLAVE_BOTON_IA = 'trackify_boton_ia_oculto';
+
+function ocultarBotonIA() {
+    const wrap = document.getElementById("botonIAWrap");
+    const chat = document.getElementById("chatFlotante");
+    if (wrap) wrap.hidden = true;
+    if (chat) chat.classList.add("oculto");
+    try { sessionStorage.setItem(CLAVE_BOTON_IA, '1'); } catch (e) { /* sin almacenamiento */ }
+}
+
+(function restaurarBotonIA() {
+    let oculto = false;
+    try { oculto = sessionStorage.getItem(CLAVE_BOTON_IA) === '1'; } catch (e) { /* sin almacenamiento */ }
+    const wrap = document.getElementById("botonIAWrap");
+    if (wrap && oculto) wrap.hidden = true;
+})();
+
 // ===== FORMATEO =====
+// Se escapa todo el HTML y luego se aplica un formato mínimo (**negrita** y saltos de línea)
 function formatearRespuesta(texto) {
-    texto = texto.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    texto = texto.replace(/\n/g, "<br>");
-    return texto;
+    const div = document.createElement("div");
+    div.textContent = String(texto);
+    let seguro = div.innerHTML;
+    seguro = seguro.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    seguro = seguro.replace(/\n/g, "<br>");
+    return seguro;
 }
 
 // ===== AGREGAR MENSAJES =====
@@ -50,38 +73,30 @@ window.preguntarIA = async function () {
     input.value = "";
     input.style.height = "auto";
 
-    // loader UX PRO
     agregarMensaje("ia typing", "Escribiendo...");
 
     try {
         const res = await fetch("./ia.php", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "X-CSRF-Token": window.csrfToken || ""
             },
             body: JSON.stringify({ pregunta: pregunta })
         });
 
         eliminarUltimoMensaje();
 
-        if (!res.ok) {
-            agregarMensaje("ia", "Error (" + res.status + ")");
-            return;
-        }
-
-        const text = await res.text();
-
-        let data;
+        let data = null;
         try {
-            data = JSON.parse(text);
+            data = await res.json();
         } catch (e) {
-            console.error("Respuesta inválida:", text);
-            agregarMensaje("ia", "Error en respuesta del servidor");
-            return;
+            console.error("Respuesta inválida del asistente");
         }
 
-        if (!data.respuesta) {
-            agregarMensaje("ia", "Sin respuesta");
+        if (!res.ok || !data || !data.respuesta) {
+            agregarMensaje("ia", (data && data.error) || "No pude responder en este momento. Intentá de nuevo.");
             return;
         }
 
@@ -109,3 +124,4 @@ textarea.addEventListener("input", function () {
     this.style.height = "auto";
     this.style.height = this.scrollHeight + "px";
 });
+

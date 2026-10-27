@@ -1,7 +1,8 @@
 /* ===== COMPONENT: CHARTS ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 .graficos-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 20px;
     margin-bottom: 28px;
     width: 100%;
@@ -32,12 +33,11 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     flex-shrink: 0;
 }
 
 .grafico-icono {
-    font-size: 1.3rem;
     line-height: 1;
     display: flex;
     align-items: center;
@@ -57,19 +57,13 @@
     font-weight: 400;
 }
 
+/* Chart.js mide el contenedor: la altura se fija acá y el canvas NO se fuerza con CSS
+   (forzar width/height del canvas descalibra el gráfico y lo deja vacío o diminuto). */
 .grafico-wrap {
     position: relative;
     width: 100%;
     min-width: 0;
-    flex: 1;
-    min-height: 230px;
-    height: clamp(230px, 34vw, 290px);
-}
-
-.grafico-wrap canvas {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100%;
+    height: 250px;
 }
 
 .grafico-empty {
@@ -77,33 +71,5 @@
     color: var(--text-muted);
     font-size: 0.9rem;
     padding: 40px 0;
-}
-
-/* Responsivo */
-@media (max-width: 768px) {
-    .graficos-container {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-
-    .grafico-card {
-        padding: 14px 14px 12px;
-    }
-
-    .grafico-wrap {
-        min-height: 220px;
-        height: 240px;
-    }
-}
-
-@media (max-width: 360px) {
-    .grafico-card {
-        padding: 12px 10px 10px;
-    }
-
-    .grafico-wrap {
-        min-height: 200px;
-        height: 220px;
-    }
+    margin: 0;
 }

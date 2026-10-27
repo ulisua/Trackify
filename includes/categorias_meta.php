@@ -28,6 +28,8 @@ function obtenerMetaCategoriaPorNombre($nombre, $tipo) {
         'tecnologia' => 'iconos/gasto/tecnologia1.png',
         'viajes' => 'iconos/gasto/viajemaleta.png',
         'otros gastos' => 'iconos/gasto/otrosgastos.png',
+        'ropa' => 'iconos/gasto/ropa.png',
+        'servicio' => 'iconos/gasto/servicio.png',
         'sueldo' => 'iconos/ingreso/sueldo.png',
         'prestamo' => 'iconos/ingreso/prestamo.png',
         'préstamo' => 'iconos/ingreso/prestamo.png',
@@ -125,6 +127,56 @@ function actualizarCategoriaMetaSiFalta($conn, &$categoria) {
     }
 }
 
+// ── Visibilidad de categorías ────────────────────────────────────────────────
+// Cada usuario ve las categorías predeterminadas (id_usuario IS NULL) y las propias.
+
+function obtenerCategoriasVisibles($conn, $user_id) {
+    $categorias = ['ingreso' => [], 'gasto' => []];
+    $stmt = $conn->prepare("SELECT id_categoria, nombre, tipo, icono, color, id_usuario FROM categorias WHERE id_usuario IS NULL OR id_usuario = ? ORDER BY nombre ASC");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    while ($row = $res->fetch_assoc()) {
+        if (isset($categorias[$row['tipo']])) {
+            $categorias[$row['tipo']][] = $row;
+        }
+    }
+    return $categorias;
+}
+
+// Devuelve el id de una categoría visible para el usuario, o null si no existe.
+function buscarCategoriaVisible($conn, $user_id, $nombre, $tipo) {
+    $stmt = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? AND (id_usuario IS NULL OR id_usuario = ?) ORDER BY id_usuario IS NULL DESC LIMIT 1");
+    $stmt->bind_param("ssi", $nombre, $tipo, $user_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    return $row ? (int)$row['id_categoria'] : null;
+}
+
+// Obtiene (o crea) una categoría predeterminada del sistema. Uso interno de la app.
+function obtenerCategoriaSistema($conn, $nombre, $tipo) {
+    $stmt = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? AND id_usuario IS NULL LIMIT 1");
+    $stmt->bind_param("ss", $nombre, $tipo);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    if ($row) {
+        return (int)$row['id_categoria'];
+    }
+    $meta = obtenerMetaCategoriaPorNombre($nombre, $tipo);
+    $stmt_ins = $conn->prepare("INSERT INTO categorias (nombre, tipo, icono, color) VALUES (?, ?, ?, ?)");
+    $stmt_ins->bind_param("ssss", $nombre, $tipo, $meta['icono'], $meta['color']);
+    $stmt_ins->execute();
+    return (int)$stmt_ins->insert_id;
+}
+
+function iconoCategoriaValido($ruta) {
+    return array_key_exists($ruta, obtenerOpcionesIconoCategoria());
+}
+
+function colorCategoriaValido($color) {
+    return is_string($color) && preg_match('/^#[0-9A-Fa-f]{6}$/', $color) === 1;
+}
+
 function obtenerOpcionesIconoCategoria() {
     return [
         'iconos/generales/pizza.png' => 'Alimentos',
@@ -142,6 +194,8 @@ function obtenerOpcionesIconoCategoria() {
         'iconos/gasto/deuda.png' => 'Deudas',
         'iconos/gasto/tecnologia1.png' => 'Tecnología',
         'iconos/gasto/viajemaleta.png' => 'Viajes',
+        'iconos/gasto/ropa.png' => 'Ropa',
+        'iconos/gasto/servicio.png' => 'Servicios',
         'iconos/gasto/otrosgastos.png' => 'Otros gastos',
         'iconos/ingreso/sueldo.png' => 'Sueldo',
         'iconos/ingreso/prestamo.png' => 'Préstamo',

@@ -210,7 +210,6 @@
     align-items: flex-start;
     gap: 11px;
     padding: 11px 13px;
-    border-radius: 99px; /* wait, let's keep original border radius if it was 9px: line 1792 has border-radius: 9px; */
     border-radius: 9px;
     border-left: 3px solid transparent;
     transition: background 0.18s;
@@ -293,147 +292,155 @@
     color: var(--brand-green-light);
 }
 
-/* ===== CARDS DE MOVIMIENTOS (MOBILE) ===== */
-.movimiento-cards {
-    display: none;
+/* ===== BOTON FLOTANTE DE IA ===== */
+.boton-ia-wrap {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
 }
 
-.movimiento-card {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--border-color);
+.boton-ia {
+    width: 60px;
+    height: 60px;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.movimiento-card:last-child {
-    border-bottom: none;
-}
-
-.mc-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mc-desc {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 1rem;
-}
-
-.mc-monto {
-    font-size: 1.05rem;
-    font-weight: 700;
-}
-
-.mc-bottom {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.mc-tag {
-    background: var(--bg-hover);
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.mc-fecha {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-left: auto;
-}
-
-.mc-acciones {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-
-.mc-acciones button {
-    min-width: 38px;
-    min-height: 38px;
-    padding: 6px;
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
+    padding: 0;
+    border: 2px solid var(--brand-green-light);
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-green-dark));
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(207, 242, 124, 0.15);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* ===== BOTON FLOTANTE DE IA ===== */
-.boton-ia {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #2c2c3e;
-    color: white;
-    font-size: 20px;
-    padding: 15px;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 999;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
+.boton-ia img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
 }
 
 .boton-ia:hover {
-    transform: scale(1.1);
+    transform: scale(1.06);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(207, 242, 124, 0.22);
 }
 
+/* Cruz para ocultar el botón */
+.boton-ia-cerrar {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-body);
+    border-radius: 50%;
+    background: var(--brand-pink);
+    color: var(--brand-dark);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.boton-ia-cerrar:hover {
+    background: #f39bf9;
+}
+
+/* Panel flotante: misma tarjeta que la página IA (fondo de tarjeta, borde, orbes
+   de color suaves). Las burbujas e input vienen de css/components/chat.css */
 .chat-flotante {
     position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 340px;
-    height: 450px;
-    background: rgba(30, 27, 38, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    bottom: 100px;
+    right: 24px;
+    width: 380px;
+    height: min(520px, calc(100dvh - 140px));
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+    isolation: isolate;
     z-index: 999;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Orbes de color de fondo, como en la página IA */
+.chat-flotante::before,
+.chat-flotante::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.chat-flotante::before {
+    width: 200px;
+    height: 200px;
+    top: 10px;
+    left: -60px;
+    background: var(--brand-green-light);
+}
+
+.chat-flotante::after {
+    width: 240px;
+    height: 240px;
+    right: -70px;
+    bottom: -80px;
+    background: var(--brand-pink);
 }
 
 .chat-header {
-    background: rgba(8, 71, 52, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--brand-green-light);
-    padding: 15px;
-    border-radius: 12px 12px 0 0;
     display: flex;
     justify-content: space-between;
-    font-weight: 600;
+    align-items: center;
+    padding: 14px 16px 14px 18px;
+    background: linear-gradient(90deg, var(--brand-dark), var(--brand-green-dark));
+    color: var(--brand-green-light);
+    font-weight: 700;
+    font-size: 0.98rem;
+    flex-shrink: 0;
+}
+
+.chat-flotante .chat {
+    margin: 14px 14px 0;
+}
+
+.chat-flotante .input-container {
+    margin: 10px 14px 14px;
+}
+
+.chat-cerrar {
+    background: none;
+    border: none;
+    padding: 6px;
+    min-height: 0;
+    cursor: pointer;
+    display: flex;
+    border-radius: 6px;
+}
+
+.chat-cerrar:hover {
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .oculto {
     display: none;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .movimiento-cards {
-        display: block;
-    }
-
-    .chat-flotante {
-        width: calc(100vw - 24px);
-        right: 12px;
-        bottom: 75px;
-        height: 420px;
-    }
-
-    .boton-ia {
-        bottom: 16px;
-        right: 16px;
-    }
+.movimientos-empty-icono {
+    width: 48px;
+    height: 48px;
+    display: block;
+    margin: 0 auto 8px;
 }

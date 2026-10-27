@@ -7,31 +7,6 @@ if(session_status() !== PHP_SESSION_ACTIVE) {
 }
 require_once 'includes/periodo.php';
 
-// Procesar el guardado del objetivo
-if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id = $_SESSION['usuario_id'];
-
-    if(isset($_POST['form_type']) && $_POST['form_type'] === 'objetivo') {
-        $nombre = $_POST['nombre_meta'];
-        $desc = $_POST['desc_meta'];
-        $monto = floatval($_POST['monto_objetivo']);
-        $fecha = $_POST['fecha_limite'];
-        $hoy = date('Y-m-d');
-        if ($fecha < $hoy) {
-            $fecha = $hoy;
-        }
-        $monto_actual = 0;
-
-        $stmt_obj = $conn->prepare("INSERT INTO metas_ahorro (id_usuario, nombre_meta, descripcion, monto_objetivo, monto_actual, fecha_limite) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt_obj->bind_param("issdds", $user_id, $nombre, $desc, $monto, $monto_actual, $fecha);
-        $stmt_obj->execute();
-        
-        // Redirigir
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    }
-}
-
 // Calcular totales
 $total_ingresos = 0;
 $total_gastos = 0;
@@ -85,20 +60,20 @@ if(isset($_SESSION['usuario_id'])) {
     $stmt_barras = $conn->prepare(
         "SELECT
             DATE_FORMAT(fecha, '%Y-%m') as mes,
-            DATE_FORMAT(fecha, '%b %Y') as mes_label,
             SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos,
             SUM(CASE WHEN tipo = 'gasto'   THEN monto ELSE 0 END) as total_gastos
          FROM movimientos
          WHERE id_usuario = ?
            AND fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-         GROUP BY mes, mes_label
+         GROUP BY mes
          ORDER BY mes ASC"
     );
     $stmt_barras->bind_param("i", $user_id);
     $stmt_barras->execute();
     $res_barras = $stmt_barras->get_result();
     while ($row = $res_barras->fetch_assoc()) {
-        $barras_labels[]   = ucfirst($row['mes_label']);
+        // Etiqueta en español (DATE_FORMAT %b depende del idioma del servidor MySQL)
+        $barras_labels[]   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][(int)substr($row['mes'], 5, 2) - 1] . ' ' . substr($row['mes'], 0, 4);
         $barras_ingresos[] = (float)$row['total_ingresos'];
         $barras_gastos[]   = (float)$row['total_gastos'];
     }
@@ -137,9 +112,7 @@ if(isset($_SESSION['usuario_id'])) {
 $balance = $total_ingresos - $total_gastos;
 
 // Codificar los datos para Chart.js
-$js_torta_labels   = json_encode($torta_labels);
 $js_torta_data     = json_encode($torta_data);
-$js_barras_labels  = json_encode($barras_labels);
 $js_barras_ing     = json_encode($barras_ingresos);
 $js_barras_gas     = json_encode($barras_gastos);
 
@@ -148,7 +121,7 @@ $balance_texto = $balance >= 0 ? "positivo" : "negativo";
 $pct_gasto = $total_ingresos > 0 ? round(($total_gastos / $total_ingresos) * 100) : 0;
 $recomendaciones_fallback = [
     ["icon" => "<img src=\"iconos/generales/bombilla.png\" alt=\"Bombilla\" class=\"icono-inline\">", "titulo" => "Balance actual", "texto" => "Tu balance es <strong>$balance_texto</strong>. " . ($balance >= 0 ? "¡Vas por buen camino!" : "Revisá tus gastos esta semana."), "tipo" => "info"],
-    ["icon" => "<img src=\"iconos/generales/graficos.png\" alt=\"Gráfico\" class=\"icono-inline\">", "titulo" => "Ratio de gasto", "texto" => "Estás gastando el <strong>{$pct_gasto}%</strong> de tus ingresos. " . ($pct_gasto > 80 ? "⚠️ Está muy alto, tratá de reducirlo." : "Buen control financiero."), "tipo" => $pct_gasto > 80 ? "alerta" : "ok"],
+    ["icon" => "<img src=\"iconos/generales/graficos.png\" alt=\"Gráfico\" class=\"icono-inline\">", "titulo" => "Ratio de gasto", "texto" => "Estás gastando el <strong>{$pct_gasto}%</strong> de tus ingresos. " . ($pct_gasto > 80 ? "Está muy alto, tratá de reducirlo." : "Buen control financiero."), "tipo" => $pct_gasto > 80 ? "alerta" : "ok"],
     ["icon" => "<img src=\"iconos/generales/altbilleteconalas.png\" alt=\"Dinero\" class=\"icono-inline\">", "titulo" => "Consejo de ahorro", "texto" => "Intentá apartar al menos el <strong>20%</strong> de tus ingresos como ahorro antes de gastar.", "tipo" => "consejo"],
     ["icon" => "<img src=\"iconos/generales/dianaconflecha.png\" alt=\"Objetivo\" class=\"icono-inline\">", "titulo" => "Objetivos", "texto" => "Crear objetivos de ahorro te ayuda a mantener el foco. ¡Revisá tus metas en la sección de Objetivos!", "tipo" => "consejo"],
 ];
@@ -156,16 +129,23 @@ $recomendaciones_fallback = [
 $extra_css = '<link rel="stylesheet" href="css/pages/dashboard.css">';
 
 require_once 'includes/header.php';
+
+$etiquetas_periodo = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 'mes' => 'Este mes'];
 ?>
 
-<!-- BOTON FLOTANTE IA -->
-<div id="botonIA" class="boton-ia" onclick="toggleChat()"><img src="iconos/generales/robot.png" alt="Chat" style="width: 24px; height: 24px; object-fit: contain;"></div>
+<!-- BOTON FLOTANTE IA (el usuario puede ocultarlo con la cruz) -->
+<div id="botonIAWrap" class="boton-ia-wrap">
+    <button type="button" id="botonIA" class="boton-ia" onclick="toggleChat()" aria-label="Abrir asistente IA">
+        <img src="iconos/generales/robot.png" alt="">
+    </button>
+    <button type="button" class="boton-ia-cerrar" onclick="ocultarBotonIA()" aria-label="Ocultar botón del asistente">&times;</button>
+</div>
 
 <!-- CHAT FLOTANTE -->
 <div id="chatFlotante" class="chat-flotante oculto">
     <div class="chat-header">
         <span>Asistente IA</span>
-        <span onclick="toggleChat()" style="cursor:pointer;"><img src="iconos/generales/flechaabajo.png" alt="Cerrar" class="icono-boton"></span>
+        <button type="button" class="chat-cerrar" onclick="toggleChat()" aria-label="Cerrar chat"><img src="iconos/generales/flechaabajo.png" alt="" class="icono-boton"></button>
     </div>
     <div id="chat" class="chat"></div>
     <div class="input-container">
@@ -174,37 +154,44 @@ require_once 'includes/header.php';
     </div>
 </div>
 
+        <div class="page-header">
+            <div class="page-header-texto">
+                <h2 class="titulo-con-icono"><img src="iconos/generales/graficos.png" alt="" class="icono-titulo"> Dashboard</h2>
+                <p class="page-subtitle"><?php echo ($etiquetas_periodo[$periodo_actual] ?? 'Período') . ' · ' . date('d/m/Y', strtotime($fecha_desde)) . ' — ' . date('d/m/Y', strtotime($fecha_hasta)); ?></p>
+            </div>
+        </div>
+
         <!-- CARDS PRINCIPALES -->
-        <section class="cards">
+        <section class="cards cards-dashboard">
             <div class="card">
                 <h4>Ingresos</h4>
-                <p id="ingresos" data-ars="<?php echo $total_ingresos; ?>">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
+                <p id="ingresos" data-ars="<?php echo (float)$total_ingresos; ?>">$<?php echo number_format($total_ingresos, 2, ',', '.'); ?></p>
             </div>
             <div class="card highlight">
                 <h4>Balance</h4>
-                <p id="balance" data-ars="<?php echo $balance; ?>">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
+                <p id="balance" data-ars="<?php echo (float)$balance; ?>">$<?php echo number_format($balance, 2, ',', '.'); ?></p>
             </div>
             <div class="card">
                 <h4>Gastos</h4>
-                <p id="gastos" data-ars="<?php echo $total_gastos; ?>">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
+                <p id="gastos" data-ars="<?php echo (float)$total_gastos; ?>">$<?php echo number_format($total_gastos, 2, ',', '.'); ?></p>
             </div>
         </section>
 
         <!-- CARDS SECUNDARIAS -->
-        <section class="cards small">
-            <?php 
+        <section class="cards small cards-dashboard">
+            <?php
                 $nombre_cat_top = '-';
                 if (!empty($torta_labels)) {
                     $nombre_cat_top = $torta_labels[0];
                 }
             ?>
-            <div class="card">% gasto <p id="porcentaje"><?php echo $pct_gasto; ?>%</p></div>
-            <div class="card">Mayor categoría <p id="categoriaTop"><?php echo htmlspecialchars($nombre_cat_top); ?></p></div>
-            <div class="card">Gasto mensual <p id="gastoMensual" data-ars="<?php echo $gasto_mensual; ?>">$<?php echo number_format($gasto_mensual, 0, ',', '.'); ?></p></div>
+            <div class="card"><h4>% gasto</h4><p id="porcentaje"><?php echo $pct_gasto; ?>%</p></div>
+            <div class="card"><h4>Mayor categoría</h4><p id="categoriaTop"><?php echo htmlspecialchars($nombre_cat_top); ?></p></div>
+            <div class="card"><h4>Gasto mensual</h4><p id="gastoMensual" data-ars="<?php echo (float)$gasto_mensual; ?>">$<?php echo number_format($gasto_mensual, 2, ',', '.'); ?></p></div>
         </section>
 
-        <!-- BOTONES -->
-        <div class="acciones dashboard-acciones">
+        <!-- BOTONES (misma grilla que las tarjetas de arriba) -->
+        <div class="dashboard-acciones">
             <button class="btn ingreso" onclick="abrirModal('ingreso')">+ Ingreso</button>
             <button class="btn gasto" onclick="abrirModal('gasto')">+ Gasto</button>
             <button class="btn objetivo" onclick="abrirModal('objetivo')">+ Objetivo</button>
@@ -215,30 +202,30 @@ require_once 'includes/header.php';
             <!-- Gráfico de torta: gastos por categoría -->
             <div class="grafico-card">
                 <div class="grafico-card-header">
-                    <span class="grafico-icono"><img src="iconos/generales/graficotorta.png" alt="Torta" class="icono-titulo"></span>
+                    <span class="grafico-icono"><img src="iconos/generales/graficotorta.png" alt="" class="icono-titulo"></span>
                     <div>
                         <h3 class="grafico-titulo">Gastos por Categoría</h3>
-                        <p class="grafico-subtitulo">Distribución total de egresos</p>
+                        <p class="grafico-subtitulo">Distribución del período</p>
                     </div>
                 </div>
                 <div class="grafico-wrap">
-                    <canvas id="graficoTorta"></canvas>
-                    <p class="grafico-empty" id="torta-empty" style="display:none;">Sin gastos registrados aún.</p>
+                    <canvas id="graficoTorta" aria-label="Gráfico de gastos por categoría" role="img"></canvas>
+                    <p class="grafico-empty" id="torta-empty" hidden>Sin gastos en este período.</p>
                 </div>
             </div>
 
             <!-- Gráfico de barras: ingresos vs gastos por mes -->
             <div class="grafico-card">
                 <div class="grafico-card-header">
-                    <span class="grafico-icono"><img src="iconos/generales/graficobarra.png" alt="Barras" class="icono-titulo"></span>
+                    <span class="grafico-icono"><img src="iconos/generales/graficobarra.png" alt="" class="icono-titulo"></span>
                     <div>
                         <h3 class="grafico-titulo">Ingresos vs Gastos</h3>
                         <p class="grafico-subtitulo">Comparativa de los últimos 6 meses</p>
                     </div>
                 </div>
                 <div class="grafico-wrap">
-                    <canvas id="graficoBarras"></canvas>
-                    <p class="grafico-empty" id="barras-empty" style="display:none;">Sin movimientos en los últimos 6 meses.</p>
+                    <canvas id="graficoBarras" aria-label="Gráfico de ingresos y gastos por mes" role="img"></canvas>
+                    <p class="grafico-empty" id="barras-empty" hidden>Sin movimientos en los últimos 6 meses.</p>
                 </div>
             </div>
         </section>
@@ -249,13 +236,13 @@ require_once 'includes/header.php';
             <!-- MOVIMIENTOS -->
             <div class="box movimientos-card">
                 <div class="movimientos-header">
-                    <h3 class="titulo-con-icono"><img src="iconos/generales/listaultmov1.png" alt="Movimientos" class="icono-titulo"> Últimos movimientos</h3>
+                    <h3 class="titulo-con-icono"><img src="iconos/generales/listaultmov1.png" alt="" class="icono-titulo"> Últimos movimientos</h3>
                     <a href="movimientos.php" class="ver-mas-link">Ver todos →</a>
                 </div>
 
                 <?php if (empty($ultimos_movimientos)): ?>
                     <div class="movimientos-empty">
-                        <span><img src="iconos/generales/altbilleteconalas.png" alt="Sin movimientos" style="width: 48px; height: 48px;"></span>
+                        <img src="iconos/generales/altbilleteconalas.png" alt="" class="movimientos-empty-icono">
                         <p>Aún no registraste ningún movimiento.</p>
                     </div>
                 <?php else: ?>
@@ -266,7 +253,7 @@ require_once 'includes/header.php';
                                 $icono      = $es_ingreso ? '<img src="iconos/generales/altbilleteconalas.png" alt="Ingreso" class="icono-inline">' : '<img src="iconos/gasto/otrosgastos.png" alt="Gasto" class="icono-inline">';
                                 $clase_tipo = $es_ingreso ? 'mov-ingreso' : 'mov-gasto';
                                 $signo      = $es_ingreso ? '+' : '-';
-                                $monto_fmt  = '$' . number_format($mv['monto'], 0, ',', '.');
+                                $monto_fmt  = '$' . number_format($mv['monto'], 2, ',', '.');
                                 $fecha_fmt  = date('d/m/Y', strtotime($mv['fecha']));
                             ?>
                             <li class="movimiento-item">
@@ -275,7 +262,7 @@ require_once 'includes/header.php';
                                     <span class="mov-desc"><?php echo htmlspecialchars($mv['descripcion']); ?></span>
                                     <span class="mov-cat"><?php echo htmlspecialchars($mv['categoria']); ?> · <?php echo $fecha_fmt; ?></span>
                                 </div>
-                                <span class="mov-monto <?php echo $clase_tipo; ?>" data-ars="<?php echo $mv['monto']; ?>" data-prefijo="<?php echo $signo; ?>"><?php echo $signo . $monto_fmt; ?></span>
+                                <span class="mov-monto <?php echo $clase_tipo; ?>" data-ars="<?php echo (float)$mv['monto']; ?>" data-prefijo="<?php echo $signo; ?>"><?php echo $signo . $monto_fmt; ?></span>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -286,7 +273,7 @@ require_once 'includes/header.php';
             <div class="box ia-card">
                 <div class="ia-header">
                     <div class="ia-titulo-wrap">
-                        <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="Recomendaciones" class="icono-titulo"> Recomendaciones IA</h3>
+                        <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="" class="icono-titulo"> Recomendaciones IA</h3>
                         <span class="ia-badge ia-badge-simulacion">Modo análisis</span>
                     </div>
                     <p class="ia-subtitulo">Análisis basado en tus finanzas actuales</p>
@@ -304,7 +291,7 @@ require_once 'includes/header.php';
                     <?php endforeach; ?>
                 </ul>
 
-                <a href="ia.php" class="ia-btn-chat"><img src="iconos/generales/robot.png" alt="Chat" class="icono-boton"> Hablar con la IA →</a>
+                <a href="ia.php" class="ia-btn-chat"><img src="iconos/generales/robot.png" alt="" class="icono-boton"> Hablar con la IA →</a>
             </div>
 
         </section>
@@ -313,157 +300,136 @@ require_once 'includes/header.php';
 ob_start();
 ?>
 <!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.6.1/dist/chart.umd.min.js"></script>
 
 <script>
-// ── Datos desde PHP (reales de la BD) ─────────────────────────────────────
-const tortaLabels   = <?php echo $js_torta_labels; ?>;
+// ── Datos desde PHP (siempre en ARS) ──────────────────────────────────────
+const tortaLabels   = <?php echo json_encode($torta_labels, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
 const tortaData     = <?php echo $js_torta_data; ?>;
-const barrasLabels  = <?php echo $js_barras_labels; ?>;
+const barrasLabels  = <?php echo json_encode($barras_labels, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
 const barrasIng     = <?php echo $js_barras_ing; ?>;
 const barrasGas     = <?php echo $js_barras_gas; ?>;
 
 // ── Paleta de colores alineada con Trackify ────────────────────────────────
-const paleta = [
-    "#CFF27C",  // verde lima
-    "#EA73F5",  // violeta/fucsia
-    "#700353",  // fucsia oscuro
-    "#084734",  // verde oscuro
-    "#6EE7B7",  // menta
-    "#A78BFA",  // lila
-    "#F472B6",  // rosa
-    "#34D399",  // esmeralda
-];
+const paleta = ["#CFF27C", "#EA73F5", "#700353", "#084734", "#6EE7B7", "#A78BFA", "#F472B6", "#34D399"];
 
-const paletaBordes = paleta.map(c => c + "CC");
+const graficos = { torta: null, barras: null };
 
-// ── Opciones comunes ───────────────────────────────────────────────────────
-const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
-Chart.defaults.font.family = "Inter, sans-serif";
-Chart.defaults.color = isDarkTheme ? "#94A3B8" : "#64748B";
+// Montos compactos para los ejes: $1,2 M · $350 k · USD 900
+function formatoCompacto(valor, moneda) {
+    const prefijo = moneda === 'USD' ? 'USD ' : '$';
+    return prefijo + new Intl.NumberFormat('es-AR', { notation: 'compact', maximumFractionDigits: 1 }).format(valor);
+}
 
-// ── Gráfico de Torta ────────────────────────────────────────────────────────
-const ctxTorta = document.getElementById("graficoTorta").getContext("2d");
-if (tortaData.length === 0) {
-    document.getElementById("torta-empty").style.display = "block";
-    document.getElementById("graficoTorta").style.display = "none";
-} else {
-    new Chart(ctxTorta, {
-        type: "doughnut",
-        data: {
-            labels: tortaLabels,
-            datasets: [{
-                data: tortaData,
-                backgroundColor: paleta.slice(0, tortaLabels.length),
-                borderColor: isDarkTheme ? "#1E1B26" : "#F8FAFC",
-                borderWidth: 3,
-                hoverOffset: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: "60%",
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: {
-                        padding: 12,
-                        boxWidth: 12,
-                        font: { size: 11, family: "'Inter', sans-serif" }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            const val = ctx.parsed;
-                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const pct = ((val / total) * 100).toFixed(1);
-                            return ` $${val.toLocaleString("es-AR")} (${pct}%)`;
+function convertirSerie(serie, moneda, tc) {
+    return moneda === 'USD' && tc > 0 ? serie.map(v => v / tc) : serie.slice();
+}
+
+function dibujarGraficos(moneda, tc) {
+    if (!window.Chart) return;
+    const oscuro = document.documentElement.getAttribute('data-theme') === 'dark';
+    const colorTexto = oscuro ? "#CBD5E1" : "#475569";
+    const colorGrilla = oscuro ? "rgba(255, 255, 255, 0.10)" : "rgba(30, 27, 38, 0.08)";
+    const formatoTooltip = v => ' ' + window.formatearMonto(moneda === 'USD' && tc > 0 ? v * tc : v, moneda, tc);
+
+    Chart.defaults.font.family = "Inter, sans-serif";
+    Chart.defaults.color = colorTexto;
+    const esAngosto = window.innerWidth < 600;
+
+    // ── Gráfico de Torta ──
+    const canvasTorta = document.getElementById("graficoTorta");
+    if (tortaData.length === 0) {
+        document.getElementById("torta-empty").hidden = false;
+        canvasTorta.hidden = true;
+    } else {
+        if (graficos.torta) graficos.torta.destroy();
+        graficos.torta = new Chart(canvasTorta, {
+            type: "doughnut",
+            data: {
+                labels: tortaLabels,
+                datasets: [{
+                    data: convertirSerie(tortaData, moneda, tc),
+                    // En oscuro el bordó (#700353) se pierde contra el fondo: se usa una variante más clara
+                    backgroundColor: paleta.slice(0, tortaLabels.length).map(c => oscuro && c === "#700353" ? "#C2389A" : c),
+                    borderColor: oscuro ? "#1E1B26" : "#FFFFFF",
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "62%",
+                layout: { padding: 4 },
+                plugins: {
+                    legend: {
+                        position: esAngosto ? "bottom" : "right",
+                        labels: { padding: 10, boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                                return `${formatoTooltip(ctx.parsed)} (${pct}%)`;
+                            }
                         }
                     }
                 }
             }
-        }
-    });
-}
+        });
+    }
 
-// ── Gráfico de Barras ───────────────────────────────────────────────────────
-const ctxBarras = document.getElementById("graficoBarras").getContext("2d");
-if (barrasLabels.length === 0) {
-    document.getElementById("barras-empty").style.display = "block";
-    document.getElementById("graficoBarras").style.display = "none";
-} else {
-    new Chart(ctxBarras, {
-        type: "bar",
-        data: {
-            labels: barrasLabels,
-            datasets: [
-                {
-                    label: "Ingresos",
-                    data: barrasIng,
-                    backgroundColor: "rgba(207, 242, 124, 0.85)",  // verde lima
-                    borderColor: "#CFF27C",
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    borderSkipped: false
-                },
-                {
-                    label: "Gastos",
-                    data: barrasGas,
-                    backgroundColor: "rgba(112, 3, 83, 0.85)",    // fucsia
-                    borderColor: "#700353",
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    borderSkipped: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: "bottom",
-                    labels: { padding: 12, boxWidth: 12, font: { size: 11, family: "'Inter', sans-serif" } }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` $${ctx.parsed.y.toLocaleString("es-AR")}`
-                    }
-                }
+    // ── Gráfico de Barras ──
+    const canvasBarras = document.getElementById("graficoBarras");
+    if (barrasLabels.length === 0) {
+        document.getElementById("barras-empty").hidden = false;
+        canvasBarras.hidden = true;
+    } else {
+        if (graficos.barras) graficos.barras.destroy();
+        graficos.barras = new Chart(canvasBarras, {
+            type: "bar",
+            data: {
+                labels: barrasLabels,
+                datasets: [
+                    { label: "Ingresos", data: convertirSerie(barrasIng, moneda, tc), backgroundColor: "#CFF27C", borderRadius: 5, maxBarThickness: 28 },
+                    { label: "Gastos", data: convertirSerie(barrasGas, moneda, tc), backgroundColor: oscuro ? "#EA73F5" : "#700353", borderRadius: 5, maxBarThickness: 28 }
+                ]
             },
-            layout: {
-                padding: {
-                    left: 2,
-                    right: 4,
-                    top: 4,
-                    bottom: 0
-                }
-            },
-            scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: {
-                        font: { size: 11, family: "'Inter', sans-serif" },
-                        maxRotation: 0,
-                        autoSkip: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { padding: 10, boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        callbacks: { label: ctx => `${ctx.dataset.label}:${formatoTooltip(ctx.parsed.y)}` }
                     }
                 },
-                y: {
-                    beginAtZero: true,
-                    grid: { color: isDarkTheme ? "rgba(255, 255, 255, 0.08)" : "rgba(0,0,0,0.05)" },
-                    ticks: {
-                        font: { size: 10, family: "'Inter', sans-serif" },
-                        callback: val => "$" + val.toLocaleString("es-AR")
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 }, maxRotation: 0, autoSkip: true }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: colorGrilla },
+                        border: { display: false },
+                        ticks: { font: { size: 10 }, maxTicksLimit: 5, callback: val => formatoCompacto(val, moneda) }
                     }
                 }
             }
-        }
-    });
+        });
+    }
 }
+
+// Los gráficos se dibujan con la moneda elegida y se redibujan al cambiarla
+document.addEventListener('trackify:moneda', e => dibujarGraficos(e.detail.moneda, e.detail.tc));
 </script>
-<script src="js/ia.js?v=2"></script>
+<script src="js/ia.js?v=4"></script>
 <?php
 $extra_js = ob_get_clean();
 require_once 'includes/footer.php';
