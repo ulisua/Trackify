@@ -57,6 +57,169 @@ input:disabled, select:disabled, textarea:disabled {
     cursor: not-allowed;
 }
 
+/* ===== SELECT CON DESPLEGABLE PROPIO: VARIANTE FORMULARIO =====
+   js/main.js (mejorarSelect) oculta el <select> nativo y muestra este botón + una lista.
+   Se ve igual que un input del tema, con la flecha de marca. */
+.select-trackify {
+    position: relative;
+    min-width: 0;
+}
+
+.select-trackify-trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 38px 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+    color: var(--input-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.select-trackify-trigger:hover:not(:disabled) {
+    border-color: var(--brand-green-dark);
+}
+
+[data-theme="dark"] .select-trackify-trigger:hover:not(:disabled) {
+    border-color: rgba(207, 242, 124, 0.5);
+}
+
+.select-trackify.abierto .select-trackify-trigger,
+.select-trackify-trigger:focus-visible {
+    border-color: var(--brand-green-dark);
+    background-color: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.15);
+    outline: none;
+}
+
+[data-theme="dark"] .select-trackify.abierto .select-trackify-trigger,
+[data-theme="dark"] .select-trackify-trigger:focus-visible {
+    border-color: var(--brand-green-light);
+    box-shadow: 0 0 0 3px rgba(207, 242, 124, 0.15);
+}
+
+.select-trackify-trigger:disabled {
+    background-color: var(--bg-hover);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* Ancho según el contexto (equivalente al que tenía el <select>) */
+.modal-content .select-trackify,
+.filtro-campo .select-trackify,
+.campo .select-trackify {
+    width: 100%;
+}
+
+/* Junto al monto, el selector de moneda tiene ancho fijo (el input ocupa el resto) */
+.modal-content .monto-moneda .select-trackify {
+    flex: 0 0 104px;
+    width: 104px;
+    min-width: 0;
+}
+
+.filtros .select-trackify {
+    min-width: 200px;
+}
+
+/* ===== LISTA DESPLEGABLE (compartida por ambas variantes; vive en <body>) ===== */
+.select-lista {
+    --lista-bg: var(--bg-card);
+    --lista-borde: var(--border-color);
+    --lista-texto: var(--text-primary);
+    --lista-hover-bg: var(--bg-hover);
+    --lista-acento: var(--select-option-hover-text);
+    display: none;
+    position: fixed;
+    z-index: 4000;
+    max-height: 300px;
+    max-width: min(360px, calc(100vw - 16px));
+    overflow-y: auto;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--lista-bg);
+    border: 1px solid var(--lista-borde);
+    border-radius: 14px;
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+    box-sizing: border-box;
+    font-family: var(--font-family);
+}
+
+.select-lista.abierta {
+    display: block;
+    animation: fadeIn 0.16s ease;
+}
+
+.select-lista [role="option"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--lista-texto);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.select-lista-pill [role="option"] {
+    font-weight: 600;
+}
+
+.select-lista [role="option"]:hover {
+    background: var(--lista-hover-bg);
+    color: var(--lista-acento);
+}
+
+.select-lista [role="option"].seleccionada {
+    background: var(--lista-hover-bg);
+    color: var(--lista-acento);
+    font-weight: 600;
+}
+
+.select-lista [role="option"].seleccionada::after {
+    content: '';
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: var(--lista-acento);
+    -webkit-mask: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") no-repeat center / contain;
+    mask: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") no-repeat center / contain;
+}
+
+/* Títulos de grupo (optgroup) */
+.select-lista .select-grupo {
+    padding: 10px 14px 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+.select-lista-pill .select-grupo {
+    color: rgba(255, 255, 255, 0.55);
+}
+
 /* ===== CAMPOS DE LOS MODALES ===== */
 /* Monto + selector de moneda en una fila */
 .monto-moneda {
@@ -574,4 +737,48 @@ input:disabled, select:disabled, textarea:disabled {
 .flatpickr-day.flatpickr-disabled:hover {
     color: var(--text-muted) !important;
     background: transparent !important;
+}
+
+/* ===== AVISO BREVE (toast de "guardado") ===== */
+.swal2-container.swal2-bottom-end {
+    padding: 16px !important;
+}
+
+/* En el dashboard el aviso aparece por encima del botón del asistente */
+body:has(.boton-ia-wrap) .swal2-container.swal2-bottom-end {
+    padding-bottom: 96px !important;
+}
+
+.swal2-popup.swal-toast-trackify {
+    width: auto !important;
+    max-width: min(320px, calc(100vw - 32px)) !important;
+    padding: 10px 16px !important;
+    gap: 0 10px;
+    background: var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--brand-green-dark);
+    border-radius: 12px !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18) !important;
+}
+
+[data-theme="dark"] .swal2-popup.swal-toast-trackify {
+    border-left-color: var(--brand-green-light);
+}
+
+.swal-toast-trackify .swal2-title {
+    margin: 0 !important;
+    align-self: center;
+    padding: 0 !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+.swal-toast-trackify .swal2-icon {
+    margin: 0 !important;
+}
+
+.swal-toast-trackify .swal2-timer-progress-bar {
+    background: var(--brand-green-light) !important;
 }

@@ -67,7 +67,7 @@ trackify/
 │   ├── categorias.js                # Tabs e interacción de edición de categorías
 │   ├── filtros_movimientos.js       # Filtro por fecha/categoría de ingresos.php y gastos.php
 │   ├── ia.js                        # Chat del asistente (escapa HTML, fetch con CSRF, botón flotante ocultable)
-│   ├── main.js                      # Controlador global de UI, modales, menú responsive y custom selects
+│   ├── main.js                      # Controlador global de UI, modales, menú responsive y selects con desplegable propio (mejorarSelect)
 │   ├── moneda.js                    # Conversor bimoneda (ExchangeRate API + Frankfurter + cache) y formularios con monto
 │   └── perfil.js                    # Edición de datos/contraseña, exportación CSV, tema oscuro y confirmaciones críticas
 ├── phpmailer/                       # Librería PHPMailer (Exception.php, PHPMailer.php, SMTP.php)
@@ -247,7 +247,7 @@ Trackify utiliza una combinación de tres estrategias de comunicación:
 
 * **Estado Real del Código:**
   * En `index.php`, las **Recomendaciones IA** en el dashboard son generadas mediante un motor heurístico de reglas en PHP (`$recomendaciones_fallback`), evaluando el signo del balance y si el ratio de gasto supera el 80% de los ingresos.
-  * Existe una interfaz de chat flotante (`#chatFlotante`, botón ocultable con la cruz durante la sesión del navegador) en el dashboard y una página completa en `ia.php`. Ambas usan `js/ia.js`, que envía `POST ./ia.php` con JSON `{ pregunta }` y la cabecera `X-CSRF-Token`, y espera `{ respuesta }` (o `{ error }`).
+  * Existe una interfaz de chat flotante (`#chatFlotante`; la cruz del botón lo minimiza a una pestaña en el borde, recordado durante la sesión del navegador) en el dashboard y una página completa en `ia.php`. Ambas usan `js/ia.js` (sugerencias de preguntas con el chat vacío, indicador animado de escritura), que envía `POST ./ia.php` con JSON `{ pregunta }` y la cabecera `X-CSRF-Token`, y espera `{ respuesta }` (o `{ error }`).
   * El chat se conecta a **Groq** con la clave `GROQ_API_KEY` de `.env` (ver `.env.example`).
   * *Pendiente de versionar:* el handler que llama a Groq no está commiteado en esta rama (el `ia.php` del repositorio solo contiene la vista). Debe subirse al repositorio para que el resto del equipo tenga el chat funcionando. Ese handler tiene que leer la clave con `getenv('GROQ_API_KEY')` y, como todo POST autenticado, pasa por la verificación CSRF de `includes/seguridad.php`.
 

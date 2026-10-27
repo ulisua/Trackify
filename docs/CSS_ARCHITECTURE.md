@@ -174,6 +174,14 @@ El aspecto visual se conmuta mediante el atributo `data-theme` en la etiqueta `<
 | `--badge-vencido-bg` / `--badge-vencido-text` | Objetivos vencidos |
 | `--select-chevron` | Flecha de marca de todos los `<select>` |
 | `--icon-filter` / `--icon-aura` | Íconos PNG según tema |
+| `--glow-verde(-borde)` / `--glow-rosa(-borde)` | Estela al pasar el mouse por tarjetas y gráficos (alternan verde/rosa con `:nth-child(even)`) |
+| `--nav-acento` / `--nav-acento-rgb` | (en `sidebar.css`) color de cada enlace del menú: degradé lima → menta → lila → rosa |
+| `--barra-header-bg` / `--barra-sidebar-bg` / `--barra-footer-bg` | (en `variables.css`) fondo casi negro con orbes radiales muy difuminados para header, menú y footer |
+
+### Selects
+Ningún `<select>` se muestra con el popup nativo: `mejorarSelect()` en `js/main.js` lo oculta y muestra un botón (`.selector-pill-trigger` en el header, `.select-trackify-trigger` en el resto) más una lista `.select-lista` que vive en `<body>` con `position: fixed` (así no la recortan los modales ni las tarjetas). El `<select>` sigue siendo la fuente de verdad: se envía con el formulario y recibe `change`; asignar `.value`, `.selectedIndex` o `.disabled` por código actualiza el botón. Estilos: `css/components/forms.css` (variante formulario y lista) y `moneda.css` (variante píldora).
+
+
 
 ---
 

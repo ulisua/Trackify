@@ -82,7 +82,7 @@
     white-space: nowrap;
 }
 
-/* ===== DESPLEGABLE PROPIO (js/main.js → mejorarSelectoresHeader) ===== */
+/* ===== DESPLEGABLE PROPIO: VARIANTE PÍLDORA (js/main.js → mejorarSelect) ===== */
 .selector-pill {
     position: relative;
 }
@@ -98,62 +98,11 @@
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 15 12 9 18 15'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
-.selector-pill-opciones {
-    display: none;
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    min-width: 100%;
-    margin: 0;
-    padding: 6px;
-    list-style: none;
-    background: var(--brand-dark);
-    border: 1px solid rgba(207, 242, 124, 0.3);
-    border-radius: 14px;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
-    z-index: 3000;
-    box-sizing: border-box;
-}
-
-.selector-pill.abierto .selector-pill-opciones {
-    display: block;
-    animation: fadeIn 0.16s ease;
-}
-
-.selector-pill-opciones li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    color: #F8FAFC;
-    font-size: 0.9rem;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-}
-
-.selector-pill-opciones li:hover {
-    background: rgba(207, 242, 124, 0.12);
-    color: var(--brand-green-light);
-}
-
-.selector-pill-opciones li.seleccionada {
-    background: rgba(207, 242, 124, 0.16);
-    color: var(--brand-green-light);
-}
-
-.selector-pill-opciones li.seleccionada::after {
-    content: '';
-    width: 14px;
-    height: 14px;
-    background: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") no-repeat center / contain;
-}
-
-/* En el navbar las opciones se alinean a la derecha del botón para no salirse de la pantalla */
-.header-controls .selector-pill-opciones {
-    left: auto;
-    right: 0;
+/* Lista de la píldora: siempre oscura con acento lima (vive en <body>, ver forms.css) */
+.select-lista-pill {
+    --lista-bg: var(--brand-dark);
+    --lista-borde: rgba(207, 242, 124, 0.3);
+    --lista-texto: #F8FAFC;
+    --lista-hover-bg: rgba(207, 242, 124, 0.12);
+    --lista-acento: var(--brand-green-light);
 }

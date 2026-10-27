@@ -74,6 +74,19 @@
     box-shadow: 0 8px 18px rgba(234, 115, 245, 0.35);
 }
 
+/* En tema oscuro el resplandor de los botones de color es más suave */
+[data-theme="dark"] .ingreso:hover {
+    box-shadow: 0 6px 16px rgba(207, 242, 124, 0.14);
+}
+
+[data-theme="dark"] .gasto:hover {
+    box-shadow: 0 6px 16px rgba(234, 115, 245, 0.16);
+}
+
+[data-theme="dark"] .objetivo:hover {
+    box-shadow: 0 6px 16px rgba(234, 115, 245, 0.18);
+}
+
 /* Modales y acciones */
 .modal-actions .btn {
     background: var(--brand-green-dark);

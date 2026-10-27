@@ -30,7 +30,7 @@ function cerrarMenu() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         cerrarMenu();
-        document.querySelectorAll('.selector-pill.abierto').forEach(p => p.classList.remove('abierto'));
+
         if(typeof cerrarModal === 'function') cerrarModal();
     }
 });
@@ -253,69 +253,159 @@ const descripcionesSugeridas = {
     "Otros gastos": "Otro gasto"
 };
 
-// ── Selectores de moneda/período con desplegable propio ─────────────────────
-// El popup nativo de <select> lo dibuja el sistema (en móvil no respeta los estilos).
-// Se muestra un botón + lista con la estética de Trackify; el <select> original queda
-// oculto y sigue siendo la fuente de verdad (se le dispara 'change' al elegir).
-function mejorarSelectoresHeader() {
-    document.querySelectorAll('.selector-header select').forEach(select => {
-        if (select.dataset.mejorado) return;
-        select.dataset.mejorado = '1';
+// ── Selects con desplegable propio (estética Trackify) ──────────────────────
+// El popup nativo de <select> lo dibuja el sistema y no respeta los estilos (sobre todo
+// en móvil). Cada <select> visible se reemplaza por un botón + lista con el estilo de la
+// app. El <select> original queda oculto y sigue siendo la fuente de verdad: se envía con
+// el formulario, se le dispara 'change' al elegir y cualquier asignación por código a
+// .value / .selectedIndex / .disabled actualiza el botón.
+// Variantes: 'pill' (selectores del header, oscuros) y 'form' (resto, según el tema).
+// La lista se agrega a <body> con position: fixed para que no la recorten los modales
+// ni las tarjetas con overflow.
+const selectProto = Object.getOwnPropertyDescriptors(HTMLSelectElement.prototype);
 
-        const wrap = document.createElement('div');
-        wrap.className = 'selector-pill';
-        const trigger = document.createElement('button');
-        trigger.type = 'button';
-        trigger.className = 'selector-pill-trigger';
-        trigger.setAttribute('aria-haspopup', 'listbox');
+function mejorarSelect(select) {
+    if (select.dataset.mejorado || select.multiple) return;
+    select.dataset.mejorado = '1';
+    const variante = select.closest('.selector-header') ? 'pill' : 'form';
+
+    const wrap = document.createElement('div');
+    wrap.className = variante === 'pill' ? 'selector-pill' : 'select-trackify';
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = variante === 'pill' ? 'selector-pill-trigger' : 'select-trackify-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    const etiqueta = select.getAttribute('aria-label') || select.closest('label')?.querySelector('span')?.textContent || select.title || '';
+    if (etiqueta) trigger.setAttribute('aria-label', etiqueta);
+
+    const lista = document.createElement('ul');
+    lista.className = 'select-lista select-lista-' + variante;
+    lista.setAttribute('role', 'listbox');
+
+    const refrescar = () => {
+        const op = select.options[select.selectedIndex];
+        trigger.textContent = op ? op.text : '';
+        trigger.disabled = select.disabled;
+        lista.querySelectorAll('[role="option"]').forEach(li => {
+            const sel = li.dataset.valor === select.value;
+            li.classList.toggle('seleccionada', sel);
+            li.setAttribute('aria-selected', String(sel));
+        });
+    };
+
+    const cerrar = () => {
+        if (!lista.classList.contains('abierta')) return;
+        lista.classList.remove('abierta');
+        wrap.classList.remove('abierto');
         trigger.setAttribute('aria-expanded', 'false');
-        trigger.setAttribute('aria-label', select.getAttribute('aria-label') || '');
-        const lista = document.createElement('ul');
-        lista.className = 'selector-pill-opciones';
-        lista.setAttribute('role', 'listbox');
+    };
 
-        const refrescar = () => {
-            trigger.textContent = select.options[select.selectedIndex]?.text || '';
-            lista.querySelectorAll('li').forEach(li => li.classList.toggle('seleccionada', li.dataset.valor === select.value));
-        };
-        const cerrar = () => { wrap.classList.remove('abierto'); trigger.setAttribute('aria-expanded', 'false'); };
+    const ubicar = () => {
+        const r = trigger.getBoundingClientRect();
+        lista.style.minWidth = r.width + 'px';
+        lista.style.left = r.left + 'px';
+        const espacioAbajo = window.innerHeight - r.bottom;
+        const alto = Math.min(lista.scrollHeight, 300);
+        if (espacioAbajo < alto + 12 && r.top > espacioAbajo) {
+            lista.style.top = '';
+            lista.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+        } else {
+            lista.style.bottom = '';
+            lista.style.top = (r.bottom + 6) + 'px';
+        }
+        // Que no se salga por la derecha
+        const ancho = lista.getBoundingClientRect().width;
+        if (r.left + ancho > window.innerWidth - 8) {
+            lista.style.left = Math.max(8, window.innerWidth - ancho - 8) + 'px';
+        }
+    };
 
-        Array.from(select.options).forEach(op => {
-            const li = document.createElement('li');
-            li.setAttribute('role', 'option');
-            li.dataset.valor = op.value;
-            li.textContent = op.text;
-            li.addEventListener('click', () => {
-                cerrar();
-                if (select.value === op.value) return;
-                select.value = op.value;
-                refrescar();
-                select.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-            lista.appendChild(li);
+    const elegir = (valor) => {
+        cerrar();
+        if (select.value === valor) return;
+        select.value = valor;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        trigger.focus();
+    };
+
+    const agregarOpcion = (op, contenedor) => {
+        const li = document.createElement('li');
+        li.setAttribute('role', 'option');
+        li.dataset.valor = op.value;
+        li.textContent = op.text;
+        li.addEventListener('click', (e) => { e.stopPropagation(); elegir(op.value); });
+        contenedor.appendChild(li);
+    };
+
+    Array.from(select.children).forEach(hijo => {
+        if (hijo.tagName === 'OPTGROUP') {
+            const grupo = document.createElement('li');
+            grupo.className = 'select-grupo';
+            grupo.setAttribute('role', 'presentation');
+            grupo.textContent = hijo.label;
+            lista.appendChild(grupo);
+            Array.from(hijo.children).forEach(op => agregarOpcion(op, lista));
+        } else {
+            agregarOpcion(hijo, lista);
+        }
+    });
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const abrir = !lista.classList.contains('abierta');
+        document.querySelectorAll('.select-lista.abierta').forEach(l => l.dispatchEvent(new Event('cerrar')));
+        if (!abrir) return;
+        lista.classList.add('abierta');
+        wrap.classList.add('abierto');
+        trigger.setAttribute('aria-expanded', 'true');
+        ubicar();
+        lista.querySelector('.seleccionada')?.scrollIntoView({ block: 'nearest' });
+    });
+
+    // Teclado: flechas cambian la opción como en un select nativo
+    trigger.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        e.preventDefault();
+        const nuevo = select.selectedIndex + (e.key === 'ArrowDown' ? 1 : -1);
+        if (nuevo >= 0 && nuevo < select.options.length) elegir(select.options[nuevo].value);
+    });
+
+    lista.addEventListener('cerrar', cerrar);
+    document.addEventListener('click', cerrar);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+    window.addEventListener('resize', cerrar);
+    window.addEventListener('scroll', (e) => { if (!lista.contains(e.target)) cerrar(); }, true);
+
+    // Asignaciones por código (abrir modales, sincronizar moneda, habilitar en perfil)
+    ['value', 'selectedIndex', 'disabled'].forEach(prop => {
+        Object.defineProperty(select, prop, {
+            configurable: true,
+            get() { return selectProto[prop].get.call(this); },
+            set(v) { selectProto[prop].set.call(this, v); refrescar(); }
         });
+    });
+    select.addEventListener('change', refrescar);
+    document.addEventListener('trackify:moneda', refrescar);
 
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const abrir = !wrap.classList.contains('abierto');
-            document.querySelectorAll('.selector-pill.abierto').forEach(p => p.classList.remove('abierto'));
-            wrap.classList.toggle('abierto', abrir);
-            trigger.setAttribute('aria-expanded', String(abrir));
-        });
-        document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) cerrar(); });
-        // La otra copia del selector (navbar ↔ menú) cambia el valor sin evento: se resincroniza
-        document.addEventListener('trackify:moneda', refrescar);
+    select.after(wrap);
+    wrap.appendChild(trigger);
+    document.body.appendChild(lista);
+    select.hidden = true;
+    refrescar();
+}
 
-        select.after(wrap);
-        wrap.append(trigger, lista);
-        select.hidden = true;
-        refrescar();
+function mejorarSelects(raiz = document) {
+    raiz.querySelectorAll('select').forEach(select => {
+        // Los selects internos de librerías (calendario, SweetAlert2) quedan como están
+        if (select.closest('.flatpickr-calendar, .swal2-container')) return;
+        mejorarSelect(select);
     });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initGlobals();
-    mejorarSelectoresHeader();
+    mejorarSelects();
 
     // Sidebar link behavior (close on mobile)
     document.querySelectorAll('.sidebar a').forEach(link => {

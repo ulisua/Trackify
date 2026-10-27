@@ -82,10 +82,15 @@
     font-size: 1.15rem;
 }
 
-/* Efecto glow global para tarjetas */
-.card:hover, .box:hover, .obj-card:hover, .cat-card:hover {
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06), 0 0 20px var(--shadow-glow);
-    border-color: rgba(207, 242, 124, 0.45);
+/* Efecto glow global para tarjetas (también los gráficos).
+   Un solo color por tema: verde manzana en claro, magenta tenue en oscuro (--glow-tarjeta). */
+.card, .box, .obj-card, .cat-card, .grafico-card {
+    --glow-hover: var(--glow-tarjeta);
+    --glow-hover-borde: var(--glow-tarjeta-borde);
+}
+.card:hover, .box:hover, .obj-card:hover, .cat-card:hover, .grafico-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06), 0 0 20px var(--glow-hover);
+    border-color: var(--glow-hover-borde);
     transform: translateY(-2px);
 }
 

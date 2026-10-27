@@ -202,7 +202,7 @@
 
     .boton-ia-wrap {
         bottom: 18px;
-        right: 18px;
+        --borde-derecho: 18px;
     }
 }
 
@@ -318,6 +318,7 @@
 
     .filtros input,
     .filtros select,
+    .filtros .select-trackify,
     .filtros .flatpickr-input,
     .btn-reset-filtros {
         width: 100%;
@@ -443,9 +444,13 @@
         padding: 12px 10px;
     }
 
+    /* Botón del asistente: solo el avatar circular */
+    .boton-ia-texto {
+        display: none;
+    }
+
     .boton-ia {
-        width: 56px;
-        height: 56px;
+        padding: 5px;
     }
 }
 

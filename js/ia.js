@@ -1,28 +1,89 @@
 // ===== TOGGLE CHAT FLOTANTE =====
 function toggleChat() {
     const chat = document.getElementById("chatFlotante");
-    chat.classList.toggle("oculto");
+    const wrap = document.getElementById("botonIAWrap");
+    const abierto = chat.classList.toggle("oculto") === false;
+    if (wrap) wrap.classList.toggle("chat-abierto", abierto);
+    // Fondo difuminado y oscurecido detrás del chat (solo existe en el dashboard)
+    const fondo = document.getElementById("chatFondo");
+    if (fondo) fondo.classList.toggle("visible", abierto);
+    if (abierto) {
+        const input = document.getElementById("pregunta");
+        if (input) setTimeout(() => input.focus(), 50);
+    }
 }
 
-// ===== OCULTAR BOTÓN FLOTANTE =====
-// Se oculta durante la sesión del navegador; el asistente sigue disponible en la página IA.
-const CLAVE_BOTON_IA = 'trackify_boton_ia_oculto';
+// ===== MINIMIZAR BOTÓN FLOTANTE =====
+// La cruz no lo elimina: lo deja como una pestaña pequeña pegada al borde derecho.
+// El estado se recuerda durante la sesión del navegador.
+const CLAVE_BOTON_IA = 'trackify_boton_ia_min';
 
-function ocultarBotonIA() {
+function minimizarBotonIA() {
     const wrap = document.getElementById("botonIAWrap");
     const chat = document.getElementById("chatFlotante");
-    if (wrap) wrap.hidden = true;
+    if (wrap) wrap.classList.add("minimizado");
+    if (wrap) wrap.classList.remove("chat-abierto");
     if (chat) chat.classList.add("oculto");
+    const fondo = document.getElementById("chatFondo");
+    if (fondo) fondo.classList.remove("visible");
     try { sessionStorage.setItem(CLAVE_BOTON_IA, '1'); } catch (e) { /* sin almacenamiento */ }
 }
 
-(function restaurarBotonIA() {
-    let oculto = false;
-    try { oculto = sessionStorage.getItem(CLAVE_BOTON_IA) === '1'; } catch (e) { /* sin almacenamiento */ }
+function restaurarBotonIA() {
     const wrap = document.getElementById("botonIAWrap");
-    if (wrap && oculto) wrap.hidden = true;
+    if (wrap) wrap.classList.remove("minimizado");
+    try { sessionStorage.removeItem(CLAVE_BOTON_IA); } catch (e) { /* sin almacenamiento */ }
+}
+
+(function estadoInicialBotonIA() {
+    let minimizado = false;
+    try {
+        minimizado = sessionStorage.getItem(CLAVE_BOTON_IA) === '1';
+        sessionStorage.removeItem('trackify_boton_ia_oculto'); // clave de la versión anterior
+    } catch (e) { /* sin almacenamiento */ }
+    const wrap = document.getElementById("botonIAWrap");
+    if (wrap && minimizado) {
+        // Al cargar la página ya minimizado no se anima la transición
+        wrap.classList.add("sin-transicion", "minimizado");
+        requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.remove("sin-transicion")));
+    }
 })();
 
+// ===== SUGERENCIAS (chat vacío) =====
+const SUGERENCIAS_IA = [
+    "¿En qué gasto más?",
+    "¿Cómo puedo ahorrar más este mes?",
+    "Haceme un resumen de mis finanzas",
+    "¿Voy bien con mis objetivos?"
+];
+
+function mostrarSugerencias() {
+    const chat = document.getElementById("chat");
+    if (!chat || chat.children.length) return;
+    const caja = document.createElement("div");
+    caja.className = "chat-sugerencias";
+    const titulo = document.createElement("p");
+    titulo.className = "chat-sugerencias-titulo";
+    titulo.textContent = "Probá preguntarme:";
+    caja.appendChild(titulo);
+    SUGERENCIAS_IA.forEach(texto => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chat-sugerencia";
+        chip.textContent = texto;
+        chip.addEventListener("click", () => {
+            const input = document.getElementById("pregunta");
+            input.value = texto;
+            preguntarIA();
+        });
+        caja.appendChild(chip);
+    });
+    chat.appendChild(caja);
+}
+
+function quitarSugerencias() {
+    document.querySelectorAll(".chat-sugerencias").forEach(el => el.remove());
+}
 // ===== FORMATEO =====
 // Se escapa todo el HTML y luego se aplica un formato mínimo (**negrita** y saltos de línea)
 function formatearRespuesta(texto) {
@@ -45,7 +106,13 @@ function agregarMensaje(tipo, contenido) {
     const tipos = tipo.split(" ");
     tipos.forEach(t => mensaje.classList.add(t));
 
-    mensaje.innerHTML = formatearRespuesta(contenido);
+    if (tipos.includes("typing")) {
+        // Indicador animado de "escribiendo" (tres puntos)
+        mensaje.setAttribute("aria-label", contenido);
+        mensaje.innerHTML = "<span class=\"typing-dots\"><span></span><span></span><span></span></span>";
+    } else {
+        mensaje.innerHTML = formatearRespuesta(contenido);
+    }
 
     chat.appendChild(mensaje);
     chat.scrollTop = chat.scrollHeight;
@@ -67,6 +134,7 @@ window.preguntarIA = async function () {
     if (!pregunta) return;
 
     // mostrar pregunta
+    quitarSugerencias();
     agregarMensaje("usuario", pregunta);
 
     // limpiar input
@@ -125,3 +193,12 @@ textarea.addEventListener("input", function () {
     this.style.height = this.scrollHeight + "px";
 });
 
+
+// ===== ESTADO INICIAL =====
+mostrarSugerencias();
+
+// Escape cierra el chat flotante si está abierto
+document.addEventListener("keydown", (e) => {
+    const chat = document.getElementById("chatFlotante");
+    if (e.key === "Escape" && chat && !chat.classList.contains("oculto")) toggleChat();
+});

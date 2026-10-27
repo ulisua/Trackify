@@ -13,7 +13,7 @@
     --accent: #EA73F5;
 
     /* Sidebar theme tokens */
-    --sidebar-bg: linear-gradient(180deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    --sidebar-bg: var(--barra-sidebar-bg);
     --sidebar-border: rgba(255, 255, 255, 0.05);
     --sidebar-link-color: #94a3b8;
     --sidebar-link-hover-color: var(--brand-green-light);
@@ -37,6 +37,15 @@
     --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.04);
     --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.18);
     --shadow-glow: rgba(207, 242, 124, 0.45);
+
+    /* Estela al pasar el mouse por las tarjetas (alternan verde y rosa) */
+    --glow-verde: rgba(132, 204, 22, 0.42);
+    --glow-verde-borde: rgba(132, 204, 22, 0.55);
+    --glow-rosa: rgba(217, 70, 239, 0.32);
+    --glow-rosa-borde: rgba(217, 70, 239, 0.45);
+    /* Estela de las tarjetas en tema claro: verde manzana */
+    --glow-tarjeta: rgba(124, 197, 34, 0.45);
+    --glow-tarjeta-borde: rgba(124, 197, 34, 0.6);
 
     /* Montos y estados */
     --color-positivo: #15803D;
@@ -84,7 +93,7 @@
     --accent: #EA73F5;
 
     /* Sidebar theme tokens */
-    --sidebar-bg: linear-gradient(180deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    --sidebar-bg: var(--barra-sidebar-bg);
     --sidebar-border: rgba(255, 255, 255, 0.05);
     --sidebar-link-color: #94a3b8;
     --sidebar-link-hover-color: var(--brand-green-light);
@@ -108,6 +117,15 @@
     --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.2);
     --shadow-hover: 0 10px 30px rgba(207, 242, 124, 0.08);
     --shadow-glow: rgba(207, 242, 124, 0.25);
+
+    /* Estela: verde corporativo y bordó de la marca, aclarados para que no encandilen */
+    --glow-verde: rgba(22, 128, 92, 0.55);
+    --glow-verde-borde: rgba(46, 160, 116, 0.6);
+    --glow-rosa: rgba(168, 40, 136, 0.5);
+    --glow-rosa-borde: rgba(206, 78, 178, 0.6);
+    /* Estela de las tarjetas en tema oscuro: magenta tenue */
+    --glow-tarjeta: rgba(176, 52, 150, 0.3);
+    --glow-tarjeta-borde: rgba(206, 78, 178, 0.38);
 
     /* Montos y estados */
     --color-positivo: #4ADE80;

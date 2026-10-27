@@ -167,7 +167,8 @@
 
 .cat-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12), 0 0 20px var(--glow-hover);
+    border-color: var(--glow-hover-borde);
 }
 
 .cat-card.con-monto {
@@ -175,7 +176,7 @@
 }
 
 .cat-card.con-monto:hover {
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.08), 0 0 20px var(--card-glow, rgba(0,0,0,0.1));
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.08), 0 0 20px var(--glow-hover);
 }
 
 .cat-icon {

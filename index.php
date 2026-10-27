@@ -133,19 +133,31 @@ require_once 'includes/header.php';
 $etiquetas_periodo = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 'mes' => 'Este mes'];
 ?>
 
-<!-- BOTON FLOTANTE IA (el usuario puede ocultarlo con la cruz) -->
+<!-- BOTON FLOTANTE IA (la cruz lo minimiza a una pestaña en el borde; tocándola vuelve) -->
 <div id="botonIAWrap" class="boton-ia-wrap">
-    <button type="button" id="botonIA" class="boton-ia" onclick="toggleChat()" aria-label="Abrir asistente IA">
+    <div class="boton-ia-cuerpo">
+        <button type="button" id="botonIA" class="boton-ia" onclick="toggleChat()" aria-label="Abrir asistente IA">
+            <span class="boton-ia-avatar"><img src="iconos/generales/robot.png" alt=""></span>
+            <span class="boton-ia-texto">Asistente IA</span>
+        </button>
+        <button type="button" class="boton-ia-cerrar" onclick="minimizarBotonIA()" aria-label="Minimizar botón del asistente">&times;</button>
+    </div>
+    <button type="button" class="boton-ia-pestana" onclick="restaurarBotonIA()" aria-label="Mostrar asistente IA">
         <img src="iconos/generales/robot.png" alt="">
     </button>
-    <button type="button" class="boton-ia-cerrar" onclick="ocultarBotonIA()" aria-label="Ocultar botón del asistente">&times;</button>
 </div>
 
+<!-- Fondo difuminado detrás del chat abierto (tocarlo cierra el chat) -->
+<div id="chatFondo" class="chat-fondo" onclick="toggleChat()"></div>
+
 <!-- CHAT FLOTANTE -->
-<div id="chatFlotante" class="chat-flotante oculto">
+<div id="chatFlotante" class="chat-flotante oculto" role="dialog" aria-label="Asistente IA">
     <div class="chat-header">
-        <span>Asistente IA</span>
-        <button type="button" class="chat-cerrar" onclick="toggleChat()" aria-label="Cerrar chat"><img src="iconos/generales/flechaabajo.png" alt="" class="icono-boton"></button>
+        <div class="chat-header-info">
+            <span class="chat-header-avatar"><img src="iconos/generales/robot.png" alt=""></span>
+            <strong>Asistente IA</strong>
+        </div>
+        <button type="button" class="chat-cerrar" onclick="toggleChat()" aria-label="Cerrar chat">&times;</button>
     </div>
     <div id="chat" class="chat"></div>
     <div class="input-container">
@@ -180,7 +192,7 @@ $etiquetas_periodo = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 
         <!-- CARDS SECUNDARIAS -->
         <section class="cards small cards-dashboard">
             <?php
-                $nombre_cat_top = '-';
+                $nombre_cat_top = 'Sin gastos';
                 if (!empty($torta_labels)) {
                     $nombre_cat_top = $torta_labels[0];
                 }
@@ -274,7 +286,6 @@ $etiquetas_periodo = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 
                 <div class="ia-header">
                     <div class="ia-titulo-wrap">
                         <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="" class="icono-titulo"> Recomendaciones IA</h3>
-                        <span class="ia-badge ia-badge-simulacion">Modo análisis</span>
                     </div>
                     <p class="ia-subtitulo">Análisis basado en tus finanzas actuales</p>
                 </div>
@@ -429,7 +440,7 @@ function dibujarGraficos(moneda, tc) {
 // Los gráficos se dibujan con la moneda elegida y se redibujan al cambiarla
 document.addEventListener('trackify:moneda', e => dibujarGraficos(e.detail.moneda, e.detail.tc));
 </script>
-<script src="js/ia.js?v=4"></script>
+<script src="js/ia.js?v=5"></script>
 <?php
 $extra_js = ob_get_clean();
 require_once 'includes/footer.php';

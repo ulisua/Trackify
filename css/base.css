@@ -128,3 +128,33 @@ img, svg {
     margin: 0;
     width: 100%;
 }
+
+/* ===== EXPERIENCIA ===== */
+/* Entrada suave del contenido de cada página (escalonada en los primeros bloques) */
+.content > * {
+    animation: fadeIn 0.35s ease backwards;
+}
+
+.content > *:nth-child(2) { animation-delay: 0.04s; }
+.content > *:nth-child(3) { animation-delay: 0.08s; }
+.content > *:nth-child(4) { animation-delay: 0.12s; }
+.content > *:nth-child(5) { animation-delay: 0.16s; }
+.content > *:nth-child(n+6) { animation-delay: 0.2s; }
+
+/* Foco visible con los colores de marca (navegación con teclado) */
+a:focus-visible,
+button:focus-visible,
+[role="option"]:focus-visible {
+    outline: 2px solid var(--brand-pink);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+/* Si el sistema pide reducir el movimiento, se desactivan animaciones y desplazamientos */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

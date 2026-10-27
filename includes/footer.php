@@ -388,7 +388,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         const flash = <?php echo json_encode($flash, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
         if (flash.tipo === 'success') {
-            Swal.fire({ ...swalBase, toast: true, position: 'top-end', icon: 'success', title: flash.mensaje, showConfirmButton: false, timer: 2600, timerProgressBar: true });
+            // Aviso compacto abajo a la derecha (estilos en forms.css: .swal-toast-trackify)
+            Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: flash.mensaje, showConfirmButton: false, timer: 2600, timerProgressBar: true, customClass: { popup: 'swal-toast-trackify' } });
         } else {
             Swal.fire({ ...swalBase, icon: 'error', title: 'No se pudo completar', text: flash.mensaje });
         }

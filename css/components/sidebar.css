@@ -30,19 +30,40 @@
     box-sizing: border-box;
 }
 
+
+
+/* ===== ACENTO POR ENLACE =====
+   Cada enlace tiene su color (--nav-acento) y forman un degradé de arriba hacia abajo
+   que acompaña el fondo del menú (negro → magenta): lima → menta → lila → rosa.
+   Se usa en el texto al pasar el mouse, en la estela de fondo y en el estado activo. */
+.sidebar nav a:nth-child(1) { --nav-acento: #CFF27C; --nav-acento-rgb: 207, 242, 124; }
+.sidebar nav a:nth-child(2) { --nav-acento: #B4EE8E; --nav-acento-rgb: 180, 238, 142; }
+.sidebar nav a:nth-child(3) { --nav-acento: #8FE7AE; --nav-acento-rgb: 143, 231, 174; }
+.sidebar nav a:nth-child(4) { --nav-acento: #6EE7B7; --nav-acento-rgb: 110, 231, 183; }
+.sidebar nav a:nth-child(5) { --nav-acento: #A78BFA; --nav-acento-rgb: 167, 139, 250; }
+.sidebar nav a:nth-child(6) { --nav-acento: #C084FC; --nav-acento-rgb: 192, 132, 252; }
+.sidebar nav a:nth-child(7) { --nav-acento: #D97CF8; --nav-acento-rgb: 217, 124, 248; }
+.sidebar nav a:nth-child(8) { --nav-acento: #EA73F5; --nav-acento-rgb: 234, 115, 245; }
+.sidebar nav a:nth-child(n+9) { --nav-acento: #F49BF9; --nav-acento-rgb: 244, 155, 249; }
+
 .sidebar a:hover {
-    background: var(--sidebar-link-hover-bg);
-    color: var(--sidebar-link-hover-color);
+    background: rgba(var(--nav-acento-rgb, 207, 242, 124), 0.1);
+    color: var(--nav-acento, var(--sidebar-link-hover-color));
     transform: translateX(4px);
     box-shadow: none;
 }
 
 .sidebar .active {
-    background: var(--sidebar-link-active-bg);
+    background: linear-gradient(90deg, rgba(var(--nav-acento-rgb, 207, 242, 124), 0.28), transparent);
     color: #ffffff;
-    border-left: 4px solid var(--sidebar-link-active-border);
+    border-left: 4px solid var(--nav-acento, var(--sidebar-link-active-border));
     border-radius: 0 8px 8px 0;
     font-weight: 600;
+    text-shadow: 0 0 14px rgba(var(--nav-acento-rgb, 207, 242, 124), 0.45);
+}
+
+.sidebar .active:hover {
+    color: #ffffff;
 }
 
 /* ===== BOTÓN HAMBURGUESA ===== */
@@ -109,7 +130,7 @@
     margin: 0;
     color: rgba(255, 255, 255, 0.85);
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 1.35rem;
 }
 
 .sidebar-saludo span {

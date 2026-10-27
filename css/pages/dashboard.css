@@ -294,43 +294,97 @@
 
 /* ===== BOTON FLOTANTE DE IA ===== */
 .boton-ia-wrap {
+    --borde-derecho: 24px;
     position: fixed;
     bottom: 24px;
-    right: 24px;
-    z-index: 999;
+    right: var(--borde-derecho);
+    z-index: 1102;
+    /* El contenedor no captura clics: solo sus botones visibles */
+    pointer-events: none;
 }
 
+/* Píldora + cruz: se animan juntas al minimizar / restaurar */
+.boton-ia-cuerpo {
+    position: relative;
+    pointer-events: auto;
+    transform-origin: right center;
+    transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1) 0.12s, opacity 0.28s ease 0.12s;
+}
+
+/* Píldora "Asistente IA" con avatar y degradé de marca */
 .boton-ia {
-    width: 60px;
-    height: 60px;
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 2px solid var(--brand-green-light);
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--brand-dark), var(--brand-green-dark));
+    gap: 10px;
+    padding: 6px 20px 6px 6px;
+    border: 1px solid rgba(207, 242, 124, 0.55);
+    border-radius: 999px;
+    background: linear-gradient(120deg, var(--brand-dark) 0%, var(--brand-green-dark) 55%, var(--brand-purple) 130%);
+    color: var(--brand-green-light);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(207, 242, 124, 0.15);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), 0 0 22px rgba(207, 242, 124, 0.22);
     transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
 }
 
-.boton-ia img {
-    width: 30px;
-    height: 30px;
-    object-fit: contain;
+/* Brillo que recorre la píldora */
+.boton-ia::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.16) 50%, transparent 70%);
+    transform: translateX(-120%);
+    animation: brillo-ia 4.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes brillo-ia {
+    0%, 60% { transform: translateX(-120%); }
+    100% { transform: translateX(120%); }
 }
 
 .boton-ia:hover {
-    transform: scale(1.06);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35), 0 0 0 6px rgba(207, 242, 124, 0.22);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.32), 0 0 28px rgba(234, 115, 245, 0.35);
 }
 
-/* Cruz para ocultar el botón */
+.boton-ia-avatar {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #CFF27C, #6EE7B7 55%, #EA73F5 120%);
+    box-shadow: inset 0 0 0 2px rgba(30, 27, 38, 0.25);
+}
+
+/* El robot va oscuro sobre el avatar claro (anula el filtro de íconos sobre fondo oscuro) */
+.boton-ia .boton-ia-avatar img {
+    width: 26px;
+    height: 26px;
+    filter: none;
+}
+
+/* Con el chat abierto el botón queda compacto */
+.boton-ia-wrap.chat-abierto .boton-ia-texto {
+    display: none;
+}
+
+.boton-ia-wrap.chat-abierto .boton-ia {
+    padding-right: 6px;
+}
+
+/* Cruz para minimizar */
 .boton-ia-cerrar {
     position: absolute;
-    top: -6px;
-    right: -6px;
+    top: -7px;
+    right: -7px;
     width: 24px;
     height: 24px;
     padding: 0;
@@ -346,10 +400,85 @@
     line-height: 1;
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    z-index: 1;
 }
 
 .boton-ia-cerrar:hover {
     background: #f39bf9;
+}
+
+/* Pestaña minimizada pegada al borde derecho */
+.boton-ia-pestana {
+    position: absolute;
+    right: calc(-1 * var(--borde-derecho));
+    bottom: 3px;
+    display: flex;
+    width: 42px;
+    height: 50px;
+    padding: 0 0 0 4px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(207, 242, 124, 0.55);
+    border-right: none;
+    border-radius: 14px 0 0 14px;
+    background: linear-gradient(135deg, var(--brand-dark), var(--brand-green-dark));
+    cursor: pointer;
+    box-shadow: -4px 6px 18px rgba(0, 0, 0, 0.25);
+    /* Oculta: fuera de pantalla a la derecha */
+    transform: translateX(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, width 0.2s;
+}
+
+.boton-ia-pestana:hover {
+    width: 50px;
+}
+
+.boton-ia-pestana img {
+    width: 24px;
+    height: 24px;
+    filter: invert(1) brightness(1.05);
+}
+
+/* Minimizar: la píldora se achica y se desliza hacia el borde; después entra la pestaña
+   con un leve rebote. Al restaurar ocurre al revés (la pestaña sale primero). */
+.boton-ia-wrap.minimizado .boton-ia-cuerpo {
+    transform: translateX(calc(100% + var(--borde-derecho))) scale(0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.boton-ia-wrap.minimizado .boton-ia-pestana {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+    transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s, opacity 0.2s ease 0.28s, width 0.2s;
+}
+
+/* Estado inicial ya minimizado (al cargar la página): sin animación */
+.boton-ia-wrap.sin-transicion .boton-ia-cuerpo,
+.boton-ia-wrap.sin-transicion .boton-ia-pestana {
+    transition: none;
+}
+
+/* Fondo difuminado y oscurecido mientras el chat está abierto */
+.chat-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(12, 10, 18, 0.42);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s;
+}
+
+.chat-fondo.visible {
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Panel flotante: misma tarjeta que la página IA (fondo de tarjeta, borde, orbes
@@ -368,7 +497,7 @@
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
     overflow: hidden;
     isolation: isolate;
-    z-index: 999;
+    z-index: 1101;
     animation: fadeIn 0.2s ease;
 }
 
@@ -404,13 +533,44 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 16px 14px 18px;
-    background: linear-gradient(90deg, var(--brand-dark), var(--brand-green-dark));
-    color: var(--brand-green-light);
-    font-weight: 700;
-    font-size: 0.98rem;
+    gap: 12px;
+    padding: 12px 14px 12px 14px;
+    background: linear-gradient(110deg, var(--brand-dark) 0%, var(--brand-green-dark) 70%, var(--brand-purple) 140%);
+    color: #F8FAFC;
     flex-shrink: 0;
 }
+
+.chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.chat-header-info strong {
+    display: block;
+    font-size: 1.02rem;
+    color: var(--brand-green-light);
+    line-height: 1.2;
+}
+
+.chat-header-avatar {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #CFF27C, #6EE7B7 55%, #EA73F5 120%);
+}
+
+.chat-header .chat-header-avatar img {
+    width: 21px;
+    height: 21px;
+    filter: none;
+}
+
 
 .chat-flotante .chat {
     margin: 14px 14px 0;
@@ -423,7 +583,14 @@
 .chat-cerrar {
     background: none;
     border: none;
-    padding: 6px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    color: #F8FAFC;
+    font-size: 22px;
+    line-height: 1;
     min-height: 0;
     cursor: pointer;
     display: flex;

@@ -5,7 +5,8 @@
     align-items: center;
     padding: 0 35px;
     height: 74px;
-    background: linear-gradient(90deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    /* Orbes muy difuminados: verde a la izquierda, magenta a la derecha (ver --barra-* en variables.css) */
+    background: var(--barra-header-bg);
     color: white;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
     z-index: 100;
@@ -58,7 +59,8 @@
     justify-content: center;
     align-items: center;
     padding: 18px 35px;
-    background: linear-gradient(90deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    /* Orbes: magenta a la izquierda (continúa el del menú lateral), verde a la derecha */
+    background: var(--barra-footer-bg);
     color: rgba(255, 255, 255, 0.65);
     font-family: var(--font-family);
     font-size: 0.9rem;
