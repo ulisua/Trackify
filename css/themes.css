@@ -44,8 +44,8 @@
     --glow-rosa: rgba(217, 70, 239, 0.32);
     --glow-rosa-borde: rgba(217, 70, 239, 0.45);
     /* Estela de las tarjetas en tema claro: verde manzana */
-    --glow-tarjeta: rgba(174, 226, 111, 0.705);
-    --glow-tarjeta-borde: rgba(142, 201, 71, 0.507);
+    --glow-tarjeta: rgba(174, 226, 111, 0.76);
+    --glow-tarjeta-borde: rgba(142, 201, 71, 0.562);
 
     /* Montos y estados */
     --color-positivo: #15803D;
