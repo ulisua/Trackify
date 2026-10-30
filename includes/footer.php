@@ -5,14 +5,14 @@
 
 <!-- MODAL -->
 <div id="modal" class="modal hidden">
-    <form class="modal-content modal-form-content" method="POST" action="includes/movimientos_handler.php" onsubmit="return convertirAntesDeGuardar()">
+    <form class="modal-content modal-form-content" method="POST" action="includes/movimientos_handler.php" onsubmit="return convertirAntesDeGuardar(event)">
         <input type="hidden" id="tipoMovimiento" name="tipoMovimiento" value="">
         <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'], ENT_QUOTES); ?>">
         <h3 id="modalTitulo">Nuevo</h3>
         
         <!-- Selector de moneda del movimiento -->
         <div style="display:flex;gap:10px;align-items:center;margin-bottom:4px;">
-            <input type="number" step="0.01" id="monto" placeholder="Monto" required style="flex:1;">
+            <input type="number" step="0.01" min="0.01" id="monto" placeholder="Monto" required style="flex:1;">
             <select id="monedaIngreso" style="padding:14px 12px;border:1px solid var(--border-color, #E2E8F0);border-radius:6px;font-size:1rem;font-family:inherit;background:var(--input-bg, #F8FAFC);color:var(--input-text, #1E1B26);outline:none;min-width:95px;">
                 <option value="ARS">🇦🇷 ARS</option>
                 <option value="USD">🇺🇸 USD</option>
@@ -164,7 +164,7 @@
         <input type="hidden" id="edit_mov_tipo" name="tipo" value="">
         <h3 id="modalEditarMovimientoTitulo">Editar</h3>
         
-        <input type="number" step="0.01" id="edit_mov_monto" name="monto" placeholder="Monto ($)" required>
+        <input type="number" step="0.01" min="0.01" id="edit_mov_monto" name="monto" placeholder="Monto ($)" required>
         
         <div class="custom-select-wrapper" id="customEditMovCategoriaWrapper">
             <div class="custom-select-trigger" id="customEditMovCategoriaTrigger">Selecciona una categoría</div>
@@ -370,27 +370,43 @@
         }
     }
 
-    async function convertirAntesDeGuardar() {
+    // Valida el monto y calcula el equivalente en pesos antes de enviar el formulario.
+    // Es async, así que devuelve una Promise (siempre "verdadera" para onsubmit): por eso
+    // el envío se frena acá mismo con preventDefault() y se reanuda con form.submit()
+    // solo si todo está bien.
+    async function convertirAntesDeGuardar(e) {
         if (!montoInput || !monedaSelect || !montoARSInput) return true;
-        const monto  = parseFloat(montoInput.value) || 0;
-        const moneda = monedaSelect.value;
-        const tc     = window.obtenerTipoCambio ? await window.obtenerTipoCambio() : parseFloat(localStorage.getItem('trackify_tc') || '1000');
+        e.preventDefault();
+        const form = e.target;
 
-        if (!monto || monto <= 0) {
-            alert('Ingresá un monto válido.');
+        const monto  = parseFloat(montoInput.value);
+        const moneda = monedaSelect.value;
+
+        if (!Number.isFinite(monto) || monto <= 0) {
+            alert('Ingresá un monto mayor a cero.');
             return false;
         }
 
+        const tc = window.obtenerTipoCambio ? await window.obtenerTipoCambio() : parseFloat(localStorage.getItem('trackify_tc') || '1000');
+
+        let ars = monto;
         if (moneda === 'USD') {
-            if (tc <= 0) {
+            if (!(tc > 0)) {
                 alert('No se pudo obtener el tipo de cambio. Intentá de nuevo.');
                 return false;
             }
-            montoARSInput.value = (monto * tc).toFixed(2);
-        } else {
-            montoARSInput.value = monto.toFixed(2);
+            ars = monto * tc;
         }
-        return true;
+        ars = Math.round(ars * 100) / 100;
+
+        if (ars < 0.01 || ars > 9999999999.99) {
+            alert('El monto es demasiado chico o demasiado grande.');
+            return false;
+        }
+
+        montoARSInput.value = ars.toFixed(2);
+        form.submit();
+        return false;
     }
 
     if (montoInput)   montoInput.addEventListener('input', actualizarPreview);
@@ -450,6 +466,28 @@
         });
     }
 </script>
+
+<?php if (!empty($_SESSION['flash_error'])): ?>
+<script>
+    // Mensaje de error que dejó el servidor al rechazar un formulario
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            title: 'No se pudo guardar',
+            text: <?php echo json_encode($_SESSION['flash_error'], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?>,
+            icon: 'error',
+            iconColor: '#EA73F5',
+            confirmButtonColor: '#084734',
+            confirmButtonText: 'Entendido',
+            background: '#2c2c3e',
+            color: '#F8FAFC',
+            customClass: {
+                popup: 'swal-trackify',
+                confirmButton: 'btn swal-btn-primary'
+            }
+        });
+    });
+</script>
+<?php unset($_SESSION['flash_error']); endif; ?>
 
 <script src="js/main.js?v=4"></script>
 <script src="js/moneda.js"></script>

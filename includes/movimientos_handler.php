@@ -7,6 +7,31 @@ if (!isset($conn)) {
     require_once dirname(__DIR__) . '/conexion.php';
 }
 
+// Valida el monto de un movimiento. Devuelve el monto redondeado a 2 decimales o
+// null si no sirve: no es un número, es menor o igual a cero, o no entra en la
+// columna decimal(12,2) de la tabla movimientos.
+if (!function_exists('trackify_monto_valido')) {
+    function trackify_monto_valido($crudo): ?float
+    {
+        if (!is_string($crudo) && !is_int($crudo) && !is_float($crudo)) {
+            return null;
+        }
+        $crudo = trim((string) $crudo);
+        if ($crudo === '') {
+            return null;
+        }
+        $monto = filter_var($crudo, FILTER_VALIDATE_FLOAT);
+        if ($monto === false || !is_finite($monto)) {
+            return null;
+        }
+        $monto = round($monto, 2);
+        if ($monto < 0.01 || $monto > 9999999999.99) {
+            return null;
+        }
+        return $monto;
+    }
+}
+
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     global $conn;
     $user_id = $_SESSION['usuario_id'];
@@ -22,7 +47,12 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // 1. Guardar nuevo movimiento
     if(isset($_POST['tipoMovimiento']) && $_POST['tipoMovimiento'] !== '') {
         $tipo = $_POST['tipoMovimiento']; // 'ingreso' o 'gasto'
-        $monto = floatval($_POST['monto']);
+        $monto = trackify_monto_valido($_POST['monto'] ?? null);
+        if ($monto === null) {
+            $_SESSION['flash_error'] = 'El monto debe ser un número mayor a cero.';
+            header("Location: " . $return_url);
+            exit();
+        }
         $categoria_nombre = $_POST['categoria'];
         $descripcion = $_POST['descripcion'];
         $fecha = $_POST['fecha'] ?? date('Y-m-d');
@@ -61,7 +91,12 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'editar_movimiento') {
         $id_movimiento = intval($_POST['id_movimiento']);
         $tipo = $_POST['tipo'];
-        $monto = floatval($_POST['monto']);
+        $monto = trackify_monto_valido($_POST['monto'] ?? null);
+        if ($monto === null) {
+            $_SESSION['flash_error'] = 'El monto debe ser un número mayor a cero.';
+            header("Location: " . $return_url);
+            exit();
+        }
         $categoria_nombre = $_POST['categoria'];
         $descripcion = $_POST['descripcion'];
         $fecha = $_POST['fecha'];
