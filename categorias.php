@@ -130,10 +130,23 @@ while ($row = $res->fetch_assoc()) {
                 <button class="btn-nuevo" onclick="abrirModalCategoria()">+ Nueva categoría</button>
             </div>
 
-            <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('gastos', this)">Gastos</button>
-                <button class="tab" onclick="switchTab('ingresos', this)">Ingresos</button>
+            <!-- Tabs + orden -->
+            <div class="cat-toolbar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+                <div class="tabs" style="margin-bottom:0;">
+                    <button class="tab active" onclick="switchTab('gastos', this)">Gastos</button>
+                    <button class="tab" onclick="switchTab('ingresos', this)">Ingresos</button>
+                </div>
+                <div class="cat-orden" style="display:flex;align-items:center;gap:8px;">
+                    <label for="ordenCategorias" style="font-size:.85rem;font-weight:600;color:var(--text-secondary,#64748B);">Ordenar por</label>
+                    <select id="ordenCategorias" style="padding:9px 14px;border:1px solid var(--border-color,#E2E8F0);border-radius:6px;background:var(--input-bg,#F8FAFC);color:var(--input-text,#1E1B26);font-family:inherit;font-size:.9rem;cursor:pointer;">
+                        <option value="monto-desc">Mayor monto</option>
+                        <option value="monto-asc">Menor monto</option>
+                        <option value="nombre-asc">Nombre (A–Z)</option>
+                        <option value="nombre-desc">Nombre (Z–A)</option>
+                        <option value="cant-desc">Más movimientos</option>
+                        <option value="cant-asc">Menos movimientos</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Resumen distribución (Se muestra para gastos por defecto) -->
@@ -164,7 +177,7 @@ while ($row = $res->fetch_assoc()) {
                     $cant = $gasto['cantidad'] ?? 0;
                     $pct = $total_gastos > 0 ? round(($monto / $total_gastos) * 100) : 0;
                 ?>
-                <div class="cat-card <?php echo htmlspecialchars($gasto['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" style="--card-accent: <?php echo htmlspecialchars($gasto['color']); ?>;">
+                <div class="cat-card <?php echo htmlspecialchars($gasto['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" data-nombre="<?php echo htmlspecialchars($gasto['nombre'], ENT_QUOTES); ?>" data-monto="<?php echo $monto; ?>" data-cant="<?php echo (int) $cant; ?>" style="--card-accent: <?php echo htmlspecialchars($gasto['color']); ?>;">
                     <div class="cat-icon">
                         <img src="<?php echo htmlspecialchars($gasto['icono']); ?>" alt="<?php echo htmlspecialchars($gasto['icon_alt']); ?>">
                     </div>
@@ -195,7 +208,7 @@ while ($row = $res->fetch_assoc()) {
                     $cant = $ingreso['cantidad'] ?? 0;
                     $pct = $total_ingresos > 0 ? round(($monto / $total_ingresos) * 100) : 0;
                 ?>
-                <div class="cat-card <?php echo htmlspecialchars($ingreso['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" style="--card-accent: <?php echo htmlspecialchars($ingreso['color']); ?>;">
+                <div class="cat-card <?php echo htmlspecialchars($ingreso['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" data-nombre="<?php echo htmlspecialchars($ingreso['nombre'], ENT_QUOTES); ?>" data-monto="<?php echo $monto; ?>" data-cant="<?php echo (int) $cant; ?>" style="--card-accent: <?php echo htmlspecialchars($ingreso['color']); ?>;">
                     <div class="cat-icon">
                         <img src="<?php echo htmlspecialchars($ingreso['icono']); ?>" alt="<?php echo htmlspecialchars($ingreso['icon_alt']); ?>">
                     </div>
@@ -218,6 +231,57 @@ while ($row = $res->fetch_assoc()) {
                 </div>
                 <?php endforeach; ?>
             </div>
+
+<script>
+(function () {
+    const select = document.getElementById('ordenCategorias');
+    if (!select) return;
+
+    const CLAVE  = 'trackify_orden_categorias';
+    const grids  = [document.getElementById('gridGastos'), document.getElementById('gridIngresos')];
+
+    function porNombre(a, b) {
+        return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
+    }
+    const comparadores = {
+        'monto-desc':  (a, b) => b.monto - a.monto,
+        'monto-asc':   (a, b) => a.monto - b.monto,
+        'nombre-asc':  (a, b) => porNombre(a, b),
+        'nombre-desc': (a, b) => porNombre(b, a),
+        'cant-desc':   (a, b) => b.cant - a.cant,
+        'cant-asc':    (a, b) => a.cant - b.cant
+    };
+
+    function ordenar(criterio) {
+        const comparar = comparadores[criterio] || comparadores['monto-desc'];
+        grids.forEach((grid) => {
+            if (!grid) return;
+            const tarjetas = Array.from(grid.querySelectorAll(':scope > .cat-card')).map((el) => ({
+                el: el,
+                nombre: el.dataset.nombre || '',
+                monto: parseFloat(el.dataset.monto) || 0,
+                cant: parseInt(el.dataset.cant, 10) || 0
+            }));
+            // Si dos categorías empatan, desempata el nombre (A–Z)
+            tarjetas.sort((a, b) => comparar(a, b) || porNombre(a, b));
+            tarjetas.forEach((t) => grid.appendChild(t.el));
+        });
+    }
+
+    // Recuperar el orden elegido la última vez
+    try {
+        const guardado = localStorage.getItem(CLAVE);
+        if (guardado && comparadores[guardado]) select.value = guardado;
+    } catch (e) { /* sin localStorage: se usa el orden por defecto */ }
+
+    select.addEventListener('change', () => {
+        ordenar(select.value);
+        try { localStorage.setItem(CLAVE, select.value); } catch (e) { /* ignorar */ }
+    });
+
+    ordenar(select.value);
+})();
+</script>
 
 <?php 
 $extra_js = '<script src="js/categorias.js"></script>';
