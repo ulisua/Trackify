@@ -2,10 +2,6 @@
 $page = 'objetivos';
 require_once 'conexion.php';
 
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 // Procesar acciones de objetivos. Los montos llegan en ARS (ver js/moneda.js).
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
     $user_id = (int)$_SESSION['usuario_id'];

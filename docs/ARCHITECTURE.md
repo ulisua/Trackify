@@ -45,9 +45,8 @@ trackify/
 │   ├── layout.css                   # Grid, flexbox layout, contenedores y tablas
 │   ├── themes.css                   # Tokens de temas Claro/Oscuro ([data-theme])
 │   ├── variables.css                # Paleta de colores de marca y tipografía
-│   ├── components/                  # Componentes reutilizables (navbar, sidebar, cards, forms, buttons, charts)
+│   ├── components/                  # Componentes reutilizables (navbar, sidebar, cards, forms, buttons, charts, moneda)
 │   └── pages/                       # Estilos específicos de cada vista (dashboard, auth, categorias, etc.)
-├── fonts/                           # Tipografías empaquetadas (Creato Display, Nexa)
 ├── iconos/                          # Recursos gráficos PNG locales
 │   ├── gasto/                       # Iconos específicos de categorías de gasto
 │   ├── generales/                   # Iconos UI (flechas, tachos, lápiz, robots, alertas)
@@ -82,7 +81,6 @@ trackify/
 ├── ingresos.php                     # Ingresos del período (usa includes/vista_movimientos_tipo.php)
 ├── login.php                        # Pantalla de inicio de sesión (credenciales + botón Google OAuth)
 ├── logout.php                       # Cierre de sesión seguro y destrucción de cookies
-├── moneda.css                       # Estilos de los selectores de moneda y período (navbar y menú móvil)
 ├── movimientos.php                  # Listado completo con filtros por rango, tipo y categoría
 ├── objetivos.php                    # Metas de ahorro: CRUD, aportes, progreso y vencimientos
 ├── perfil.php                       # Perfil: nombre, moneda, contraseña, tema oscuro y zona de peligro

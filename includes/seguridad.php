@@ -38,13 +38,42 @@ function verificarCsrfSiCorresponde() {
 }
 
 // Ruta base de la app (funciona en la raíz del servidor o en una subcarpeta como /trackify),
-// también cuando el script que corre está dentro de /includes o /api.
+// también cuando el script que corre está dentro de /includes, /api o /auth/google.
 function urlBaseApp() {
     $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
-    if (in_array(basename($dir), ['includes', 'api'], true)) {
-        $dir = str_replace('\\', '/', dirname($dir));
-    }
+    $dir = preg_replace('#/(includes|api|auth/google)$#', '', $dir);
     return rtrim($dir, '/');
+}
+
+// Redirige a una página de la app y termina la ejecución
+function redirigir($pagina) {
+    header('Location: ' . urlBaseApp() . '/' . ltrim($pagina, '/'));
+    exit();
+}
+
+// UUID v4 aleatorio
+function generarUuid() {
+    $b = random_bytes(16);
+    $b[6] = chr((ord($b[6]) & 0x0f) | 0x40);
+    $b[8] = chr((ord($b[8]) & 0x3f) | 0x80);
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
+}
+
+// Inicia la sesión del usuario con un id de sesión nuevo (evita fijación de sesión)
+function iniciarSesionUsuario($id, $nombre) {
+    session_regenerate_id(true);
+    $_SESSION['usuario_id']     = (int)$id;
+    $_SESSION['usuario_nombre'] = $nombre;
+}
+
+// Cierra la sesión por completo, incluida la cookie
+function cerrarSesion() {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+    }
+    session_destroy();
 }
 
 // Solo acepta rutas relativas del propio sitio; cualquier URL externa vuelve al dashboard.

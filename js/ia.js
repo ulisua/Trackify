@@ -39,7 +39,6 @@ function restaurarBotonIA() {
     let minimizado = false;
     try {
         minimizado = sessionStorage.getItem(CLAVE_BOTON_IA) === '1';
-        sessionStorage.removeItem('trackify_boton_ia_oculto'); // clave de la versión anterior
     } catch (e) { /* sin almacenamiento */ }
     const wrap = document.getElementById("botonIAWrap");
     if (wrap && minimizado) {
@@ -90,6 +89,7 @@ function formatearRespuesta(texto) {
     const div = document.createElement("div");
     div.textContent = String(texto);
     let seguro = div.innerHTML;
+    seguro = seguro.replace(/^#{1,6}\s*(.+)$/gm, "**$1**"); // títulos Markdown → negrita
     seguro = seguro.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     seguro = seguro.replace(/\n/g, "<br>");
     return seguro;
@@ -127,11 +127,16 @@ function eliminarUltimoMensaje() {
 }
 
 // ===== FUNCION PRINCIPAL =====
+// Turnos previos que se envían al servidor para que la IA entienda repreguntas
+const historialIA = [];
+let consultandoIA = false;
+
 window.preguntarIA = async function () {
     const input = document.getElementById("pregunta");
     const pregunta = input.value.trim();
 
-    if (!pregunta) return;
+    if (!pregunta || consultandoIA) return;
+    consultandoIA = true;
 
     // mostrar pregunta
     quitarSugerencias();
@@ -151,7 +156,7 @@ window.preguntarIA = async function () {
                 "Accept": "application/json",
                 "X-CSRF-Token": window.csrfToken || ""
             },
-            body: JSON.stringify({ pregunta: pregunta })
+            body: JSON.stringify({ pregunta, historial: historialIA.slice(-6) })
         });
 
         eliminarUltimoMensaje();
@@ -169,29 +174,31 @@ window.preguntarIA = async function () {
         }
 
         agregarMensaje("ia", data.respuesta);
+        historialIA.push({ rol: "usuario", texto: pregunta }, { rol: "ia", texto: data.respuesta });
 
     } catch (error) {
         console.error("Error fetch:", error);
         eliminarUltimoMensaje();
         agregarMensaje("ia", "Error de conexión");
+    } finally {
+        consultandoIA = false;
     }
 };
 
-// ===== ENTER PARA ENVIAR =====
-document.getElementById("pregunta").addEventListener("keydown", function(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        preguntarIA();
-    }
-});
-
-// ===== AUTO-RESIZE TEXTAREA =====
-const textarea = document.getElementById("pregunta");
-
-textarea.addEventListener("input", function () {
-    this.style.height = "auto";
-    this.style.height = this.scrollHeight + "px";
-});
+// ===== ENTER PARA ENVIAR + AUTO-RESIZE =====
+const textareaIA = document.getElementById("pregunta");
+if (textareaIA) {
+    textareaIA.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            preguntarIA();
+        }
+    });
+    textareaIA.addEventListener("input", function () {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+    });
+}
 
 
 // ===== ESTADO INICIAL =====

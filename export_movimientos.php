@@ -1,6 +1,5 @@
 <?php
 require_once 'conexion.php';
-if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
 header('Content-Type: application/json; charset=utf-8');
 

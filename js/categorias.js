@@ -21,8 +21,5 @@ function abrirModalEditarCategoria(id, nombre, tipo, icono, color) {
         document.getElementById('edit_icono_categoria').value = icono;
         document.getElementById('edit_color_categoria').value = color || '#EA73F5';
         modal.classList.remove('hidden');
-        if (typeof blurBackground === 'function') {
-            blurBackground(true);
-        }
     }
 }

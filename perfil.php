@@ -2,10 +2,6 @@
 $page = 'perfil';
 $extra_css = '<link rel="stylesheet" href="css/pages/perfil.css">';
 require_once 'conexion.php';
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 // ── Acciones del perfil (PRG) ────────────────────────────────────────────────
 if (isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['form_type'])) {
     $user_id = (int)$_SESSION['usuario_id'];

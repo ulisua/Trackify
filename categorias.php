@@ -2,11 +2,6 @@
 $page = 'categorias';
 $extra_css = '<link rel="stylesheet" href="css/pages/categorias.css">';
 require_once 'conexion.php';
-require_once 'includes/categorias_meta.php';
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 // Procesar acciones de categorías.
 // Las categorías predeterminadas (id_usuario NULL) son de solo lectura: cada usuario
 // solo puede crear, editar y eliminar sus propias categorías.

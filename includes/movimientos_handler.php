@@ -1,14 +1,9 @@
 <?php
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-// Asegurar la conexión a la base de datos cuando este handler se llama directamente
-if (!isset($conn)) {
-    require_once dirname(__DIR__) . '/conexion.php';
-}
+// Altas, ediciones y bajas de movimientos (también borrar historial y eliminar cuenta).
+// Se incluye desde las páginas que muestran movimientos o se llama directo desde los modales.
+require_once dirname(__DIR__) . '/conexion.php';
 
 if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    global $conn;
     $user_id = (int)$_SESSION['usuario_id'];
     $return_url = urlRetornoSegura($_POST['return_url'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
 
@@ -142,23 +137,7 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        // Destruir sesión limpia y eliminar cookie de sesión si existe
-        $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params['path'], $params['domain'],
-                $params['secure'], $params['httponly']
-            );
-        }
-        session_destroy();
-
-        $basePath = dirname(dirname($_SERVER['PHP_SELF']));
-        if ($basePath === '/' || $basePath === '\\' || $basePath === '.') {
-            $basePath = '';
-        }
-        header("Location: {$basePath}/login.php");
-        exit();
+        cerrarSesion();
+        redirigir('login.php');
     }
 }
-?>

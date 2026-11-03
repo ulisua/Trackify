@@ -69,45 +69,9 @@ function abrirModal(tipo) {
     if (montoVisible) montoVisible.value = '';
     prepararFormularioMoneda(modal.querySelector('form'), monedaPreferida());
 
-    const modalTitulo = document.getElementById('modalTitulo');
-    const tipoMovimiento = document.getElementById('tipoMovimiento');
-    tipoMovimiento.value = tipo;
-    modalTitulo.innerText = tipo === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Gasto';
-
-    // Populate custom categories based on 'tipo'
-    const hiddenInput = document.getElementById('categoria');
-    const trigger = document.getElementById('customCategoriaTrigger');
-    const optionsContainer = document.getElementById('customCategoriaOptions');
-    const wrapper = document.getElementById('customCategoriaWrapper');
-
-    if (hiddenInput && trigger && optionsContainer && wrapper) {
-        hiddenInput.value = '';
-        trigger.innerText = 'Selecciona una categoría';
-        optionsContainer.innerHTML = '';
-        wrapper.classList.remove('open');
-
-        let opciones = [];
-        if (window.dbCategorias) {
-            opciones = window.dbCategorias[tipo] || [];
-        } else {
-            opciones = tipo === 'ingreso' ? ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"] : ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
-        }
-
-        opciones.forEach(o => {
-            const div = document.createElement('div');
-            div.className = 'custom-option';
-            div.innerText = o;
-            div.addEventListener('click', () => {
-                hiddenInput.value = o;
-                trigger.innerText = o;
-                wrapper.classList.remove('open');
-                optionsContainer.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
-                div.classList.add('selected');
-                hiddenInput.dispatchEvent(new Event('change'));
-            });
-            optionsContainer.appendChild(div);
-        });
-    }
+    document.getElementById('tipoMovimiento').value = tipo;
+    document.getElementById('modalTitulo').innerText = tipo === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Gasto';
+    poblarSelectorCategoria('categoria', 'customCategoria', tipo, '');
 
     const desc = document.getElementById('descripcion');
     if (desc) {
@@ -118,17 +82,38 @@ function abrirModal(tipo) {
     modal.classList.remove('hidden');
 }
 
-function blurBackground(enable) {
-    // El CSS del modal ya maneja backdrop-filter; función mantenida para compatibilidad
+// Selector de categoría propio (modales de alta y edición de movimientos).
+// idInput: input oculto que se envía; prefijo: ids "<prefijo>Wrapper/Trigger/Options".
+function poblarSelectorCategoria(idInput, prefijo, tipo, seleccionada) {
+    const hiddenInput = document.getElementById(idInput);
+    const trigger = document.getElementById(prefijo + 'Trigger');
+    const optionsContainer = document.getElementById(prefijo + 'Options');
+    const wrapper = document.getElementById(prefijo + 'Wrapper');
+    if (!hiddenInput || !trigger || !optionsContainer || !wrapper) return;
+
+    hiddenInput.value = seleccionada;
+    trigger.innerText = seleccionada || 'Selecciona una categoría';
+    optionsContainer.innerHTML = '';
+    wrapper.classList.remove('open');
+
+    (window.dbCategorias?.[tipo] || []).forEach(nombre => {
+        const div = document.createElement('div');
+        div.className = 'custom-option' + (nombre === seleccionada ? ' selected' : '');
+        div.innerText = nombre;
+        div.addEventListener('click', () => {
+            hiddenInput.value = nombre;
+            trigger.innerText = nombre;
+            wrapper.classList.remove('open');
+            optionsContainer.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
+            div.classList.add('selected');
+            hiddenInput.dispatchEvent(new Event('change'));
+        });
+        optionsContainer.appendChild(div);
+    });
 }
 
 function cerrarModal() {
-    const modales = ['modal', 'modalObjetivo', 'modalAhorro', 'modalEditarObjetivo', 'modalCategoria', 'modalEditarCategoria', 'modalEditarMovimiento', 'modalBorrarHistorial', 'modalEliminarCuenta'];
-    modales.forEach(id => {
-        const m = document.getElementById(id);
-        if (m) m.classList.add('hidden');
-    });
-    blurBackground(false);
+    document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
 }
 
 function abrirModalAhorro(id_meta) {
@@ -140,7 +125,6 @@ function abrirModalAhorro(id_meta) {
         if (monto) monto.value = '';
         prepararFormularioMoneda(modal.querySelector('form'), monedaPreferida());
         modal.classList.remove('hidden');
-        blurBackground(true);
     }
 }
 
@@ -155,7 +139,6 @@ function abrirModalEditarObj(id, nombre, desc, monto, fecha, estado) {
         document.getElementById('edit_fecha_limite').value = fecha;
         document.getElementById('edit_estado').value = estado;
         modal.classList.remove('hidden');
-        blurBackground(true);
     }
 }
 
@@ -167,7 +150,6 @@ function abrirModalCategoria() {
         if (iconoSelect) iconoSelect.value = iconoSelect.options[0]?.value || iconoSelect.value;
         if (colorInput) colorInput.value = '#EA73F5';
         modal.classList.remove('hidden');
-        blurBackground(true);
     }
 }
 
@@ -183,40 +165,7 @@ function abrirModalEditarMovimiento(id, monto, categoria, descripcion, fecha, ti
     document.getElementById('edit_mov_descripcion').value = descripcion;
     document.getElementById('edit_mov_fecha').value = fecha;
     document.getElementById('edit_mov_tipo').value = tipo;
-
-    const hiddenInput = document.getElementById('edit_mov_categoria');
-    const trigger = document.getElementById('customEditMovCategoriaTrigger');
-    const optionsContainer = document.getElementById('customEditMovCategoriaOptions');
-    const wrapper = document.getElementById('customEditMovCategoriaWrapper');
-
-    if (hiddenInput && trigger && optionsContainer && wrapper) {
-        hiddenInput.value = categoria;
-        trigger.innerText = categoria;
-        optionsContainer.innerHTML = '';
-        wrapper.classList.remove('open');
-
-        let opciones = [];
-        if (window.dbCategorias) {
-            opciones = window.dbCategorias[tipo] || [];
-        } else {
-            opciones = tipo === 'ingreso' ? ["Sueldo", "Transferencia", "Préstamo recibido", "Otros ingresos"] : ["Alimentos", "Transporte", "Servicios", "Otros gastos"];
-        }
-
-        opciones.forEach(o => {
-            const div = document.createElement('div');
-            div.className = 'custom-option';
-            if (o === categoria) div.classList.add('selected');
-            div.innerText = o;
-            div.addEventListener('click', () => {
-                hiddenInput.value = o;
-                trigger.innerText = o;
-                wrapper.classList.remove('open');
-                optionsContainer.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
-                div.classList.add('selected');
-            });
-            optionsContainer.appendChild(div);
-        });
-    }
+    poblarSelectorCategoria('edit_mov_categoria', 'customEditMovCategoria', tipo, categoria);
 
     modal.classList.remove('hidden');
 }

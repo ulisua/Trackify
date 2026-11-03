@@ -2,14 +2,8 @@
 $page = 'dashboard';
 require_once 'conexion.php';
 require_once 'includes/movimientos_handler.php';
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
 require_once 'includes/periodo.php';
 
-// Calcular totales
-$total_ingresos = 0;
-$total_gastos = 0;
 // Datos para gráficos
 $torta_labels = [];
 $torta_data   = [];
@@ -17,26 +11,29 @@ $barras_labels   = [];
 $barras_ingresos = [];
 $barras_gastos   = [];
 $ultimos_movimientos = [];
+$total_ingresos = $total_gastos = $gasto_mensual = 0;
 
 if(isset($_SESSION['usuario_id'])) {
-    $user_id = $_SESSION['usuario_id'];
-    
-    // Totales del período actual
-    $stmt_ingresos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'ingreso' AND fecha BETWEEN ? AND ?");
-    $stmt_ingresos->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
-    $stmt_ingresos->execute();
-    $res_ing = $stmt_ingresos->get_result();
-    if ($row = $res_ing->fetch_assoc()) {
-        $total_ingresos = $row['total'] ?? 0;
-    }
+    $user_id = (int)$_SESSION['usuario_id'];
 
-    $stmt_gastos = $conn->prepare("SELECT SUM(monto) as total FROM movimientos WHERE id_usuario = ? AND tipo = 'gasto' AND fecha BETWEEN ? AND ?");
-    $stmt_gastos->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
-    $stmt_gastos->execute();
-    $res_gas = $stmt_gastos->get_result();
-    if ($row = $res_gas->fetch_assoc()) {
-        $total_gastos = $row['total'] ?? 0;
-    }
+    // Totales del período actual + gasto del mes calendario, en una sola consulta
+    $mes_desde = date('Y-m-01');
+    $mes_hasta = date('Y-m-t');
+    $stmt_tot = $conn->prepare(
+        "SELECT
+            COALESCE(SUM(CASE WHEN tipo = 'ingreso' AND fecha BETWEEN ? AND ? THEN monto END), 0) AS ingresos,
+            COALESCE(SUM(CASE WHEN tipo = 'gasto'   AND fecha BETWEEN ? AND ? THEN monto END), 0) AS gastos,
+            COALESCE(SUM(CASE WHEN tipo = 'gasto'   AND fecha BETWEEN ? AND ? THEN monto END), 0) AS gasto_mes
+         FROM movimientos
+         WHERE id_usuario = ? AND fecha BETWEEN LEAST(?, ?) AND GREATEST(?, ?)"
+    );
+    $stmt_tot->bind_param("ssssssissss", $fecha_desde, $fecha_hasta, $fecha_desde, $fecha_hasta, $mes_desde, $mes_hasta,
+        $user_id, $fecha_desde, $mes_desde, $fecha_hasta, $mes_hasta);
+    $stmt_tot->execute();
+    $tot = $stmt_tot->get_result()->fetch_assoc();
+    $total_ingresos = (float)$tot['ingresos'];
+    $total_gastos   = (float)$tot['gastos'];
+    $gasto_mensual  = (float)$tot['gasto_mes'];
 
     // ── Gráfico de torta: gastos por categoría en el período ──────────────────────────────
     $stmt_torta = $conn->prepare(
@@ -64,7 +61,7 @@ if(isset($_SESSION['usuario_id'])) {
             SUM(CASE WHEN tipo = 'gasto'   THEN monto ELSE 0 END) as total_gastos
          FROM movimientos
          WHERE id_usuario = ?
-           AND fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+           AND fecha >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01')
          GROUP BY mes
          ORDER BY mes ASC"
     );
@@ -89,25 +86,7 @@ if(isset($_SESSION['usuario_id'])) {
     );
     $stmt_ultimos->bind_param("i", $user_id);
     $stmt_ultimos->execute();
-    $res_ultimos = $stmt_ultimos->get_result();
-    while ($row = $res_ultimos->fetch_assoc()) {
-        $ultimos_movimientos[] = $row;
-    }
-    
-    // ── Gasto mensual actual ───────────────────────────────────────────────
-    $gasto_mensual = 0;
-    $stmt_mes = $conn->prepare(
-        "SELECT SUM(monto) as total FROM movimientos 
-         WHERE id_usuario = ? AND tipo = 'gasto' 
-         AND MONTH(fecha) = MONTH(CURRENT_DATE()) 
-         AND YEAR(fecha) = YEAR(CURRENT_DATE())"
-    );
-    $stmt_mes->bind_param("i", $user_id);
-    $stmt_mes->execute();
-    $res_mes = $stmt_mes->get_result();
-    if ($row = $res_mes->fetch_assoc()) {
-        $gasto_mensual = $row['total'] ?? 0;
-    }
+    $ultimos_movimientos = $stmt_ultimos->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 $balance = $total_ingresos - $total_gastos;
 
@@ -440,7 +419,7 @@ function dibujarGraficos(moneda, tc) {
 // Los gráficos se dibujan con la moneda elegida y se redibujan al cambiarla
 document.addEventListener('trackify:moneda', e => dibujarGraficos(e.detail.moneda, e.detail.tc));
 </script>
-<script src="js/ia.js?v=5"></script>
+<script src="js/ia.js?v=7"></script>
 <?php
 $extra_js = ob_get_clean();
 require_once 'includes/footer.php';

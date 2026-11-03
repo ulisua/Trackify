@@ -397,7 +397,7 @@
     <?php endif; ?>
 </script>
 
-<script src="js/main.js?v=5"></script>
+<script src="js/main.js?v=6"></script>
 <script src="js/moneda.js?v=2"></script>
 <?php if(isset($extra_js)) echo $extra_js; ?>
 

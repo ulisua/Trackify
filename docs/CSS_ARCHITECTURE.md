@@ -19,7 +19,6 @@
 ```
 trackify/
 ├── styles.css                       # ENTRY POINT: Orquestador global con directivas @import
-├── moneda.css                       # Estilos del selector de divisas y períodos en el navbar
 └── css/
     ├── variables.css                # 1. Tokens inmutables de marca y fuentes
     ├── themes.css                   # 2. Variables contextuales de tema (Claro / Oscuro)
@@ -70,10 +69,9 @@ trackify/
 
 ```
 1. flatpickr.min.css (CDN)        ← librerías primero, para poder sobrescribirlas
-2. styles.css                     ← tokens, base, layout y componentes
-3. moneda.css                     ← selectores de moneda/período
-4. css/pages/<pagina>.css         ← $extra_css de cada página
-5. css/responsive.css             ← SIEMPRE al final
+2. styles.css                     ← tokens, base, layout y componentes (incluye components/moneda.css)
+3. css/pages/<pagina>.css         ← $extra_css de cada página
+4. css/responsive.css             ← SIEMPRE al final
 ```
 
 > [!IMPORTANT]
@@ -179,7 +177,7 @@ El aspecto visual se conmuta mediante el atributo `data-theme` en la etiqueta `<
 | `--barra-header-bg` / `--barra-sidebar-bg` / `--barra-footer-bg` | (en `variables.css`) fondo casi negro con orbes radiales muy difuminados para header, menú y footer |
 
 ### Selects
-Ningún `<select>` se muestra con el popup nativo: `mejorarSelect()` en `js/main.js` lo oculta y muestra un botón (`.selector-pill-trigger` en el header, `.select-trackify-trigger` en el resto) más una lista `.select-lista` que vive en `<body>` con `position: fixed` (así no la recortan los modales ni las tarjetas). El `<select>` sigue siendo la fuente de verdad: se envía con el formulario y recibe `change`; asignar `.value`, `.selectedIndex` o `.disabled` por código actualiza el botón. Estilos: `css/components/forms.css` (variante formulario y lista) y `moneda.css` (variante píldora).
+Ningún `<select>` se muestra con el popup nativo: `mejorarSelect()` en `js/main.js` lo oculta y muestra un botón (`.selector-pill-trigger` en el header, `.select-trackify-trigger` en el resto) más una lista `.select-lista` que vive en `<body>` con `position: fixed` (así no la recortan los modales ni las tarjetas). El `<select>` sigue siendo la fuente de verdad: se envía con el formulario y recibe `change`; asignar `.value`, `.selectedIndex` o `.disabled` por código actualiza el botón. Estilos: `css/components/forms.css` (variante formulario y lista) y `css/components/moneda.css` (variante píldora).
 
 
 
@@ -263,7 +261,7 @@ Sobrescrito con tema Trackify:
 | **Fondo general o color de texto claro/oscuro** | `css/themes.css` | `--bg-primary`, `--text-primary` en `[data-theme="..."]` |
 | **Estilo o ancho de la barra lateral** | `css/components/sidebar.css` | `.sidebar`, `.sidebar a` |
 | **Barra de navegación superior o logo** | `css/components/navbar.css` | `.navbar`, `.navbar .logo` |
-| **Diseño del selector ARS/USD del header** | `moneda.css` | `.selector-header select` |
+| **Diseño del selector ARS/USD del header** | `css/components/moneda.css` | `.selector-header select` |
 | **Título y subtítulo de cada página** | `css/layout.css` | `.page-header`, `.page-subtitle` |
 | **Cualquier comportamiento por tamaño de pantalla** | `css/responsive.css` | bloque del punto de corte correspondiente |
 | **Listado de movimientos y sus filtros** | `css/pages/movimientos.css` | `.filtros-movimientos`, `.badge-tipo` |

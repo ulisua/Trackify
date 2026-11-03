@@ -1,18 +1,8 @@
 <?php
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 require_once __DIR__ . '/../conexion.php';
 
-// Si no está logueado → login
-if(!isset($_SESSION['usuario_id'])){
-    $loginPath = dirname($_SERVER['PHP_SELF']);
-    if ($loginPath === '/' || $loginPath === '\\') {
-        $loginPath = '';
-    }
-    header("Location: {$loginPath}/login.php");
-    exit();
+if (!isset($_SESSION['usuario_id'])) {
+    redirigir('login.php');
 }
 
 // Nombre del usuario
@@ -57,24 +47,18 @@ function renderSelectoresHeader($moneda_actual, $periodo_actual, $conEtiquetas) 
 <html lang="es">
 
 <head>
-    <script>
-        (function() {
-            let savedTheme = null;
-            try { savedTheme = localStorage.getItem('theme'); } catch (e) {}
-            document.documentElement.setAttribute('data-theme', savedTheme === 'dark' ? 'dark' : 'light');
-        })();
-    </script>
+    <?php include __DIR__ . '/tema_inicial.php'; ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(csrfToken()); ?>">
     <title><?php echo htmlspecialchars($titulo); ?></title>
+    <link rel="icon" href="favicon.ico">
 
     <!-- Librerías primero, para que los estilos de Trackify las sobrescriban -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="moneda.css">
 
     <script>
         window.dbCategorias = <?php echo json_encode($dbCategorias, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
