@@ -4,14 +4,14 @@
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: calc(10 * var(--u));
     margin-left: auto;
 }
 
 .selector-header {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: calc(6 * var(--u));
     margin: 0;
 }
 
@@ -28,11 +28,11 @@
 .selector-pill-trigger {
     appearance: none;
     -webkit-appearance: none;
-    padding: 8px 34px 8px 16px;
-    min-height: 40px;
-    min-width: 104px;
+    padding: calc(8 * var(--u)) calc(34 * var(--u)) calc(8 * var(--u)) calc(16 * var(--u));
+    min-height: calc(40 * var(--u));
+    min-width: calc(104 * var(--u));
     border: 1px solid rgba(207, 242, 124, 0.35);
-    border-radius: 999px;
+    border-radius: calc(999 * var(--u));
     background-color: rgba(207, 242, 124, 0.08);
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
@@ -73,7 +73,7 @@
 .sidebar-controles .selector-pill,
 .sidebar-controles .selector-pill-trigger {
     width: 100%;
-    min-height: 44px;
+    min-height: calc(44 * var(--u));
 }
 
 #tipoCambioInfo {

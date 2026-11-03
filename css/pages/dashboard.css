@@ -2,14 +2,14 @@
 
 /* ===== MOVIMIENTOS RECIENTES ===== */
 .movimientos-card {
-    padding: 18px 20px;
+    padding: calc(18 * var(--u)) calc(20 * var(--u));
 }
 
 .movimientos-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: calc(14 * var(--u));
 }
 
 .movimientos-header h3 {
@@ -48,9 +48,9 @@
 .movimiento-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    gap: calc(12 * var(--u));
+    padding: calc(10 * var(--u)) calc(12 * var(--u));
+    border-radius: calc(8 * var(--u));
     transition: background 0.18s;
     cursor: default;
 }
@@ -61,9 +61,9 @@
 
 .mov-icono {
     font-size: 1.25rem;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: calc(36 * var(--u));
+    height: calc(36 * var(--u));
+    border-radius: calc(8 * var(--u));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,14 +120,14 @@
 
 .movimientos-empty {
     text-align: center;
-    padding: 30px 0;
+    padding: calc(30 * var(--u)) 0;
     color: var(--text-muted);
 }
 
 .movimientos-empty span {
     font-size: 2rem;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: calc(8 * var(--u));
 }
 
 .movimientos-empty p {
@@ -137,21 +137,21 @@
 
 /* ===== RECOMENDACIONES IA ===== */
 .ia-card {
-    padding: 18px 20px;
+    padding: calc(18 * var(--u)) calc(20 * var(--u));
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
 .ia-header {
-    margin-bottom: 14px;
+    margin-bottom: calc(14 * var(--u));
 }
 
 .ia-titulo-wrap {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 4px;
+    gap: calc(10 * var(--u));
+    margin-bottom: calc(4 * var(--u));
 }
 
 .ia-titulo-wrap h3 {
@@ -164,8 +164,8 @@
 .ia-badge {
     font-size: 0.68rem;
     font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 20px;
+    padding: calc(3 * var(--u)) calc(9 * var(--u));
+    border-radius: calc(20 * var(--u));
     letter-spacing: 0.03em;
     text-transform: uppercase;
 }
@@ -199,18 +199,18 @@
 .ia-lista {
     list-style: none;
     padding: 0;
-    margin: 0 0 14px 0;
+    margin: 0 0 calc(14 * var(--u)) 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: calc(8 * var(--u));
 }
 
 .ia-item {
     display: flex;
     align-items: flex-start;
-    gap: 11px;
-    padding: 11px 13px;
-    border-radius: 9px;
+    gap: calc(11 * var(--u));
+    padding: calc(11 * var(--u)) calc(13 * var(--u));
+    border-radius: calc(9 * var(--u));
     border-left: 3px solid transparent;
     transition: background 0.18s;
 }
@@ -273,13 +273,13 @@
 .ia-btn-chat {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: calc(6 * var(--u));
     font-size: 0.83rem;
     font-weight: 600;
     color: white;
     background: linear-gradient(90deg, var(--brand-green-dark), #0f6b4f);
-    padding: 9px 16px;
-    border-radius: 8px;
+    padding: calc(9 * var(--u)) calc(16 * var(--u));
+    border-radius: calc(8 * var(--u));
     text-decoration: none;
     transition: all 0.2s ease;
     align-self: flex-start;
@@ -296,7 +296,7 @@
 .boton-ia-wrap {
     --borde-derecho: 24px;
     position: fixed;
-    bottom: 24px;
+    bottom: calc(24 * var(--u));
     right: var(--borde-derecho);
     z-index: 1102;
     /* El contenedor no captura clics: solo sus botones visibles */
@@ -316,10 +316,10 @@
     position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 6px 20px 6px 6px;
+    gap: calc(10 * var(--u));
+    padding: calc(6 * var(--u)) calc(20 * var(--u)) calc(6 * var(--u)) calc(6 * var(--u));
     border: 1px solid rgba(207, 242, 124, 0.55);
-    border-radius: 999px;
+    border-radius: calc(999 * var(--u));
     background: linear-gradient(120deg, var(--brand-dark) 0%, var(--brand-green-dark) 55%, var(--brand-purple) 130%);
     color: var(--brand-green-light);
     font-family: inherit;
@@ -353,8 +353,8 @@
 }
 
 .boton-ia-avatar {
-    width: 44px;
-    height: 44px;
+    width: calc(44 * var(--u));
+    height: calc(44 * var(--u));
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -366,8 +366,8 @@
 
 /* El robot va oscuro sobre el avatar claro (anula el filtro de íconos sobre fondo oscuro) */
 .boton-ia .boton-ia-avatar img {
-    width: 26px;
-    height: 26px;
+    width: calc(26 * var(--u));
+    height: calc(26 * var(--u));
     filter: none;
 }
 
@@ -377,16 +377,16 @@
 }
 
 .boton-ia-wrap.chat-abierto .boton-ia {
-    padding-right: 6px;
+    padding-right: calc(6 * var(--u));
 }
 
 /* Cruz para minimizar */
 .boton-ia-cerrar {
     position: absolute;
-    top: -7px;
-    right: -7px;
-    width: 24px;
-    height: 24px;
+    top: calc(-7 * var(--u));
+    right: calc(-7 * var(--u));
+    width: calc(24 * var(--u));
+    height: calc(24 * var(--u));
     padding: 0;
     display: flex;
     align-items: center;
@@ -395,7 +395,7 @@
     border-radius: 50%;
     background: var(--brand-pink);
     color: var(--brand-dark);
-    font-size: 16px;
+    font-size: calc(16 * var(--uf));
     font-weight: 700;
     line-height: 1;
     cursor: pointer;
@@ -411,16 +411,16 @@
 .boton-ia-pestana {
     position: absolute;
     right: calc(-1 * var(--borde-derecho));
-    bottom: 3px;
+    bottom: calc(3 * var(--u));
     display: flex;
-    width: 42px;
-    height: 50px;
-    padding: 0 0 0 4px;
+    width: calc(42 * var(--u));
+    height: calc(50 * var(--u));
+    padding: 0 0 0 calc(4 * var(--u));
     align-items: center;
     justify-content: center;
     border: 1px solid rgba(207, 242, 124, 0.55);
     border-right: none;
-    border-radius: 14px 0 0 14px;
+    border-radius: calc(14 * var(--u)) 0 0 calc(14 * var(--u));
     background: linear-gradient(135deg, var(--brand-dark), var(--brand-green-dark));
     cursor: pointer;
     box-shadow: -4px 6px 18px rgba(0, 0, 0, 0.25);
@@ -432,12 +432,12 @@
 }
 
 .boton-ia-pestana:hover {
-    width: 50px;
+    width: calc(50 * var(--u));
 }
 
 .boton-ia-pestana img {
-    width: 24px;
-    height: 24px;
+    width: calc(24 * var(--u));
+    height: calc(24 * var(--u));
     filter: invert(1) brightness(1.05);
 }
 
@@ -485,15 +485,15 @@
    de color suaves). Las burbujas e input vienen de css/components/chat.css */
 .chat-flotante {
     position: fixed;
-    bottom: 100px;
-    right: 24px;
-    width: 380px;
-    height: min(520px, calc(100dvh - 140px));
+    bottom: calc(100 * var(--u));
+    right: calc(24 * var(--u));
+    width: calc(380 * var(--u));
+    height: min(calc(520 * var(--u)), calc(100dvh - calc(140 * var(--u))));
     display: flex;
     flex-direction: column;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: calc(20 * var(--u));
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
     overflow: hidden;
     isolation: isolate;
@@ -514,18 +514,18 @@
 }
 
 .chat-flotante::before {
-    width: 200px;
-    height: 200px;
-    top: 10px;
-    left: -60px;
+    width: calc(200 * var(--u));
+    height: calc(200 * var(--u));
+    top: calc(10 * var(--u));
+    left: calc(-60 * var(--u));
     background: var(--brand-green-light);
 }
 
 .chat-flotante::after {
-    width: 240px;
-    height: 240px;
-    right: -70px;
-    bottom: -80px;
+    width: calc(240 * var(--u));
+    height: calc(240 * var(--u));
+    right: calc(-70 * var(--u));
+    bottom: calc(-80 * var(--u));
     background: var(--brand-pink);
 }
 
@@ -533,8 +533,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px 12px 14px;
+    gap: calc(12 * var(--u));
+    padding: calc(12 * var(--u)) calc(14 * var(--u)) calc(12 * var(--u)) calc(14 * var(--u));
     background: linear-gradient(110deg, var(--brand-dark) 0%, var(--brand-green-dark) 70%, var(--brand-purple) 140%);
     color: #F8FAFC;
     flex-shrink: 0;
@@ -543,7 +543,7 @@
 .chat-header-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: calc(10 * var(--u));
     min-width: 0;
 }
 
@@ -555,8 +555,8 @@
 }
 
 .chat-header-avatar {
-    width: 36px;
-    height: 36px;
+    width: calc(36 * var(--u));
+    height: calc(36 * var(--u));
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -566,35 +566,35 @@
 }
 
 .chat-header .chat-header-avatar img {
-    width: 21px;
-    height: 21px;
+    width: calc(21 * var(--u));
+    height: calc(21 * var(--u));
     filter: none;
 }
 
 
 .chat-flotante .chat {
-    margin: 14px 14px 0;
+    margin: calc(14 * var(--u)) calc(14 * var(--u)) 0;
 }
 
 .chat-flotante .input-container {
-    margin: 10px 14px 14px;
+    margin: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u));
 }
 
 .chat-cerrar {
     background: none;
     border: none;
-    width: 32px;
-    height: 32px;
+    width: calc(32 * var(--u));
+    height: calc(32 * var(--u));
     padding: 0;
     align-items: center;
     justify-content: center;
     color: #F8FAFC;
-    font-size: 22px;
+    font-size: calc(22 * var(--uf));
     line-height: 1;
     min-height: 0;
     cursor: pointer;
     display: flex;
-    border-radius: 6px;
+    border-radius: calc(6 * var(--u));
 }
 
 .chat-cerrar:hover {
@@ -606,8 +606,8 @@
 }
 
 .movimientos-empty-icono {
-    width: 48px;
-    height: 48px;
+    width: calc(48 * var(--u));
+    height: calc(48 * var(--u));
     display: block;
-    margin: 0 auto 8px;
+    margin: 0 auto calc(8 * var(--u));
 }

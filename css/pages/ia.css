@@ -2,8 +2,8 @@
 .ia-chat-shell {
     position: relative;
     width: 100%;
-    max-width: 680px;
-    margin: 8px auto 0;
+    max-width: calc(680 * var(--u));
+    margin: calc(8 * var(--u)) auto 0;
     overflow: visible;
 }
 
@@ -14,9 +14,9 @@
     display: flex;
     flex-direction: column;
     gap: 0;
-    height: clamp(440px, 62vh, 620px);
-    padding: 20px 20px 18px;
-    border-radius: 20px;
+    height: clamp(calc(440 * var(--u)), 62vh, calc(620 * var(--u)));
+    padding: calc(20 * var(--u)) calc(20 * var(--u)) calc(18 * var(--u));
+    border-radius: calc(20 * var(--u));
     overflow: hidden;
     isolation: isolate;
     background: var(--bg-card);
@@ -30,7 +30,7 @@
     z-index: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: calc(8 * var(--u));
     flex: 1;
     min-height: 0;
 }
@@ -45,18 +45,18 @@
 }
 
 .ia-chat-shell .orb-1 {
-    width: 240px;
-    height: 240px;
-    top: -70px;
-    left: -70px;
+    width: calc(240 * var(--u));
+    height: calc(240 * var(--u));
+    top: calc(-70 * var(--u));
+    left: calc(-70 * var(--u));
     background: var(--brand-green-light);
 }
 
 .ia-chat-shell .orb-2 {
-    width: 320px;
-    height: 320px;
-    right: -90px;
-    bottom: -100px;
+    width: calc(320 * var(--u));
+    height: calc(320 * var(--u));
+    right: calc(-90 * var(--u));
+    bottom: calc(-100 * var(--u));
     background: var(--brand-pink);
 }
 

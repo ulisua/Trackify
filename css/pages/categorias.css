@@ -3,12 +3,12 @@
 
 
 .btn-nuevo {
-    padding: 12px 22px;
-    min-height: 44px;
+    padding: calc(12 * var(--u)) calc(22 * var(--u));
+    min-height: calc(44 * var(--u));
     background: var(--brand-green-dark);
     color: var(--brand-green-light);
     border: none;
-    border-radius: 8px;
+    border-radius: calc(8 * var(--u));
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
@@ -29,19 +29,19 @@
 /* Tabs */
 .tabs {
     display: flex;
-    gap: 6px;
-    margin-bottom: 24px;
+    gap: calc(6 * var(--u));
+    margin-bottom: calc(24 * var(--u));
     background: var(--bg-hover);
-    padding: 4px;
-    border-radius: 10px;
+    padding: calc(4 * var(--u));
+    border-radius: calc(10 * var(--u));
     width: fit-content;
     box-sizing: border-box;
 }
 
 .tab {
-    padding: 10px 22px;
-    min-height: 42px;
-    border-radius: 8px;
+    padding: calc(10 * var(--u)) calc(22 * var(--u));
+    min-height: calc(42 * var(--u));
+    border-radius: calc(8 * var(--u));
     border: none;
     background: transparent;
     font-family: inherit;
@@ -145,19 +145,19 @@
 /* Grid de categorías */
 .cat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
+    grid-template-columns: repeat(auto-fill, minmax(calc(200 * var(--u)), 1fr));
+    gap: calc(16 * var(--u));
+    margin-bottom: calc(32 * var(--u));
 }
 
 .cat-card {
     background: var(--card-bg, var(--bg-card));
     border: 1px solid var(--card-border, var(--border-color));
-    border-radius: 18px;
-    padding: 22px 20px;
+    border-radius: calc(18 * var(--u));
+    padding: calc(22 * var(--u)) calc(20 * var(--u));
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: calc(14 * var(--u));
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -180,12 +180,12 @@
 }
 
 .cat-icon {
-    width: 46px;
-    height: 46px;
+    width: calc(46 * var(--u));
+    height: calc(46 * var(--u));
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 14px;
+    border-radius: calc(14 * var(--u));
     background: rgba(255, 255, 255, 0.72);
     border: 1px solid rgba(0, 0, 0, 0.05);
     transition: background 0.2s ease;
@@ -197,8 +197,8 @@
 }
 
 .cat-icon img {
-    width: 24px;
-    height: 24px;
+    width: calc(24 * var(--u));
+    height: calc(24 * var(--u));
     object-fit: contain;
 }
 
@@ -228,17 +228,17 @@
 
 .cat-acciones {
     display: flex;
-    gap: 8px;
-    margin-top: 6px;
+    gap: calc(8 * var(--u));
+    margin-top: calc(6 * var(--u));
     align-items: center;
 }
 
 .cat-acciones button {
     background: var(--card-btn-bg, var(--bg-hover));
     border: 1px solid var(--card-btn-border, var(--border-color));
-    border-radius: 8px;
-    padding: 8px 14px;
-    min-height: 38px;
+    border-radius: calc(8 * var(--u));
+    padding: calc(8 * var(--u)) calc(14 * var(--u));
+    min-height: calc(38 * var(--u));
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
@@ -247,7 +247,7 @@
     transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: calc(6 * var(--u));
     box-sizing: border-box;
 }
 
@@ -257,8 +257,8 @@
 }
 
 .cat-acciones .btn-del {
-    padding: 8px 10px;
-    min-width: 38px;
+    padding: calc(8 * var(--u)) calc(10 * var(--u));
+    min-width: calc(38 * var(--u));
     justify-content: center;
 }
 
@@ -270,11 +270,11 @@
 
 /* Barra de progreso mini */
 .cat-barra {
-    height: 4px;
+    height: calc(4 * var(--u));
     background: rgba(0, 0, 0, 0.06);
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
     overflow: hidden;
-    margin-top: 4px;
+    margin-top: calc(4 * var(--u));
 }
 
 [data-theme="dark"] .cat-barra {
@@ -283,7 +283,7 @@
 
 .cat-barra-fill {
     height: 100%;
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
     background: var(--card-accent, var(--brand-green-dark));
     transition: width 0.3s ease;
 }
@@ -292,14 +292,14 @@
 .resumen-cats {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 22px 24px;
-    margin-bottom: 28px;
+    border-radius: calc(10 * var(--u));
+    padding: calc(22 * var(--u)) calc(24 * var(--u));
+    margin-bottom: calc(28 * var(--u));
     box-shadow: var(--shadow-card);
 }
 
 .resumen-cats h3 {
-    margin: 0 0 16px 0;
+    margin: 0 0 calc(16 * var(--u)) 0;
     font-size: 1rem;
     color: var(--text-secondary);
     font-weight: 600;
@@ -311,9 +311,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
+    padding: calc(10 * var(--u)) 0;
     border-bottom: 1px solid var(--border-color);
-    gap: 12px;
+    gap: calc(12 * var(--u));
 }
 
 .resumen-row:last-child {
@@ -323,18 +323,18 @@
 .resumen-cat-nombre {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: calc(8 * var(--u));
     font-size: 0.95rem;
     color: var(--card-text, var(--text-primary));
     font-weight: 500;
-    min-width: 140px;
+    min-width: calc(140 * var(--u));
 }
 
 .resumen-barra {
     flex: 1;
-    height: 8px;
+    height: calc(8 * var(--u));
     background: rgba(0, 0, 0, 0.04);
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
     overflow: hidden;
 }
 
@@ -344,7 +344,7 @@
 
 .resumen-barra-fill {
     height: 100%;
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
     background: var(--card-accent, var(--brand-green-dark));
     transition: width 0.3s ease;
 }
@@ -352,7 +352,7 @@
 .resumen-pct {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    min-width: 36px;
+    min-width: calc(36 * var(--u));
     text-align: right;
 }
 
@@ -377,14 +377,14 @@
 
 .modal-cat-content {
     background: var(--bg-modal);
-    border-radius: 10px;
-    padding: 28px 24px;
+    border-radius: calc(10 * var(--u));
+    padding: calc(28 * var(--u)) calc(24 * var(--u));
     width: 100%;
-    max-width: 400px;
+    max-width: calc(400 * var(--u));
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: calc(16 * var(--u));
     border: 1px solid var(--border-color);
 }
 
@@ -397,7 +397,7 @@
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: calc(6 * var(--u));
 }
 
 .form-group label {
@@ -410,9 +410,9 @@
 
 .form-group input,
 .form-group select {
-    padding: 12px 14px;
+    padding: calc(12 * var(--u)) calc(14 * var(--u));
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: calc(6 * var(--u));
     font-size: 0.95rem;
     font-family: inherit;
     background: var(--input-bg);
@@ -430,14 +430,14 @@
 
 .emoji-picker {
     display: flex;
-    gap: 8px;
+    gap: calc(8 * var(--u));
     flex-wrap: wrap;
 }
 
 .emoji-opt {
-    width: 38px;
-    height: 38px;
-    border-radius: 8px;
+    width: calc(38 * var(--u));
+    height: calc(38 * var(--u));
+    border-radius: calc(8 * var(--u));
     border: 2px solid var(--border-color);
     background: var(--bg-card);
     color: var(--text-primary);
@@ -457,9 +457,9 @@
 
 .modal-cat-actions {
     display: flex;
-    gap: 10px;
+    gap: calc(10 * var(--u));
     justify-content: flex-end;
-    margin-top: 4px;
+    margin-top: calc(4 * var(--u));
 }
 
 /* ===== ADAPTACIÓN PARA MODO OSCURO (TEMAS EN TARJETAS) ===== */
@@ -532,14 +532,20 @@
 
 /* Categorías predeterminadas: compartidas, sin edición */
 .cat-badge-sistema {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 999px;
+    display: inline-block;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: calc(4 * var(--u)) calc(10 * var(--u));
+    border-radius: calc(999 * var(--u));
     font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.03em;
     text-transform: uppercase;
+    /* Se adapta al ancho de la tarjeta: si no entra, se recorta con "…" */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: var(--card-text-muted, var(--text-secondary));
     background: var(--card-btn-bg, var(--bg-hover));
     border: 1px solid var(--card-btn-border, var(--border-color));
@@ -547,5 +553,5 @@
 
 .resumen-cats .texto-vacio {
     text-align: left;
-    padding: 4px 0 0;
+    padding: calc(4 * var(--u)) 0 0;
 }

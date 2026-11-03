@@ -7,6 +7,17 @@
     --brand-pink: #EA73F5;
     --brand-purple: #700353;
 
+    /* Escala fluida: "1px" que se achica de forma continua con el ancho de pantalla,
+       desde 1440px (1px) hasta 320px (mínimo). Hay dos escalas:
+       --u  cajas: padding, márgenes, gaps, anchos/altos, íconos y radios (1 → 0.6)
+       --uf textos: font-size y line-height (1 → 0.76; menos que eso deja de ser legible)
+       Los tamaños se escriben calc(N * var(--u)) / calc(N * var(--uf)) en lugar de Npx.
+       html usa calc(16 * var(--uf)), así que los rem también escalan.
+       Para cambiar cuánto se achica en móvil, ajustá el mínimo y recalculá la recta
+       para que llegue a ese mínimo en 320px y a 1px en 1440px. */
+    --u:  clamp(0.6px, calc(0.4858px + 0.03572vw), 1px);
+    --uf: clamp(0.76px, calc(0.6915px + 0.02143vw), 1px);
+
     /* Tipografía */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 

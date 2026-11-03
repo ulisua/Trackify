@@ -3,8 +3,8 @@
 .navbar {
     display: flex;
     align-items: center;
-    padding: 0 35px;
-    height: 74px;
+    padding: 0 calc(35 * var(--u));
+    height: calc(74 * var(--u));
     /* Orbes muy difuminados: verde a la izquierda, magenta a la derecha (ver --barra-* en variables.css) */
     background: var(--barra-header-bg);
     color: white;
@@ -20,7 +20,7 @@
 .logo {
     display: flex;
     align-items: center;
-    margin-right: 20px;
+    margin-right: calc(20 * var(--u));
 }
 
 .logo-link {
@@ -30,7 +30,7 @@
 }
 
 .logo-img {
-    height: 54px;
+    height: calc(54 * var(--u));
     width: auto;
     object-fit: contain;
     transition: transform 0.2s ease;
@@ -44,7 +44,7 @@
     font-size: 0.95rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
-    margin-left: 16px;
+    margin-left: calc(16 * var(--u));
     white-space: nowrap;
 }
 
@@ -58,7 +58,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 18px 35px;
+    padding: calc(18 * var(--u)) calc(35 * var(--u));
     /* Orbes: magenta a la izquierda (continúa el del menú lateral), verde a la derecha */
     background: var(--barra-footer-bg);
     color: rgba(255, 255, 255, 0.65);

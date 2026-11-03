@@ -18,7 +18,7 @@
 @media (max-width: 1100px) {
     /* El menú lateral ocupa menos para dejarle lugar al contenido */
     .sidebar {
-        width: 200px;
+        width: calc(200 * var(--u));
     }
 
     /* Perfil en una sola columna: con el menú visible no entran tarjeta + secciones */
@@ -33,18 +33,18 @@
     /* Tablas más compactas */
     .tabla th,
     .tabla td {
-        padding: 12px 14px;
+        padding: calc(12 * var(--u)) calc(14 * var(--u));
     }
 
     .content {
-        padding: 44px 24px 36px;
+        padding: calc(44 * var(--u)) calc(24 * var(--u)) calc(36 * var(--u));
     }
 
     .cards,
     .dashboard-acciones,
     .graficos-container,
     .grid {
-        gap: 16px;
+        gap: calc(16 * var(--u));
     }
 
     .filtros-movimientos {
@@ -73,8 +73,8 @@
 @media (max-width: 900px) {
     /* --- Navbar: hamburguesa a la izquierda, logo centrado, sin selectores --- */
     .navbar {
-        height: 64px;
-        padding: 0 14px;
+        height: calc(64 * var(--u));
+        padding: 0 calc(14 * var(--u));
         position: sticky;
         top: 0;
         z-index: 1000;
@@ -93,7 +93,7 @@
     }
 
     .logo-img {
-        height: 46px;
+        height: max(30px, calc(46 * var(--u)));
     }
 
     /* Los selectores de moneda y período pasan al menú lateral para no tapar el logo */
@@ -115,13 +115,13 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: min(290px, 84vw);
+        width: min(calc(290 * var(--u)), 84vw);
         height: 100dvh;
         min-height: 100dvh;
         z-index: 2000;
         transform: translateX(-100%);
         transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        padding-top: 76px;
+        padding-top: calc(76 * var(--u));
         box-shadow: none;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -133,7 +133,7 @@
     }
 
     .sidebar nav {
-        padding-top: 14px;
+        padding-top: calc(14 * var(--u));
     }
 
     .sidebar-overlay {
@@ -147,7 +147,7 @@
 
     /* --- Contenido --- */
     .content {
-        padding: 40px 18px 32px;
+        padding: calc(40 * var(--u)) calc(18 * var(--u)) calc(32 * var(--u));
     }
 
     .grid,
@@ -167,41 +167,41 @@
     .perfil-user-stats {
         flex-direction: row;
         flex-wrap: wrap;
-        gap: 14px;
+        gap: calc(14 * var(--u));
     }
 
     .perfil-user-stat {
         flex-direction: column;
         gap: 2px;
-        min-width: 100px;
+        min-width: calc(100 * var(--u));
     }
 
     /* --- Categorías --- */
     .cat-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(calc(160 * var(--u)), 1fr));
     }
 
     .resumen-cat-nombre {
-        min-width: 110px;
+        min-width: calc(110 * var(--u));
         font-size: 0.88rem;
     }
 
     /* --- IA: página completa y chat flotante --- */
     .ia-chat-shell .chat-container {
-        height: calc(100dvh - 210px);
-        min-height: 380px;
+        height: calc(100dvh - calc(210 * var(--u)));
+        min-height: calc(380 * var(--u));
         max-height: none;
     }
 
     .chat-flotante {
-        width: calc(100vw - 24px);
-        right: 12px;
-        bottom: 92px;
-        height: min(440px, calc(100dvh - 170px));
+        width: calc(100vw - calc(24 * var(--u)));
+        right: calc(12 * var(--u));
+        bottom: calc(92 * var(--u));
+        height: min(calc(440 * var(--u)), calc(100dvh - calc(170 * var(--u))));
     }
 
     .boton-ia-wrap {
-        bottom: 18px;
+        bottom: calc(18 * var(--u));
         --borde-derecho: 18px;
     }
 }
@@ -209,12 +209,12 @@
 /* ===== ≤600px: teléfonos ===== */
 @media (max-width: 600px) {
     .content {
-        padding: 36px 16px 28px;
+        padding: calc(36 * var(--u)) calc(16 * var(--u)) calc(28 * var(--u));
     }
 
     /* --- Encabezado de página --- */
     .page-header {
-        margin-bottom: 18px;
+        margin-bottom: calc(18 * var(--u));
     }
 
     .page-header h2,
@@ -239,17 +239,17 @@
     /* --- Tarjetas de métricas: cada una ocupa todo el ancho --- */
     .cards {
         grid-template-columns: 1fr;
-        gap: 12px;
-        margin-bottom: 14px;
+        gap: calc(12 * var(--u));
+        margin-bottom: calc(14 * var(--u));
     }
 
     .card {
-        padding: 16px 18px;
+        padding: calc(16 * var(--u)) calc(18 * var(--u));
     }
 
     .card h4 {
         font-size: 0.85rem;
-        margin-bottom: 4px;
+        margin-bottom: calc(4 * var(--u));
     }
 
     .card p {
@@ -261,8 +261,8 @@
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 14px 18px;
+        gap: calc(12 * var(--u));
+        padding: calc(14 * var(--u)) calc(18 * var(--u));
     }
 
     .cards.small .card h4 {
@@ -277,31 +277,31 @@
     /* --- Botones del dashboard: en fila (no en columna) y bien separados --- */
     .dashboard-acciones {
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        margin: 6px 0 28px;
+        gap: calc(10 * var(--u));
+        margin: calc(6 * var(--u)) 0 calc(28 * var(--u));
     }
 
     .dashboard-acciones .btn {
-        height: 52px;
-        padding: 0 8px;
+        height: calc(52 * var(--u));
+        padding: 0 calc(8 * var(--u));
         font-size: 0.95rem;
     }
 
     /* --- Gráficos --- */
     .grafico-card {
-        padding: 14px 14px 12px;
+        padding: calc(14 * var(--u)) calc(14 * var(--u)) calc(12 * var(--u));
     }
 
     .grafico-wrap {
-        height: 260px;
+        height: calc(260 * var(--u));
     }
 
     /* --- Ingresos / gastos: acciones y filtros a todo el ancho --- */
     .acciones-filtros-bar {
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
-        margin-bottom: 18px;
+        gap: calc(12 * var(--u));
+        margin-bottom: calc(18 * var(--u));
     }
 
     .acciones,
@@ -313,7 +313,7 @@
         flex-direction: column;
         align-items: stretch;
         width: 100%;
-        gap: 10px;
+        gap: calc(10 * var(--u));
     }
 
     .filtros input,
@@ -328,8 +328,8 @@
     /* --- Movimientos: filtros --- */
     .filtros-movimientos {
         grid-template-columns: 1fr 1fr;
-        padding: 14px;
-        gap: 10px;
+        padding: calc(14 * var(--u));
+        gap: calc(10 * var(--u));
     }
 
     .filtro-botones .btn,
@@ -340,12 +340,12 @@
     /* --- Dashboard: listas --- */
     .box.movimientos-card,
     .box.ia-card {
-        padding: 16px 14px;
+        padding: calc(16 * var(--u)) calc(14 * var(--u));
     }
 
     .movimiento-item {
-        padding: 8px 6px;
-        gap: 10px;
+        padding: calc(8 * var(--u)) calc(6 * var(--u));
+        gap: calc(10 * var(--u));
     }
 
     /* --- Categorías --- */
@@ -361,11 +361,78 @@
 
     .cat-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: calc(10 * var(--u));
     }
 
+    /* Tarjetas de categoría compactas: en 2 columnas el diseño de escritorio queda enorme */
     .cat-card {
-        padding: 16px 14px;
+        padding: calc(14 * var(--u)) calc(12 * var(--u));
+        gap: calc(10 * var(--u));
+        border-radius: calc(14 * var(--u));
+    }
+
+    .cat-icon {
+        width: calc(38 * var(--u));
+        height: calc(38 * var(--u));
+        border-radius: calc(11 * var(--u));
+    }
+
+    .cat-icon img {
+        width: calc(20 * var(--u));
+        height: calc(20 * var(--u));
+    }
+
+    .cat-nombre {
+        font-size: 0.92rem;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .cat-monto {
+        font-size: 1rem;
+    }
+
+    .cat-cant {
+        font-size: 0.75rem;
+    }
+
+    .cat-acciones {
+        flex-wrap: wrap;
+        gap: calc(6 * var(--u));
+        margin-top: 0;
+    }
+
+    .cat-acciones button {
+        padding: calc(6 * var(--u)) calc(10 * var(--u));
+        min-height: max(28px, calc(34 * var(--u)));
+        font-size: 0.8rem;
+    }
+
+    .cat-badge-sistema {
+        font-size: 0.7rem;
+        letter-spacing: 0.01em;
+        padding: calc(3 * var(--u)) calc(7 * var(--u));
+    }
+
+    .cat-acciones .btn-del {
+        min-width: max(28px, calc(34 * var(--u)));
+        padding: calc(6 * var(--u));
+    }
+
+    .tab {
+        padding: calc(8 * var(--u)) calc(12 * var(--u));
+        min-height: max(28px, calc(38 * var(--u)));
+        font-size: 0.88rem;
+    }
+
+    /* iOS hace zoom al enfocar campos con letra menor a 16px: los campos de texto no se achican.
+       Especificidad baja a propósito: los campos grandes (código de verificación) conservan su tamaño. */
+    input:where(:not([type="checkbox"], [type="radio"], [type="color"], [readonly])),
+    select,
+    textarea,
+    .input-chat,
+    .form-group input:not([readonly]) {
+        font-size: 16px;
     }
 
     .resumen-barra {
@@ -375,11 +442,11 @@
     /* --- Objetivos --- */
     .obj-stats {
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        gap: calc(10 * var(--u));
     }
 
     .obj-stat {
-        padding: 14px 10px;
+        padding: calc(14 * var(--u)) calc(10 * var(--u));
     }
 
     .obj-stat-num {
@@ -388,7 +455,7 @@
 
     .obj-card-top {
         flex-direction: column;
-        gap: 8px;
+        gap: calc(8 * var(--u));
     }
 
     .obj-montos {
@@ -408,7 +475,7 @@
     .peligro-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: calc(10 * var(--u));
     }
 
     .btn-peligro {
@@ -424,24 +491,24 @@
     .ia-chat-shell .input-chat,
     .ia-chat-shell .btn-enviar {
         width: 100%;
-        min-height: 46px;
+        min-height: calc(46 * var(--u));
     }
 
     /* --- Modales --- */
     .modal {
-        padding: 12px;
+        padding: calc(12 * var(--u));
     }
 
     .modal-content {
-        padding: 20px 16px;
-        gap: 12px;
-        max-height: calc(100dvh - 24px);
+        padding: calc(20 * var(--u)) calc(16 * var(--u));
+        gap: calc(12 * var(--u));
+        max-height: calc(100dvh - calc(24 * var(--u)));
     }
 
     .modal-actions .btn {
         flex: 1 1 0;
         min-width: 0;
-        padding: 12px 10px;
+        padding: calc(12 * var(--u)) calc(10 * var(--u));
     }
 
     /* Botón del asistente: solo el avatar circular */
@@ -450,18 +517,18 @@
     }
 
     .boton-ia {
-        padding: 5px;
+        padding: calc(5 * var(--u));
     }
 }
 
 /* ===== ≤360px: teléfonos angostos ===== */
 @media (max-width: 360px) {
     .content {
-        padding: 32px 12px 24px;
+        padding: calc(32 * var(--u)) calc(12 * var(--u)) calc(24 * var(--u));
     }
 
     .logo-img {
-        height: 40px;
+        height: max(28px, calc(40 * var(--u)));
     }
 
     .dashboard-acciones .btn {
@@ -469,10 +536,6 @@
     }
 
     .filtros-movimientos {
-        grid-template-columns: 1fr;
-    }
-
-    .cat-grid {
         grid-template-columns: 1fr;
     }
 

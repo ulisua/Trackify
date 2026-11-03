@@ -111,6 +111,26 @@ Son constantes de identidad visual que **no cambian** con el tema claro u oscuro
 }
 ```
 
+### Escala fluida (`--u` y `--uf`)
+Los tamaños **no se escriben en `px` fijos** sino con dos unidades fluidas que se achican de forma continua desde 1440px hasta 320px:
+
+```css
+--u:  clamp(0.6px,  calc(0.4858px + 0.03572vw), 1px);  /* cajas: 1 → 0.6  */
+--uf: clamp(0.76px, calc(0.6915px + 0.02143vw), 1px);  /* textos: 1 → 0.76 */
+
+.mi-tarjeta {
+    padding: calc(16 * var(--u)) calc(20 * var(--u));   /* cajas: padding, márgenes, gaps, anchos/altos, íconos, radios */
+    font-size: 0.9rem;                                   /* textos: rem (html usa calc(16 * var(--uf))) o calc(N * var(--uf)) */
+}
+```
+
+- Desde 1440px de ancho ambas valen exactamente `1px`: el diseño de escritorio no cambia.
+- Las cajas se achican más que el texto: por debajo de 0.76 la letra deja de ser legible.
+- **No** usar para bordes de 1–3px, sombras, `transform` ni breakpoints de `` (los breakpoints siguen en `px`).
+- Para elementos que se tocan con el dedo o que no deben quedar diminutos, poné un piso con `max()`: `min-height: max(28px, calc(38 * var(--u)))`.
+- Los campos de texto editables quedan en `16px` en ≤600px (regla en `responsive.css`): con menos, iOS hace zoom al enfocarlos. Los de solo lectura (calendarios) no la necesitan.
+- Los gráficos de Chart.js (index.php) leen el `font-size` de `html` para escalar sus textos y se redibujan al cambiar el ancho.
+
 ---
 
 ## 4. Sistema Bitema: Claro y Oscuro (`css/themes.css`)

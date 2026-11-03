@@ -325,6 +325,9 @@ function dibujarGraficos(moneda, tc) {
     Chart.defaults.font.family = "Inter, sans-serif";
     Chart.defaults.color = colorTexto;
     const esAngosto = window.innerWidth < 600;
+    // Tamaños de los gráficos según la escala de texto del CSS (--uf, vía el font-size de html)
+    const k = parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
+    const px = n => Math.round(n * k * 10) / 10;
 
     // ── Gráfico de Torta ──
     const canvasTorta = document.getElementById("graficoTorta");
@@ -354,7 +357,7 @@ function dibujarGraficos(moneda, tc) {
                 plugins: {
                     legend: {
                         position: esAngosto ? "bottom" : "right",
-                        labels: { padding: 10, boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } }
+                        labels: { padding: px(10), boxWidth: px(10), boxHeight: px(10), usePointStyle: true, font: { size: px(11) } }
                     },
                     tooltip: {
                         callbacks: {
@@ -382,8 +385,8 @@ function dibujarGraficos(moneda, tc) {
             data: {
                 labels: barrasLabels,
                 datasets: [
-                    { label: "Ingresos", data: convertirSerie(barrasIng, moneda, tc), backgroundColor: "#CFF27C", borderRadius: 5, maxBarThickness: 28 },
-                    { label: "Gastos", data: convertirSerie(barrasGas, moneda, tc), backgroundColor: oscuro ? "#EA73F5" : "#700353", borderRadius: 5, maxBarThickness: 28 }
+                    { label: "Ingresos", data: convertirSerie(barrasIng, moneda, tc), backgroundColor: "#CFF27C", borderRadius: 5, maxBarThickness: px(28) },
+                    { label: "Gastos", data: convertirSerie(barrasGas, moneda, tc), backgroundColor: oscuro ? "#EA73F5" : "#700353", borderRadius: 5, maxBarThickness: px(28) }
                 ]
             },
             options: {
@@ -393,7 +396,7 @@ function dibujarGraficos(moneda, tc) {
                 plugins: {
                     legend: {
                         position: "bottom",
-                        labels: { padding: 10, boxWidth: 10, boxHeight: 10, usePointStyle: true, font: { size: 11 } }
+                        labels: { padding: px(10), boxWidth: px(10), boxHeight: px(10), usePointStyle: true, font: { size: px(11) } }
                     },
                     tooltip: {
                         callbacks: { label: ctx => `${ctx.dataset.label}:${formatoTooltip(ctx.parsed.y)}` }
@@ -402,13 +405,13 @@ function dibujarGraficos(moneda, tc) {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 11 }, maxRotation: 0, autoSkip: true }
+                        ticks: { font: { size: px(11) }, maxRotation: 0, autoSkip: true }
                     },
                     y: {
                         beginAtZero: true,
                         grid: { color: colorGrilla },
                         border: { display: false },
-                        ticks: { font: { size: 10 }, maxTicksLimit: 5, callback: val => formatoCompacto(val, moneda) }
+                        ticks: { font: { size: px(10) }, maxTicksLimit: 5, callback: val => formatoCompacto(val, moneda) }
                     }
                 }
             }
@@ -417,7 +420,17 @@ function dibujarGraficos(moneda, tc) {
 }
 
 // Los gráficos se dibujan con la moneda elegida y se redibujan al cambiarla
-document.addEventListener('trackify:moneda', e => dibujarGraficos(e.detail.moneda, e.detail.tc));
+// Se redibujan al cambiar la moneda y al cambiar el ancho (los tamaños dependen de la escala)
+let ultimaMoneda = null;
+document.addEventListener('trackify:moneda', e => {
+    ultimaMoneda = e.detail;
+    dibujarGraficos(e.detail.moneda, e.detail.tc);
+});
+let esperaResize;
+window.addEventListener('resize', () => {
+    clearTimeout(esperaResize);
+    esperaResize = setTimeout(() => { if (ultimaMoneda) dibujarGraficos(ultimaMoneda.moneda, ultimaMoneda.tc); }, 250);
+});
 </script>
 <script src="js/ia.js?v=7"></script>
 <?php
