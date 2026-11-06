@@ -1,15 +1,18 @@
 /* ===== COMPONENT: FORMS & MODALS ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 
 /* inputs, selects, textareas por defecto */
 input, select, textarea {
-    padding: 12px 14px;
+    padding: calc(12 * var(--u)) calc(14 * var(--u));
+    min-height: calc(44 * var(--u));
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: calc(8 * var(--u));
     font-size: 0.95rem;
     font-family: inherit;
     background: var(--input-bg);
     color: var(--input-text);
     outline: none;
+    box-sizing: border-box;
     transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
 }
 
@@ -23,10 +26,315 @@ input::placeholder, textarea::placeholder {
     color: var(--text-muted);
 }
 
+/* Select con la flecha de marca (verde en claro, lima en oscuro) */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: calc(38 * var(--u));
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+    cursor: pointer;
+}
+
+select:focus {
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+}
+
+select option,
+select optgroup {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
 input:disabled, select:disabled, textarea:disabled {
-    background: var(--bg-hover) !important;
-    color: var(--text-muted) !important;
+    background-color: var(--bg-hover);
+    color: var(--text-secondary);
     cursor: not-allowed;
+}
+
+/* ===== SELECT CON DESPLEGABLE PROPIO: VARIANTE FORMULARIO =====
+   js/main.js (mejorarSelect) oculta el <select> nativo y muestra este botón + una lista.
+   Se ve igual que un input del tema, con la flecha de marca. */
+.select-trackify {
+    position: relative;
+    min-width: 0;
+}
+
+.select-trackify-trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: calc(44 * var(--u));
+    padding: calc(10 * var(--u)) calc(38 * var(--u)) calc(10 * var(--u)) calc(14 * var(--u));
+    border: 1px solid var(--border-color);
+    border-radius: calc(8 * var(--u));
+    background-color: var(--input-bg);
+    background-image: var(--select-chevron);
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 14px 14px;
+    color: var(--input-text);
+    font-family: inherit;
+    font-size: 0.95rem;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.select-trackify-trigger:hover:not(:disabled) {
+    border-color: var(--brand-green-dark);
+}
+
+[data-theme="dark"] .select-trackify-trigger:hover:not(:disabled) {
+    border-color: rgba(207, 242, 124, 0.5);
+}
+
+.select-trackify.abierto .select-trackify-trigger,
+.select-trackify-trigger:focus-visible {
+    border-color: var(--brand-green-dark);
+    background-color: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.15);
+    outline: none;
+}
+
+[data-theme="dark"] .select-trackify.abierto .select-trackify-trigger,
+[data-theme="dark"] .select-trackify-trigger:focus-visible {
+    border-color: var(--brand-green-light);
+    box-shadow: 0 0 0 3px rgba(207, 242, 124, 0.15);
+}
+
+.select-trackify-trigger:disabled {
+    background-color: var(--bg-hover);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* Ancho según el contexto (equivalente al que tenía el <select>) */
+.modal-content .select-trackify,
+.filtro-campo .select-trackify,
+.campo .select-trackify {
+    width: 100%;
+}
+
+/* Junto al monto, el selector de moneda tiene ancho fijo (el input ocupa el resto) */
+.modal-content .monto-moneda .select-trackify {
+    flex: 0 0 104px;
+    width: calc(104 * var(--u));
+    min-width: 0;
+}
+
+.filtros .select-trackify {
+    min-width: calc(200 * var(--u));
+}
+
+/* ===== LISTA DESPLEGABLE (compartida por ambas variantes; vive en <body>) ===== */
+.select-lista {
+    --lista-bg: var(--bg-card);
+    --lista-borde: var(--border-color);
+    --lista-texto: var(--text-primary);
+    --lista-hover-bg: var(--bg-hover);
+    --lista-acento: var(--select-option-hover-text);
+    display: none;
+    position: fixed;
+    z-index: 4000;
+    max-height: calc(300 * var(--u));
+    max-width: min(calc(360 * var(--u)), calc(100vw - calc(16 * var(--u))));
+    overflow-y: auto;
+    margin: 0;
+    padding: calc(6 * var(--u));
+    list-style: none;
+    background: var(--lista-bg);
+    border: 1px solid var(--lista-borde);
+    border-radius: calc(14 * var(--u));
+    box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+    box-sizing: border-box;
+    font-family: var(--font-family);
+}
+
+.select-lista.abierta {
+    display: block;
+    animation: fadeIn 0.16s ease;
+}
+
+.select-lista [role="option"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(12 * var(--u));
+    padding: calc(10 * var(--u)) calc(14 * var(--u));
+    border-radius: calc(10 * var(--u));
+    color: var(--lista-texto);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.select-lista-pill [role="option"] {
+    font-weight: 600;
+}
+
+.select-lista [role="option"]:hover {
+    background: var(--lista-hover-bg);
+    color: var(--lista-acento);
+}
+
+.select-lista [role="option"].seleccionada {
+    background: var(--lista-hover-bg);
+    color: var(--lista-acento);
+    font-weight: 600;
+}
+
+.select-lista [role="option"].seleccionada::after {
+    content: '';
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+    flex-shrink: 0;
+    background: var(--lista-acento);
+    -webkit-mask: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") no-repeat center / contain;
+    mask: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='20 6 9 17 4 12'%3e%3c/polyline%3e%3c/svg%3e") no-repeat center / contain;
+}
+
+/* Títulos de grupo (optgroup) */
+.select-lista .select-grupo {
+    padding: calc(10 * var(--u)) calc(14 * var(--u)) calc(4 * var(--u));
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    cursor: default;
+}
+
+.select-lista-pill .select-grupo {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* ===== CAMPOS DE LOS MODALES ===== */
+/* Monto + selector de moneda en una fila */
+.monto-moneda {
+    display: flex;
+    gap: calc(10 * var(--u));
+    align-items: stretch;
+}
+
+.monto-moneda input {
+    flex: 1;
+    min-width: 0;
+}
+
+.monto-moneda select {
+    flex: 0 0 auto;
+    min-width: calc(96 * var(--u));
+}
+
+.preview-conversion {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: calc(-6 * var(--u)) 0 0;
+    min-height: 0;
+}
+
+.preview-conversion:empty {
+    display: none;
+}
+
+.modal-ayuda {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+}
+
+.campo-color {
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--u));
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.campo-color input[type="color"] {
+    width: 100%;
+    height: calc(44 * var(--u));
+    padding: calc(4 * var(--u));
+    cursor: pointer;
+}
+
+/* ===== MODALES DE CONFIRMACIÓN DESTRUCTIVA ===== */
+.modal-confirmacion {
+    max-width: calc(480 * var(--u));
+}
+
+.modal-content h3.modal-peligro-titulo {
+    color: var(--color-peligro);
+}
+
+/* Aviso: tarjeta con borde completo y un leve brillo magenta (sin barra lateral) */
+.aviso-peligro {
+    background:
+        radial-gradient(120% 140% at 100% 0%, rgba(234, 115, 245, 0.16), transparent 60%),
+        var(--bg-peligro);
+    border: 1px solid var(--borde-peligro);
+    padding: calc(12 * var(--u)) calc(14 * var(--u));
+    border-radius: calc(10 * var(--u));
+}
+
+.aviso-peligro p {
+    margin: calc(6 * var(--u)) 0 0;
+    color: var(--texto-peligro);
+    font-size: 0.86rem;
+}
+
+.aviso-peligro .aviso-peligro-titulo {
+    margin: 0;
+    color: var(--color-peligro);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+}
+
+.form-confirmacion {
+    display: flex;
+    flex-direction: column;
+    gap: calc(16 * var(--u));
+}
+
+.input-confirmacion {
+    border-width: 2px;
+}
+
+.form-confirmacion .modal-actions .btn {
+    flex: 1;
+}
+
+/* Botón destructivo: degradé bordó → magenta de la marca */
+.modal-actions .btn.btn-peligro-solido {
+    background: linear-gradient(120deg, var(--brand-purple), #A3127F);
+    color: #ffffff;
+    border: 1px solid rgba(234, 115, 245, 0.45);
+}
+
+.modal-actions .btn.btn-peligro-solido:hover:not(:disabled) {
+    box-shadow: 0 0 18px var(--glow-rosa);
+}
+
+.modal-actions .btn.btn-peligro-solido:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* ===== ESTRUCTURA MODALES (GENÉRICOS) ===== */
@@ -36,14 +344,19 @@ input:disabled, select:disabled, textarea:disabled {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     opacity: 1;
     transition: opacity 0.3s ease;
+    padding: calc(16 * var(--u));
+    box-sizing: border-box;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal.hidden {
@@ -53,57 +366,52 @@ input:disabled, select:disabled, textarea:disabled {
 
 .modal-content {
     background: var(--bg-modal);
-    padding: 30px;
-    border-radius: 8px;
+    padding: calc(28 * var(--u)) calc(24 * var(--u));
+    border-radius: calc(14 * var(--u));
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    max-width: calc(440 * var(--u));
+    max-height: calc(100dvh - calc(32 * var(--u)));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     transform: translateY(0) scale(1);
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: calc(14 * var(--u));
     border: 1px solid var(--border-color);
+    box-sizing: border-box;
+    margin: auto;
 }
 
 .modal.hidden .modal-content {
-    transform: translateY(-20px) scale(0.95);
+    transform: translateY(-16px) scale(0.96);
 }
 
 .modal-content h3 {
-    margin: 0 0 5px 0;
+    margin: 0 0 calc(4 * var(--u)) 0;
     color: var(--text-primary);
-    font-size: 1.3rem;
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
-/* Clases específicas para modal index.php */
 .modal-form-content {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-.modal-form-select {
-    padding: 14px 16px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 1rem;
-    font-family: inherit;
-    outline: none;
-    background: var(--input-bg);
-    color: var(--input-text);
-    margin-bottom: 5px;
 }
 
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    margin-top: 15px;
+    gap: calc(10 * var(--u));
+    margin-top: calc(10 * var(--u));
+    flex-wrap: wrap;
 }
 
 .modal-actions .btn {
     flex: none;
-    padding: 12px 24px;
-    border-radius: 6px;
+    padding: calc(12 * var(--u)) calc(22 * var(--u));
+    border-radius: calc(8 * var(--u));
+    min-height: calc(44 * var(--u));
 }
 
 /* ===== CUSTOM SELECT DE MOVIMIENTOS ===== */
@@ -111,13 +419,15 @@ input:disabled, select:disabled, textarea:disabled {
     position: relative;
     user-select: none;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .custom-select-trigger {
-    padding: 14px 16px;
+    padding: calc(12 * var(--u)) calc(14 * var(--u));
+    min-height: calc(44 * var(--u));
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 1rem;
+    border-radius: calc(8 * var(--u));
+    font-size: 0.95rem;
     font-family: inherit;
     background: var(--input-bg);
     color: var(--text-primary);
@@ -126,20 +436,20 @@ input:disabled, select:disabled, textarea:disabled {
     justify-content: space-between;
     align-items: center;
     transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 .custom-select-trigger::after {
     content: '';
-    width: 16px;
-    height: 16px;
+    width: calc(16 * var(--u));
+    height: calc(16 * var(--u));
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23084734' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: center;
-    transition: transform 0.3s ease;
+    transition: transform 0.25s ease;
 }
 
 [data-theme="dark"] .custom-select-trigger::after {
-    /* Usar un tono claro para el SVG de flecha en modo oscuro */
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
@@ -155,30 +465,36 @@ input:disabled, select:disabled, textarea:disabled {
 
 .custom-select-options {
     position: absolute;
-    top: 100%;
+    top: calc(100% + calc(4 * var(--u)));
     left: 0;
     right: 0;
     background: var(--bg-modal);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    margin-top: 5px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    z-index: 1001;
-    max-height: 200px;
+    border-radius: calc(8 * var(--u));
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    z-index: 1050;
+    max-height: calc(200 * var(--u));
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     display: none;
+    box-sizing: border-box;
 }
 
 .custom-select-wrapper.open .custom-select-options {
     display: block;
-    animation: fadeIn 0.2s ease;
+    animation: fadeIn 0.18s ease;
 }
 
 .custom-option {
-    padding: 12px 16px;
+    padding: calc(12 * var(--u)) calc(14 * var(--u));
+    min-height: calc(42 * var(--u));
+    display: flex;
+    align-items: center;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.18s, color 0.18s;
     color: var(--text-primary);
+    box-sizing: border-box;
+    font-size: 0.92rem;
 }
 
 .custom-option:hover {
@@ -194,92 +510,252 @@ input:disabled, select:disabled, textarea:disabled {
 }
 
 .custom-select-options::-webkit-scrollbar {
-    width: 6px;
+    width: calc(6 * var(--u));
 }
 
 .custom-select-options::-webkit-scrollbar-thumb {
     background: var(--text-muted);
-    border-radius: 10px;
+    border-radius: calc(10 * var(--u));
 }
 
-.layout-blur {
-    transition: all 0.3s ease;
-    filter: blur(6px) brightness(0.6);
+
+/* ===== SWEETALERT2 CON ESTÉTICA TRACKIFY =====
+   Todos los Swal.fire pasan por js/main.js (alertaTrackify / confirmarTrackify / avisoTrackify),
+   que aplican estas clases. Popup de vidrio con los orbes verde y magenta de la marca,
+   íconos en los colores de la paleta (no los naranjas/azules por defecto) y sin barras laterales. */
+.swal2-container {
+    padding: calc(12 * var(--u)) !important;
+    z-index: 10000 !important;
 }
 
-/* ===== SWEETALERT2 OVERRIDES ===== */
-.swal-trackify {
+.swal2-container.swal2-backdrop-show {
+    background: rgba(12, 10, 18, 0.5) !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.swal2-popup.swal-trackify {
+    width: 100% !important;
+    max-width: min(calc(440 * var(--u)), calc(100vw - calc(24 * var(--u)))) !important;
+    box-sizing: border-box !important;
+    padding: calc(26 * var(--u)) calc(22 * var(--u)) calc(22 * var(--u)) !important;
     border: 1px solid var(--border-color) !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
-    background: var(--bg-card) !important;
+    border-radius: calc(20 * var(--u)) !important;
+    background:
+        radial-gradient(80% 60% at 0% 0%, rgba(207, 242, 124, 0.16), transparent 70%),
+        radial-gradient(80% 60% at 100% 100%, rgba(234, 115, 245, 0.16), transparent 70%),
+        var(--bg-card) !important;
     color: var(--text-primary) !important;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35) !important;
+    font-family: var(--font-family) !important;
 }
 
 .swal-trackify .swal2-title {
     color: var(--text-primary) !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
 }
 
 .swal-trackify .swal2-html-container {
     color: var(--text-secondary) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
 }
 
-.swal-btn-primary { 
-    background: var(--brand-green-dark) !important; 
-    color: var(--brand-green-light) !important; 
+.swal2-actions {
+    flex-wrap: wrap !important;
+    gap: calc(10 * var(--u)) !important;
+    width: 100% !important;
 }
 
-.swal-btn-danger { 
-    background: var(--brand-purple) !important; 
-    color: white !important; 
+.swal2-actions button {
+    min-height: calc(44 * var(--u)) !important;
+    padding: calc(10 * var(--u)) calc(20 * var(--u)) !important;
+    border-radius: calc(10 * var(--u)) !important;
+    font-family: inherit !important;
+    font-weight: 600 !important;
+    transition: box-shadow 0.2s, transform 0.2s, background-color 0.2s !important;
 }
 
-.swal-btn-cancel { 
-    background: transparent !important; 
-    border: 1px solid var(--border-color) !important; 
-    color: var(--text-secondary) !important; 
+.swal2-actions button:hover {
+    transform: translateY(-1px);
 }
 
-.swal-btn-cancel:hover { 
-    background: var(--bg-hover) !important; 
-    color: var(--text-primary) !important; 
+.swal-btn-primary {
+    background: var(--brand-green-dark) !important;
+    color: var(--brand-green-light) !important;
+    border: 1px solid rgba(207, 242, 124, 0.35) !important;
 }
 
-/* SweetAlert2 Cuenta/Zona Peligro específica */
-.swal-trackify-danger {
-    border: 1px solid rgba(234, 115, 245, 0.18) !important;
-    background: var(--bg-card) !important;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45) !important;
-    border-radius: 24px !important;
+.swal-btn-primary:hover {
+    box-shadow: 0 0 16px var(--glow-verde) !important;
 }
 
-.swal-trackify-danger .swal2-title {
-    color: var(--text-primary) !important;
+.swal-btn-danger {
+    background: linear-gradient(120deg, var(--brand-purple), #A3127F) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(234, 115, 245, 0.45) !important;
 }
 
-.swal-trackify-danger .swal2-html-container {
+.swal-btn-danger:hover {
+    box-shadow: 0 0 18px var(--glow-rosa) !important;
+}
+
+.swal-btn-cancel {
+    background: transparent !important;
+    border: 1px solid var(--border-color) !important;
     color: var(--text-secondary) !important;
 }
 
-.swal-trackify-danger .swal2-icon {
-    border-color: rgba(234, 115, 245, 0.65) !important;
+.swal-btn-cancel:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Íconos en la paleta de la marca (popup y toast) */
+.swal2-icon.swal2-warning {
+    border-color: var(--brand-pink) !important;
     color: var(--brand-pink) !important;
 }
 
+.swal2-icon.swal2-question,
+.swal2-icon.swal2-info {
+    border-color: var(--brand-green-dark) !important;
+    color: var(--brand-green-dark) !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: var(--color-peligro) !important;
+    color: var(--color-peligro) !important;
+}
+
+.swal2-icon.swal2-error [class^="swal2-x-mark-line"] {
+    background-color: var(--color-peligro) !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: var(--color-positivo) !important;
+    color: var(--color-positivo) !important;
+}
+
+.swal2-icon.swal2-success [class^="swal2-success-line"] {
+    background-color: var(--color-positivo) !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+    border-color: var(--glow-verde-borde) !important;
+}
+
+/* Las "máscaras" del círculo animado se pintan del color de fondo por defecto (blanco) */
+.swal2-icon.swal2-success [class^="swal2-success-circular-line"],
+.swal2-icon.swal2-success .swal2-success-fix {
+    background-color: transparent !important;
+}
+
+[data-theme="dark"] .swal2-icon.swal2-question,
+[data-theme="dark"] .swal2-icon.swal2-info {
+    border-color: var(--brand-green-light) !important;
+    color: var(--brand-green-light) !important;
+}
+
+/* ===== AVISO BREVE (toast de "guardado") ===== */
+.swal2-container.swal2-bottom-end {
+    padding: calc(16 * var(--u)) !important;
+}
+
+/* En el dashboard el aviso aparece por encima del botón del asistente */
+body:has(.boton-ia-wrap) .swal2-container.swal2-bottom-end {
+    padding-bottom: calc(96 * var(--u)) !important;
+}
+
+.swal2-popup.swal-toast-trackify {
+    width: auto !important;
+    max-width: min(calc(320 * var(--u)), calc(100vw - calc(32 * var(--u)))) !important;
+    padding: calc(10 * var(--u)) calc(16 * var(--u)) !important;
+    gap: 0 calc(10 * var(--u));
+    background:
+        radial-gradient(90% 120% at 0% 0%, rgba(207, 242, 124, 0.2), transparent 70%),
+        var(--bg-card) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--glow-verde-borde) !important;
+    border-radius: calc(14 * var(--u)) !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18), 0 0 18px var(--glow-verde) !important;
+}
+
+.swal-toast-trackify .swal2-title {
+    margin: 0 !important;
+    align-self: center;
+    padding: 0 !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+}
+
+.swal-toast-trackify .swal2-icon {
+    margin: 0 !important;
+}
+
+.swal-toast-trackify .swal2-timer-progress-bar {
+    background: linear-gradient(90deg, var(--brand-green-light), var(--brand-pink)) !important;
+}
+
 /* ===== FLATPICKR OVERRIDES ===== */
+/* Los controles internos del calendario (mes y año) heredaban el estilo global de
+   input/select (padding 12px y alto mínimo 44px) y quedaban cortados en el encabezado. */
+.flatpickr-calendar input,
+.flatpickr-calendar select {
+    min-height: 0;
+    padding: 0 0 0 0.5ch;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background-image: none;
+    font-size: inherit;
+}
+
+.flatpickr-current-month {
+    padding-top: calc(6 * var(--u));
+    font-size: 1rem;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    height: auto;
+    padding: 2px calc(4 * var(--u));
+    margin: 0;
+    font-weight: 600;
+}
+
+.flatpickr-current-month .numInputWrapper {
+    width: 7ch;
+}
+
+.flatpickr-current-month input.cur-year {
+    padding: 0 0 0 0.5ch;
+    font-weight: 600;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+    background: var(--brand-dark);
+    color: #F8FAFC;
+}
+
 .flatpickr-calendar {
     background: var(--bg-card) !important;
-    box-shadow: var(--shadow-card) !important;
+    box-shadow: var(--shadow-card), 0 10px 25px rgba(0, 0, 0, 0.15) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 12px !important;
+    border-radius: calc(14 * var(--u)) !important;
     font-family: var(--font-family) !important;
     color: var(--text-primary) !important;
+    max-width: min(calc(320 * var(--u)), calc(100vw - calc(20 * var(--u)))) !important;
+    box-sizing: border-box !important;
+    z-index: 99999 !important;
 }
 
 .flatpickr-months {
     background: var(--brand-green-dark) !important;
     color: var(--brand-green-light) !important;
-    border-radius: 12px 12px 0 0 !important;
-    padding-top: 5px;
+    border-radius: calc(13 * var(--u)) calc(13 * var(--u)) 0 0 !important;
+    padding-top: calc(5 * var(--u));
 }
 
 .flatpickr-months .flatpickr-month {
@@ -309,6 +785,7 @@ input:disabled, select:disabled, textarea:disabled {
 
 .flatpickr-day {
     color: var(--text-primary) !important;
+    border-radius: calc(8 * var(--u)) !important;
 }
 
 .flatpickr-day.selected {

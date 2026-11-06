@@ -1,43 +1,99 @@
 <?php
 $page = 'perfil';
-$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css">';
+$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css?v=2">';
 require_once 'conexion.php';
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
+
+// ── Guardar datos personales: nombre y nombre de usuario (PRG) ───────────────
+// El email no se edita. La contraseña se cambia por separado, vía api/cambiar_password.php (ver js/perfil.js).
+// La moneda se elige con el selector del encabezado (api/cambiar_moneda.php).
+if (isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'actualizar_datos') {
+    $user_id        = (int)$_SESSION['usuario_id'];
+    $nuevo_nombre   = trim($_POST['nombre'] ?? '');
+    $nombre_usuario = normalizarNombreUsuario($_POST['nombre_usuario'] ?? '');
+
+    if ($nuevo_nombre === '' || mb_strlen($nuevo_nombre) > 50) {
+        flash('El nombre es obligatorio (máximo 50 caracteres).');
+    } elseif (!preg_match(NOMBRE_USUARIO_REGEX, $nombre_usuario)) {
+        flash('El nombre de usuario debe tener entre 3 y 30 caracteres: letras minúsculas, números, punto o guion bajo.');
+    } elseif (!nombreUsuarioDisponible($conn, $nombre_usuario, $user_id)) {
+        flash('Ese nombre de usuario ya está en uso. Probá con otro.');
+    } else {
+        $stmt = $conn->prepare("UPDATE usuarios SET nombre = ?, nombre_usuario = ? WHERE id_usuario = ?");
+        $stmt->bind_param("ssi", $nuevo_nombre, $nombre_usuario, $user_id);
+        $stmt->execute();
+        $_SESSION['usuario_nombre'] = $nuevo_nombre;
+        flash('Datos actualizados.', 'success');
+    }
+
+    header('Location: perfil.php');
+    exit();
 }
+
 require_once 'includes/header.php';
 
-$user_id = $_SESSION['usuario_id'];
-$query = $conn->prepare("SELECT nombre, email, fecha_registro FROM usuarios WHERE id_usuario=?");
+$user_id = (int)$_SESSION['usuario_id'];
+$query = $conn->prepare("SELECT nombre, nombre_usuario, email, fecha_registro, clave, moneda_principal FROM usuarios WHERE id_usuario=?");
 $query->bind_param("i", $user_id);
 $query->execute();
-$res = $query->get_result();
-$user_data = $res->fetch_assoc();
+$user_data = $query->get_result()->fetch_assoc() ?: [];
 
-$nombre = $user_data['nombre'] ?? 'Usuario';
-$email = $user_data['email'] ?? 'usuario@email.com';
-$fecha_registro = isset($user_data['fecha_registro']) ? date('M Y', strtotime($user_data['fecha_registro'])) : 'Ene 2026';
+$nombre         = $user_data['nombre'] ?? 'Usuario';
+$email          = $user_data['email'] ?? '';
+$nombre_usuario = $user_data['nombre_usuario'] ?? '';
+$tiene_clave    = !empty($user_data['clave']); // las cuentas creadas con Google no tienen contraseña
+$moneda_usuario = $user_data['moneda_principal'] ?? 'ARS';
 
-// Movimientos count
-$query_mov = $conn->prepare("SELECT COUNT(*) as total_mov FROM movimientos WHERE id_usuario=?");
-$query_mov->bind_param("i", $user_id);
-$query_mov->execute();
-$res_mov = $query_mov->get_result();
-$mov_data = $res_mov->fetch_assoc();
-$total_movimientos = $mov_data['total_mov'] ?? 0;
+// Por si la cuenta se creó sin nombre de usuario (por ejemplo, desde otro código): se le asigna uno
+if ($nombre_usuario === '' && $email !== '') {
+    $nombre_usuario = generarNombreUsuario($conn, $email);
+    $stmt_nu = $conn->prepare("UPDATE usuarios SET nombre_usuario = ? WHERE id_usuario = ?");
+    $stmt_nu->bind_param("si", $nombre_usuario, $user_id);
+    $stmt_nu->execute();
+}
 
-// Objetivos count
-$query_obj = $conn->prepare("SELECT COUNT(*) as total_obj FROM metas_ahorro WHERE id_usuario=?");
-$query_obj->bind_param("i", $user_id);
-$query_obj->execute();
-$res_obj = $query_obj->get_result();
-$obj_data = $res_obj->fetch_assoc();
-$total_objetivos = $obj_data['total_obj'] ?? 0;
+$meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+$fecha_registro = isset($user_data['fecha_registro'])
+    ? $meses[(int)date('n', strtotime($user_data['fecha_registro'])) - 1] . ' ' . date('Y', strtotime($user_data['fecha_registro']))
+    : '-';
 
+// Estadísticas de la tarjeta lateral (una sola consulta)
+$query_stats = $conn->prepare("SELECT
+    (SELECT COUNT(*) FROM movimientos WHERE id_usuario = ?) AS total_mov,
+    (SELECT COUNT(*) FROM metas_ahorro WHERE id_usuario = ? AND estado = 'activo' AND fecha_limite >= CURDATE()) AS total_obj");
+$query_stats->bind_param("ii", $user_id, $user_id);
+$query_stats->execute();
+$stats = $query_stats->get_result()->fetch_assoc();
+
+$inicial = mb_strtoupper(mb_substr(trim($nombre) ?: 'U', 0, 1));
+
+// Campos de contraseña nueva + confirmación (compartidos por "cambiar" y "crear")
+function camposClaveNueva() {
+    ?>
+    <div class="campo">
+        <label for="pwNueva">Contraseña nueva</label>
+        <div class="pw-wrap">
+            <input type="password" id="pwNueva" autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-target="pwNueva" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+        </div>
+        <div class="pw-fuerza" aria-hidden="true"><span id="pwFuerzaBarra"></span></div>
+        <div class="pw-fuerza-txt" id="pwFuerzaTxt" aria-live="polite"></div>
+    </div>
+    <div class="campo">
+        <label for="pwConf">Confirmar contraseña nueva</label>
+        <div class="pw-wrap">
+            <input type="password" id="pwConf" autocomplete="new-password">
+            <button type="button" class="pw-toggle" data-target="pwConf" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+        </div>
+    </div>
+    <?php
+}
 ?>
 
             <div class="page-header">
-                <h2 class="titulo-con-icono"><img src="iconos/generales/usuario.png" alt="Perfil" class="icono-titulo"> Mi perfil</h2>
+                <div class="page-header-texto">
+                    <h2 class="titulo-con-icono"><img src="iconos/generales/usuario.png" alt="" class="icono-titulo"> Mi perfil</h2>
+                    <p class="page-subtitle">Tus datos, seguridad y preferencias</p>
+                </div>
             </div>
 
             <div class="perfil-layout">
@@ -47,12 +103,11 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                     <div class="perfil-sidebar-card">
                         <div class="perfil-banner"></div>
                         <div class="perfil-avatar-wrap">
-                            <div class="perfil-avatar" title="Cambiar foto">U</div>
-                            <span class="perfil-avatar-edit"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-inline"> editar</span>
+                            <div class="perfil-avatar perfil-avatar-inicial"><?php echo htmlspecialchars($inicial); ?></div>
                         </div>
                         <div class="perfil-nombre-box">
-                            <strong id="nombreMostrado"><?php echo htmlspecialchars($nombre); ?></strong>
-                            <span id="emailMostrado"><?php echo htmlspecialchars($email); ?></span>
+                            <strong><?php echo htmlspecialchars($nombre); ?></strong>
+                            <span>@<?php echo htmlspecialchars($nombre_usuario); ?></span>
                         </div>
                         <div class="perfil-divider"></div>
                         <div class="perfil-user-stats">
@@ -62,20 +117,20 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                             </div>
                             <div class="perfil-user-stat">
                                 <span>Movimientos</span>
-                                <span><?php echo $total_movimientos; ?></span>
+                                <span><?php echo (int)$stats['total_mov']; ?></span>
                             </div>
                             <div class="perfil-user-stat">
                                 <span>Objetivos activos</span>
-                                <span><?php echo $total_objetivos; ?></span>
+                                <span><?php echo (int)$stats['total_obj']; ?></span>
                             </div>
                             <div class="perfil-user-stat">
                                 <span>Moneda</span>
-                                <span>ARS ($)</span>
+                                <span><?php echo $moneda_usuario === 'USD' ? 'USD (US$)' : 'ARS ($)'; ?></span>
                             </div>
                         </div>
                         <div class="perfil-divider"></div>
-                        <div style="padding:16px 20px 0;">
-                            <button class="btn-logout" onclick="confirmarLogout()"><img src="iconos/generales/puerta.png" alt="Salir" class="icono-boton"> Cerrar sesión</button>
+                        <div class="perfil-logout-wrap">
+                            <button class="btn-logout" onclick="confirmarLogout()"><img src="iconos/generales/puerta.png" alt="" class="icono-boton"> Cerrar sesión</button>
                         </div>
                     </div>
                 </div>
@@ -83,79 +138,93 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                 <!-- Columna derecha -->
                 <div class="perfil-secciones">
 
-                    <!-- Datos personales -->
-                    <div class="seccion-card">
+                    <!-- Datos personales: "Editar" habilita los campos y pasa a "Guardar" -->
+                    <form class="seccion-card" id="formDatos" method="POST" action="perfil.php">
+                        <input type="hidden" name="form_type" value="actualizar_datos">
                         <div class="seccion-header">
-                            <h3 class="titulo-con-icono"><img src="iconos/generales/flechaabajo.png" alt="Datos" class="icono-titulo"> Datos personales</h3>
-                            <button class="btn-editar-seccion" id="btnDatos" onclick="toggleEditar('datos')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton">
-                                Editar</button>
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/usuario.png" alt="" class="icono-titulo"> Datos personales</h3>
+                            <button type="button" class="btn-editar-seccion" id="btnDatos"><img src="iconos/generales/lapiz.png" alt="" class="icono-boton"> Editar</button>
                         </div>
                         <div class="seccion-body">
                             <div class="campo-row">
                                 <div class="campo">
-                                    <label>Nombre</label>
-                                    <input type="text" id="inputNombre" value="<?php echo htmlspecialchars($nombre); ?>" disabled>
+                                    <label for="inputNombre">Nombre</label>
+                                    <input type="text" id="inputNombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" maxlength="50" autocomplete="name" required disabled data-editable>
                                 </div>
                                 <div class="campo">
-                                    <label>Apellido</label>
-                                    <input type="text" id="inputApellido" placeholder="Completame" disabled>
+                                    <label for="inputUsuario">Nombre de usuario</label>
+                                    <div class="campo-arroba">
+                                        <span aria-hidden="true">@</span>
+                                        <input type="text" id="inputUsuario" name="nombre_usuario" value="<?php echo htmlspecialchars($nombre_usuario); ?>" minlength="3" maxlength="30" pattern="[a-z0-9._]{3,30}" title="De 3 a 30 caracteres: minúsculas, números, punto o guion bajo" autocomplete="nickname" spellcheck="false" autocapitalize="off" required disabled data-editable>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="campo-row">
-                                <div class="campo">
-                                    <label>Email</label>
-                                    <input type="email" id="inputEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
-                                </div>
-                                <div class="campo">
-                                    <label>Teléfono</label>
-                                    <input type="tel" id="inputTel" placeholder="Completame" disabled>
-                                </div>
-                            </div>
-                            <div class="campo-row">
-                                <div class="campo">
-                                    <label>País</label>
-                                    <select id="inputPais" disabled>
-                                        <option selected>Argentina</option>
-                                        <option>Uruguay</option>
-                                        <option>Chile</option>
-                                        <option>México</option>
-                                        <option>España</option>
-                                    </select>
-                                </div>
-                                <div class="campo">
-                                    <label>Moneda</label>
-                                    <select id="inputMoneda" disabled>
-                                        <option selected>ARS — Peso argentino</option>
-                                        <option>USD — Dólar</option>
-                                        <option>EUR — Euro</option>
-                                        <option>UYU — Peso uruguayo</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Seguridad -->
-                    <div class="seccion-card">
-                        <div class="seccion-header">
-                            <h3 class="titulo-con-icono"><img src="iconos/generales/candado.png" alt="Seguridad" class="icono-titulo"> Seguridad</h3>
-                            <button class="btn-editar-seccion" id="btnSeg" onclick="toggleEditar('seg')"><img src="iconos/generales/lapiz.png" alt="Editar" class="icono-boton">
-                                Editar</button>
-                        </div>
-                        <div class="seccion-body">
                             <div class="campo">
-                                <label>Contraseña actual</label>
-                                <input type="password" id="inputPassActual" value="••••••••" disabled>
+                                <label for="inputEmail">Email</label>
+                                <input type="email" id="inputEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
+                                <span class="campo-ayuda">El email identifica tu cuenta y no se puede cambiar.</span>
                             </div>
-                            <div class="campo-row">
-                                <div class="campo">
-                                    <label>Nueva contraseña</label>
-                                    <input type="password" id="inputPassNueva" placeholder="••••••••" disabled>
+                        </div>
+                    </form>
+
+                    <!-- Seguridad: cambiar la contraseña, o crearla si la cuenta es de Google -->
+                    <div class="seccion-card" id="seccionSeguridad">
+                        <div class="seccion-header">
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/candado.png" alt="" class="icono-titulo"> Seguridad</h3>
+                            <button type="button" class="btn-editar-seccion" id="btnSeg" aria-expanded="false" aria-controls="pwPanel"><img src="iconos/generales/lapiz.png" alt="" class="icono-boton"> <?php echo $tiene_clave ? 'Cambiar contraseña' : 'Crear contraseña'; ?></button>
+                        </div>
+                        <div class="seccion-body">
+                            <?php if ($tiene_clave): ?>
+                                <p class="pw-intro">Tu cuenta tiene contraseña. Para cambiarla, primero te pedimos la actual.</p>
+                            <?php else: ?>
+                                <p class="pw-intro">Entraste con Google, así que tu cuenta todavía no tiene contraseña. Para crear una, confirmamos que sos vos con un código de 6 dígitos que enviamos a <strong><?php echo htmlspecialchars(mascaraEmail($email)); ?></strong>.</p>
+                            <?php endif; ?>
+
+                            <div class="pw-msg" id="pwMsg" role="alert" hidden></div>
+
+                            <div id="pwPanel" class="pw-panel" hidden>
+                            <?php if ($tiene_clave): ?>
+                                <form id="formCambiar" class="pw-form" novalidate>
+                                    <input type="text" class="pw-oculto" name="username" value="<?php echo htmlspecialchars($email); ?>" autocomplete="username" readonly tabindex="-1" aria-hidden="true">
+                                    <div class="campo">
+                                        <label for="pwActual">Contraseña actual</label>
+                                        <div class="pw-wrap">
+                                            <input type="password" id="pwActual" autocomplete="current-password">
+                                            <button type="button" class="pw-toggle" data-target="pwActual" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+                                        </div>
+                                    </div>
+                                    <?php camposClaveNueva(); ?>
+                                    <ul class="pw-reqs">
+                                        <li id="reqLargo">Al menos 8 caracteres</li>
+                                        <li id="reqDistinta">Distinta de la contraseña actual</li>
+                                        <li id="reqCoincide">Coincide con la confirmación</li>
+                                    </ul>
+                                    <div class="pw-acciones">
+                                        <button type="submit" class="btn btn-guardar-modal" id="btnGuardarClave">Guardar contraseña</button>
+                                    </div>
+                                </form>
+                            <?php else: ?>
+                                <div id="pwPaso1" class="pw-acciones">
+                                    <button type="button" class="btn btn-guardar-modal" id="btnEnviarCodigo">Enviar código</button>
+                                    <button type="button" class="btn cancel" id="btnYaTengoCodigo">Ya tengo un código</button>
                                 </div>
-                                <div class="campo">
-                                    <label>Confirmar contraseña</label>
-                                    <input type="password" id="inputPassConf" placeholder="••••••••" disabled>
-                                </div>
+                                <form id="formCrear" class="pw-form" hidden novalidate>
+                                    <input type="text" class="pw-oculto" name="username" value="<?php echo htmlspecialchars($email); ?>" autocomplete="username" readonly tabindex="-1" aria-hidden="true">
+                                    <div class="campo">
+                                        <label for="pwCodigo">Código de 6 dígitos</label>
+                                        <input type="text" id="pwCodigo" class="pw-codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+                                    </div>
+                                    <?php camposClaveNueva(); ?>
+                                    <ul class="pw-reqs">
+                                        <li id="reqLargo">Al menos 8 caracteres</li>
+                                        <li id="reqCoincide">Coincide con la confirmación</li>
+                                    </ul>
+                                    <div class="pw-acciones">
+                                        <button type="submit" class="btn btn-guardar-modal" id="btnCrearClave">Crear contraseña</button>
+                                        <button type="button" class="btn cancel" id="btnReenviar">Reenviar código</button>
+                                    </div>
+                                </form>
+                            <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -163,55 +232,25 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                     <!-- Preferencias -->
                     <div class="seccion-card">
                         <div class="seccion-header">
-                            <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="Preferencias" class="icono-titulo"> Preferencias</h3>
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/tick.png" alt="" class="icono-titulo"> Preferencias</h3>
                         </div>
                         <div class="seccion-body">
-                            <div class="toggle-row">
-                                <div class="toggle-info">
-                                    <strong>Notificaciones de objetivos</strong>
-                                    <span>Alertas cuando te acercás a tu meta</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-row">
-                                <div class="toggle-info">
-                                    <strong>Resumen mensual por email</strong>
-                                    <span>Recibís un reporte el 1° de cada mes</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                            <div class="toggle-row">
-                                <div class="toggle-info">
-                                    <strong>Sugerencias de la IA</strong>
-                                    <span>La IA analiza tus patrones y sugiere mejoras</span>
-                                </div>
-                                <label class="switch">
-                                    <input type="checkbox" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
                             <div class="toggle-row">
                                 <div class="toggle-info">
                                     <strong>Modo oscuro</strong>
                                 </div>
                                 <label class="switch">
-                                    <input type="checkbox" id="btnModoOscuro">
+                                    <input type="checkbox" id="btnModoOscuro" aria-label="Modo oscuro">
                                     <span class="slider"></span>
                                 </label>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Zona de peligro -->
+                    <!-- Zona de peligro (los modales de confirmación están al final de esta página) -->
                     <div class="seccion-card zona-peligro">
                         <div class="seccion-header">
-                            <h3 class="titulo-con-icono"><img src="iconos/generales/triangulopeligro.png" alt="Peligro" class="icono-titulo"> Zona de peligro</h3>
+                            <h3 class="titulo-con-icono"><img src="iconos/generales/triangulopeligro.png" alt="" class="icono-titulo"> Zona de peligro</h3>
                         </div>
                         <div class="seccion-body">
                             <div class="peligro-row">
@@ -219,33 +258,82 @@ $total_objetivos = $obj_data['total_obj'] ?? 0;
                                     <strong>Exportar mis datos</strong>
                                     <span>Descargá un .csv con todos tus movimientos</span>
                                 </div>
-                                <button id="btnExportarDatos" class="btn-peligro"><img src="iconos/generales/exportar.png" alt="Exportar" class="icono-boton"> Exportar</button>
+                                <button id="btnExportarDatos" type="button" class="btn-peligro"><img src="iconos/generales/exportar.png" alt="" class="icono-boton"> Exportar</button>
                             </div>
                             <div class="peligro-row">
                                 <div class="peligro-info">
                                     <strong>Borrar historial</strong>
                                     <span>Elimina todos los movimientos (no se puede deshacer)</span>
                                 </div>
-                                <button id="btnBorrarHistorial" type="button" class="btn-peligro"><img src="iconos/generales/flechaizquierda.png" alt="Eliminar" class="icono-boton"> Borrar historial</button>
+                                <button id="btnBorrarHistorial" type="button" class="btn-peligro"><img src="iconos/generales/flechaizquierda.png" alt="" class="icono-boton"> Borrar historial</button>
                             </div>
                             <div class="peligro-row">
                                 <div class="peligro-info">
                                     <strong>Eliminar cuenta</strong>
                                     <span>Borra tu cuenta y todos tus datos permanentemente</span>
                                 </div>
-                                <button id="btnEliminarCuenta" type="button" class="btn-peligro" style="border-color:#BE123C;background:#FFF1F2;"><img src="iconos/generales/tachodebasura.png" alt="Eliminar cuenta" class="icono-boton"> Eliminar
-                                    cuenta</button>
+                                <button id="btnEliminarCuenta" type="button" class="btn-peligro btn-peligro-fuerte"><img src="iconos/generales/tachodebasura.png" alt="" class="icono-boton"> Eliminar cuenta</button>
                             </div>
                         </div>
                     </div>
-                    <form id="formEliminarCuenta" method="POST" action="includes/movimientos_handler.php" style="display:none;">
-                        <input type="hidden" name="form_type" value="eliminar_cuenta">
-                    </form>
 
                 </div>
             </div>
 
-<?php 
-$extra_js = '<script src="js/utils/exportCSV.js"></script><script src="js/perfil.js"></script>';
-require_once 'includes/footer.php'; 
-?>
+<!-- Modales de la zona de peligro (los maneja js/perfil.js) -->
+<!-- MODAL BORRAR HISTORIAL COMPLETO -->
+<div id="modalBorrarHistorial" class="modal hidden">
+    <div class="modal-content modal-confirmacion">
+        <h3 class="modal-peligro-titulo">Borrar todo el historial</h3>
+
+        <div class="aviso-peligro">
+            <p class="aviso-peligro-titulo"><img src="iconos/generales/triangulopeligro.png" alt="" class="icono-inline"> Advertencia</p>
+            <p>Esta acción eliminará <strong>TODOS</strong> tus movimientos (ingresos y gastos) permanentemente.</p>
+            <p><strong>No se puede deshacer.</strong></p>
+        </div>
+
+        <p class="modal-ayuda">Para confirmar, escribí "SI, ESTOY SEGURO" en el campo de abajo:</p>
+
+        <form id="formBorrarHistorial" class="form-confirmacion" method="POST" action="includes/movimientos_handler.php">
+            <input type="hidden" name="form_type" value="borrar_historial_completo">
+            <input type="hidden" name="return_url" value="perfil.php">
+
+            <input type="text" id="inputConfirmacionBorrar" name="confirmacion_borrar" class="input-confirmacion" placeholder="SI, ESTOY SEGURO" autocomplete="off" required>
+
+            <div class="modal-actions">
+                <button type="button" class="btn cancel" onclick="cerrarModalBorrar()">Cancelar</button>
+                <button type="submit" class="btn btn-peligro-solido" id="btnConfirmarBorrar" disabled>Eliminar todo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL ELIMINAR CUENTA -->
+<div id="modalEliminarCuenta" class="modal hidden">
+    <div class="modal-content modal-confirmacion">
+        <h3 class="modal-peligro-titulo">Eliminar cuenta</h3>
+
+        <div class="aviso-peligro">
+            <p class="aviso-peligro-titulo"><img src="iconos/generales/triangulopeligro.png" alt="" class="icono-inline"> Advertencia crítica</p>
+            <p>Esta acción eliminará <strong>permanentemente tu cuenta</strong>, tus movimientos, objetivos y categorías propias.</p>
+            <p><strong>No se puede deshacer.</strong></p>
+        </div>
+
+        <p class="modal-ayuda">Para confirmar, escribí "ELIMINAR MI CUENTA" en el campo de abajo:</p>
+
+        <form id="formEliminarCuentaModal" class="form-confirmacion" method="POST" action="includes/movimientos_handler.php">
+            <input type="hidden" name="form_type" value="eliminar_cuenta">
+
+            <input type="text" id="inputConfirmacionEliminarCuenta" name="confirmacion_eliminar" class="input-confirmacion" placeholder="ELIMINAR MI CUENTA" autocomplete="off" required>
+
+            <div class="modal-actions">
+                <button type="button" class="btn cancel" onclick="cerrarModalEliminarCuenta()">Cancelar</button>
+                <button type="submit" class="btn btn-peligro-solido" id="btnConfirmarEliminarCuenta" disabled>Eliminar cuenta</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php
+$extra_js = '<script src="js/utils/exportCSV.js"></script><script src="js/perfil.js?v=3"></script>';
+require_once 'includes/footer.php';

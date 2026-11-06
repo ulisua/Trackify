@@ -1,35 +1,25 @@
 /* ===== PAGE: OBJETIVOS ===== */
 
-.page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.page-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: var(--text-primary);
-}
-
 .btn-nuevo {
-    padding: 12px 22px;
+    padding: calc(12 * var(--u)) calc(22 * var(--u));
+    min-height: calc(44 * var(--u));
     background: var(--brand-pink);
     color: var(--brand-dark);
     border: none;
-    border-radius: 6px;
+    border-radius: calc(8 * var(--u));
     font-weight: 700;
     font-size: 0.95rem;
     cursor: pointer;
     font-family: inherit;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .btn-nuevo:hover {
-    opacity: 0.88;
+    opacity: 0.9;
     transform: translateY(-1px);
 }
 
@@ -37,15 +27,15 @@
 .obj-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 28px;
+    gap: calc(16 * var(--u));
+    margin-bottom: calc(28 * var(--u));
 }
 
 .obj-stat {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 18px 20px;
+    border-radius: calc(10 * var(--u));
+    padding: calc(18 * var(--u)) calc(20 * var(--u));
     text-align: center;
     box-shadow: var(--shadow-card);
 }
@@ -69,15 +59,15 @@
 .obj-lista {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-bottom: 32px;
+    gap: calc(16 * var(--u));
+    margin-bottom: calc(32 * var(--u));
 }
 
 .obj-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 22px 24px;
+    border-radius: calc(12 * var(--u));
+    padding: calc(22 * var(--u)) calc(24 * var(--u));
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -85,7 +75,8 @@
 }
 
 .obj-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07), 0 0 20px var(--glow-hover);
+    border-color: var(--glow-hover-borde);
     transform: translateY(-1px);
 }
 
@@ -93,8 +84,8 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 14px;
-    gap: 12px;
+    margin-bottom: calc(14 * var(--u));
+    gap: calc(12 * var(--u));
 }
 
 .obj-info {
@@ -108,15 +99,15 @@
     color: var(--text-primary);
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+    gap: calc(8 * var(--u));
+    margin-bottom: calc(4 * var(--u));
 }
 
 .obj-badge {
     font-size: 0.72rem;
     font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 99px;
+    padding: 2px calc(8 * var(--u));
+    border-radius: calc(99 * var(--u));
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
@@ -169,13 +160,13 @@
 
 /* Barra de progreso */
 .obj-progress-wrap {
-    margin-bottom: 14px;
+    margin-bottom: calc(14 * var(--u));
 }
 
 .obj-progress-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 6px;
+    margin-bottom: calc(6 * var(--u));
     font-size: 0.82rem;
     color: var(--text-secondary);
 }
@@ -189,15 +180,15 @@
 }
 
 .obj-barra {
-    height: 10px;
+    height: calc(10 * var(--u));
     background: var(--bg-hover);
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
     overflow: hidden;
 }
 
 .obj-barra-fill {
     height: 100%;
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
 }
@@ -207,10 +198,10 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: 6px;
+    width: calc(6 * var(--u));
     height: 100%;
     background: rgba(255, 255, 255, 0.4);
-    border-radius: 99px;
+    border-radius: calc(99 * var(--u));
 }
 
 /* Colores por objetivo */
@@ -247,37 +238,49 @@
 /* Acciones del objetivo */
 .obj-acciones {
     display: flex;
-    gap: 8px;
+    gap: calc(8 * var(--u));
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .btn-agregar {
-    padding: 8px 16px;
-    background: rgba(22, 163, 74, 0.1);
+    padding: calc(9 * var(--u)) calc(16 * var(--u));
+    min-height: calc(40 * var(--u));
+    background: rgba(22, 163, 74, 0.12);
     color: #16A34A;
     border: 1px solid rgba(22, 163, 74, 0.25);
-    border-radius: 6px;
-    font-size: 0.85rem;
+    border-radius: calc(8 * var(--u));
+    font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.15s;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 .btn-agregar:hover {
-    background: rgba(22, 163, 74, 0.2);
+    background: rgba(22, 163, 74, 0.22);
 }
 
 .btn-editar-obj {
-    padding: 8px 14px;
+    padding: calc(9 * var(--u)) calc(14 * var(--u));
+    min-height: calc(40 * var(--u));
     background: var(--bg-hover);
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 0.85rem;
+    border-radius: calc(8 * var(--u));
+    font-size: 0.88rem;
+    font-weight: 500;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.15s;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+    box-sizing: border-box;
 }
 
 .btn-editar-obj:hover {
@@ -286,21 +289,27 @@
 }
 
 .btn-eliminar-obj {
-    padding: 8px 14px;
+    padding: calc(9 * var(--u)) calc(14 * var(--u));
+    min-height: calc(40 * var(--u));
     background: transparent;
     color: var(--text-muted);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    font-size: 0.85rem;
+    border-radius: calc(8 * var(--u));
+    font-size: 0.88rem;
+    font-weight: 500;
     cursor: pointer;
     font-family: inherit;
-    transition: all 0.15s;
+    transition: all 0.18s;
+    display: inline-flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+    box-sizing: border-box;
 }
 
 .btn-eliminar-obj:hover {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.2);
+    background: var(--bg-peligro);
+    color: var(--color-peligro);
+    border-color: var(--borde-peligro);
 }
 
 /* Objetivo completado */
@@ -319,7 +328,7 @@
     background: rgba(134, 239, 172, var(--meta-bg-opacity, 0.25));
     z-index: 0;
     pointer-events: none;
-    border-radius: 12px;
+    border-radius: calc(12 * var(--u));
 }
 
 /* Asegura que el contenido quede sobre el overlay */
@@ -345,10 +354,10 @@
     font-weight: 700;
     color: #16A34A;
     background: rgba(22, 163, 74, 0.15);
-    padding: 3px 10px;
-    border-radius: 99px;
+    padding: calc(3 * var(--u)) calc(10 * var(--u));
+    border-radius: calc(99 * var(--u));
     text-align: center;
-    margin-bottom: 4px;
+    margin-bottom: calc(4 * var(--u));
     white-space: nowrap;
 }
 
@@ -365,105 +374,22 @@
     box-shadow: var(--shadow-card);
 }
 
-/* Modal nuevo objetivo */
-.modal-obj {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 1;
-    transition: opacity 0.3s;
-}
-
-.modal-obj.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.modal-obj-content {
-    background: var(--bg-modal);
-    border-radius: 12px;
-    padding: 28px 24px;
-    width: 100%;
-    max-width: 440px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-height: 90dvh;
-    overflow-y: auto;
-    border: 1px solid var(--border-color);
-}
-
-.modal-obj-content h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: var(--text-primary);
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.modal-obj-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
 /* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .obj-stats {
-        grid-template-columns: repeat(3, 1fr);
-    }
+
+.badge-vencido {
+    background: var(--badge-vencido-bg);
+    color: var(--badge-vencido-text);
+    border: 1px solid var(--borde-peligro);
 }
 
-@media (max-width: 600px) {
-    .obj-stats {
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
-    }
+/* En un objetivo vencido el único botón es eliminar, con color de peligro */
+.btn-eliminar-obj.btn-eliminar-vencido {
+    background: var(--bg-peligro);
+    border-color: var(--borde-peligro);
+    color: var(--color-peligro);
+    font-weight: 600;
+}
 
-    .obj-stat {
-        padding: 14px 12px;
-    }
-
-    .obj-stat-num {
-        font-size: 1.4rem;
-    }
-
-    .obj-card-top {
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .obj-montos {
-        text-align: left;
-        align-items: flex-start;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .btn-nuevo {
-        width: 100%;
-        text-align: center;
-    }
-
-    /* Badge en mobile: sigue encima del monto */
-    .obj-card.completado .obj-montos::before {
-        align-self: flex-start;
-    }
+.obj-lista .texto-vacio {
+    grid-column: 1 / -1;
 }

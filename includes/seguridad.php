@@ -1,0 +1,184 @@
+<?php
+// includes/seguridad.php
+// Utilidades de seguridad compartidas: token CSRF, URL de retorno segura,
+// validación de montos/fechas y escape de argumentos JS dentro de atributos HTML.
+// Se incluye desde conexion.php, por lo que está disponible en todas las páginas.
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+function csrfToken() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// Toda petición POST de un usuario autenticado debe traer el token,
+// ya sea en el campo csrf_token (formularios) o en la cabecera X-CSRF-Token (fetch).
+function verificarCsrfSiCorresponde() {
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST' || !isset($_SESSION['usuario_id'])) {
+        return;
+    }
+    $enviado = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    if (!is_string($enviado) || $enviado === '' || !hash_equals(csrfToken(), $enviado)) {
+        http_response_code(403);
+        $esJson = stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false
+            || stripos($_SERVER['CONTENT_TYPE'] ?? '', 'application/json') !== false
+            || isset($_SERVER['HTTP_X_CSRF_TOKEN']);
+        if ($esJson) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => 'Sesión vencida. Recargá la página.']);
+        } else {
+            echo 'Sesión vencida o solicitud inválida. Volvé atrás y recargá la página.';
+        }
+        exit();
+    }
+}
+
+// Ruta base de la app (funciona en la raíz del servidor o en una subcarpeta como /trackify),
+// también cuando el script que corre está dentro de /includes, /api o /auth/google.
+function urlBaseApp() {
+    $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+    $dir = preg_replace('#/(includes|api|auth/google)$#', '', $dir);
+    return rtrim($dir, '/');
+}
+
+// Redirige a una página de la app y termina la ejecución
+function redirigir($pagina) {
+    header('Location: ' . urlBaseApp() . '/' . ltrim($pagina, '/'));
+    exit();
+}
+
+// UUID v4 aleatorio
+function generarUuid() {
+    $b = random_bytes(16);
+    $b[6] = chr((ord($b[6]) & 0x0f) | 0x40);
+    $b[8] = chr((ord($b[8]) & 0x3f) | 0x80);
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
+}
+
+// Inicia la sesión del usuario con un id de sesión nuevo (evita fijación de sesión)
+function iniciarSesionUsuario($id, $nombre) {
+    session_regenerate_id(true);
+    $_SESSION['usuario_id']     = (int)$id;
+    $_SESSION['usuario_nombre'] = $nombre;
+}
+
+// Cierra la sesión por completo, incluida la cookie
+function cerrarSesion() {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+    }
+    session_destroy();
+}
+
+// Solo acepta rutas relativas del propio sitio; cualquier URL externa vuelve al dashboard.
+function urlRetornoSegura($url, $porDefecto = null) {
+    $porDefecto = urlBaseApp() . '/' . ($porDefecto ?? 'index.php');
+    $url = trim((string)$url);
+    if ($url === '') {
+        return $porDefecto;
+    }
+
+    $partes = parse_url($url);
+    if ($partes === false) {
+        return $porDefecto;
+    }
+
+    // Referer absoluto del mismo host: conservar solo ruta + query
+    if (isset($partes['host'])) {
+        $hostActual = $_SERVER['HTTP_HOST'] ?? '';
+        $hostUrl = $partes['host'] . (isset($partes['port']) ? ':' . $partes['port'] : '');
+        if ($hostActual === '' || strcasecmp($hostUrl, $hostActual) !== 0) {
+            return $porDefecto;
+        }
+        $url = ($partes['path'] ?? '/') . (isset($partes['query']) ? '?' . $partes['query'] : '');
+    } elseif (isset($partes['scheme'])) {
+        return $porDefecto;
+    }
+
+    if (str_starts_with($url, '//') || str_contains($url, '\\') || preg_match('/[\r\n]/', $url)) {
+        return $porDefecto;
+    }
+    return $url;
+}
+
+// Monto positivo con hasta 2 decimales. Devuelve float o null si es inválido.
+function montoValido($valor, $maximo = 9999999999.99) {
+    if (is_string($valor)) {
+        $valor = trim(str_replace(',', '.', $valor));
+    }
+    if (!is_numeric($valor)) {
+        return null;
+    }
+    $monto = round((float)$valor, 2);
+    if (!is_finite($monto) || $monto <= 0 || $monto > $maximo) {
+        return null;
+    }
+    return $monto;
+}
+
+// Fecha exacta en formato Y-m-d. Devuelve el string o null.
+function fechaValida($valor) {
+    if (!is_string($valor)) {
+        return null;
+    }
+    $fecha = DateTime::createFromFormat('!Y-m-d', $valor);
+    return ($fecha && $fecha->format('Y-m-d') === $valor) ? $valor : null;
+}
+
+// Argumento JS seguro para usar dentro de onclick="fn(...)".
+function jsAttr($valor) {
+    return htmlspecialchars(
+        json_encode($valor, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
+
+// Email parcialmente oculto para mostrar en pantalla: "ag*****@gmail.com"
+function mascaraEmail($email) {
+    [$local, $dominio] = array_pad(explode('@', (string)$email, 2), 2, '');
+    return mb_substr($local, 0, 2) . str_repeat('*', max(mb_strlen($local) - 2, 1)) . '@' . $dominio;
+}
+
+// ── Nombre de usuario (@usuario) ─────────────────────────────────────────────
+// Único, de 3 a 30 caracteres: minúsculas, números, punto y guion bajo.
+const NOMBRE_USUARIO_REGEX = '/^[a-z0-9._]{3,30}$/';
+
+// Normaliza lo que escribe el usuario: sin "@" inicial, sin espacios, en minúsculas.
+function normalizarNombreUsuario($texto) {
+    return mb_strtolower(ltrim(trim((string)$texto), '@'));
+}
+
+function nombreUsuarioDisponible(mysqli $conn, string $nombre_usuario, int $excluir_id = 0): bool {
+    $stmt = $conn->prepare('SELECT 1 FROM usuarios WHERE nombre_usuario = ? AND id_usuario <> ? LIMIT 1');
+    $stmt->bind_param('si', $nombre_usuario, $excluir_id);
+    $stmt->execute();
+    return $stmt->get_result()->num_rows === 0;
+}
+
+// Genera un nombre de usuario libre a partir del email (ej.: juan.perez@x.com -> juan.perez, juan.perez2...)
+function generarNombreUsuario(mysqli $conn, string $email): string {
+    $base = preg_replace('/[^a-z0-9._]/', '', mb_strtolower(explode('@', $email)[0]));
+    $base = substr($base, 0, 24);
+    if (strlen($base) < 3) {
+        $base = 'usuario' . $base;
+    }
+    $candidato = $base;
+    for ($n = 2; !nombreUsuarioDisponible($conn, $candidato); $n++) {
+        $candidato = $base . $n;
+    }
+    return $candidato;
+}
+
+// Mensajes de una sola lectura (Post/Redirect/Get) que js/main.js muestra con SweetAlert2
+function flash($mensaje, $tipo = 'error') {
+    $_SESSION['flash'] = ['mensaje' => $mensaje, 'tipo' => $tipo];
+}
+
+verificarCsrfSiCorresponde();

@@ -2,10 +2,6 @@
 // includes/periodo.php
 // Centraliza el cálculo de períodos y la inicialización de moneda para todo Trackify
 
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 require_once __DIR__ . '/../conexion.php';
 
 // Inicializar moneda del usuario desde BD si está en sesión

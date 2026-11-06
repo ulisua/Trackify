@@ -1,87 +1,71 @@
 /* ===== COMPONENT: CHARTS ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 .graficos-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 22px;
-    margin-bottom: 28px;
-    max-height: 280px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(20 * var(--u));
+    margin-bottom: calc(28 * var(--u));
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .grafico-card {
-    flex: 1 1 280px;
     background: var(--bg-card);
-    border-radius: 12px;
+    border-radius: calc(12 * var(--u));
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-card);
     transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
     min-width: 0;
-    max-height: 280px;
-    overflow: hidden;
-    padding: 14px 16px 10px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: calc(18 * var(--u)) calc(20 * var(--u)) calc(16 * var(--u));
+    display: flex;
+    flex-direction: column;
 }
 
-.grafico-card:hover {
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
-    transform: translateY(-2px);
-}
 
 .grafico-card-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: calc(12 * var(--u));
+    margin-bottom: calc(10 * var(--u));
+    flex-shrink: 0;
 }
 
 .grafico-icono {
-    font-size: 1.3rem;
     line-height: 1;
+    display: flex;
+    align-items: center;
 }
 
 .grafico-titulo {
     margin: 0 0 2px 0;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-primary);
 }
 
 .grafico-subtitulo {
     margin: 0;
-    font-size: 0.73rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
     font-weight: 400;
 }
 
+/* Chart.js mide el contenedor: la altura se fija acá y el canvas NO se fuerza con CSS
+   (forzar width/height del canvas descalibra el gráfico y lo deja vacío o diminuto). */
 .grafico-wrap {
     position: relative;
     width: 100%;
-}
-
-.grafico-wrap canvas {
-    max-height: 190px !important;
+    min-width: 0;
+    height: calc(250 * var(--u));
 }
 
 .grafico-empty {
     text-align: center;
     color: var(--text-muted);
     font-size: 0.9rem;
-    padding: 40px 0;
-}
-
-/* Responsivo */
-@media (max-width: 900px) {
-    .graficos-container {
-        flex-direction: column;
-        gap: 16px;
-        margin-bottom: 20px;
-        max-height: none;
-    }
-
-    .grafico-card {
-        padding: 18px 16px 14px;
-        max-height: none;
-    }
-
-    .grafico-wrap canvas {
-        max-height: 220px !important;
-    }
+    padding: calc(40 * var(--u)) 0;
+    margin: 0;
 }

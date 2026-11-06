@@ -7,6 +7,35 @@
     --brand-pink: #EA73F5;
     --brand-purple: #700353;
 
+    /* Escala fluida: "1px" que se achica de forma continua con el ancho de pantalla,
+       desde 1440px (1px) hasta 320px (mínimo). Hay dos escalas:
+       --u  cajas: padding, márgenes, gaps, anchos/altos, íconos y radios (1 → 0.6)
+       --uf textos: font-size y line-height (1 → 0.76; menos que eso deja de ser legible)
+       Los tamaños se escriben calc(N * var(--u)) / calc(N * var(--uf)) en lugar de Npx.
+       html usa calc(16 * var(--uf)), así que los rem también escalan.
+       Para cambiar cuánto se achica en móvil, ajustá el mínimo y recalculá la recta
+       para que llegue a ese mínimo en 320px y a 1px en 1440px. */
+    --u:  clamp(0.6px, calc(0.4858px + 0.03572vw), 1px);
+    --uf: clamp(0.76px, calc(0.6915px + 0.02143vw), 1px);
+
     /* Tipografía */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    /* Barras oscuras (header, menú lateral, footer): casi negro con orbes de color muy
+       difuminados, al estilo de la página IA y el login. Los orbes se conectan entre sí:
+       header verde→magenta, menú verde arriba→magenta abajo, footer magenta→verde. */
+    --barra-fondo: #050407;
+    --barra-header-bg:
+        radial-gradient(55% 260% at 0% 0%, rgba(207, 242, 124, 0.28), transparent 70%),
+        radial-gradient(55% 260% at 100% 100%, rgba(234, 115, 245, 0.38), transparent 70%),
+        var(--barra-fondo);
+    --barra-sidebar-bg:
+        radial-gradient(170% 42% at 0% 0%, rgba(207, 242, 124, 0.2), transparent 70%),
+        radial-gradient(190% 55% at 0% 100%, rgba(234, 115, 245, 0.4), transparent 72%),
+        radial-gradient(140% 40% at 100% 70%, rgba(112, 3, 83, 0.38), transparent 70%),
+        var(--barra-fondo);
+    --barra-footer-bg:
+        radial-gradient(55% 300% at 0% 100%, rgba(234, 115, 245, 0.36), transparent 70%),
+        radial-gradient(55% 300% at 100% 0%, rgba(207, 242, 124, 0.24), transparent 70%),
+        var(--barra-fondo);
 }

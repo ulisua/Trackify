@@ -1,43 +1,69 @@
 /* ===== COMPONENT: SIDEBAR & HAMBURGER ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 .sidebar {
-    width: 220px;
+    width: calc(230 * var(--u));
     background: var(--sidebar-bg);
-    min-height: 100vh;
+    min-height: calc(100vh - calc(74 * var(--u)));
     position: sticky;
-    top: 0;
+    top: calc(74 * var(--u));
     border-right: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
 }
 
 .sidebar nav {
-    padding-top: 25px;
-    padding-bottom: 25px;
+    padding: calc(24 * var(--u)) calc(14 * var(--u));
 }
 
 .sidebar a {
-    display: block;
-    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    padding: calc(12 * var(--u)) calc(16 * var(--u));
     color: var(--sidebar-link-color);
-    border-radius: 6px;
-    margin-bottom: 8px;
+    border-radius: calc(8 * var(--u));
+    margin-bottom: calc(6 * var(--u));
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
     font-weight: 500;
+    font-size: 0.95rem;
+    min-height: calc(44 * var(--u));
+    box-sizing: border-box;
 }
 
+
+
+/* ===== ACENTO POR ENLACE =====
+   Cada enlace tiene su color (--nav-acento) y forman un degradé de arriba hacia abajo
+   que acompaña el fondo del menú (negro → magenta): lima → menta → lila → rosa.
+   Se usa en el texto al pasar el mouse, en la estela de fondo y en el estado activo. */
+.sidebar nav a:nth-child(1) { --nav-acento: #CFF27C; --nav-acento-rgb: 207, 242, 124; }
+.sidebar nav a:nth-child(2) { --nav-acento: #B4EE8E; --nav-acento-rgb: 180, 238, 142; }
+.sidebar nav a:nth-child(3) { --nav-acento: #8FE7AE; --nav-acento-rgb: 143, 231, 174; }
+.sidebar nav a:nth-child(4) { --nav-acento: #6EE7B7; --nav-acento-rgb: 110, 231, 183; }
+.sidebar nav a:nth-child(5) { --nav-acento: #A78BFA; --nav-acento-rgb: 167, 139, 250; }
+.sidebar nav a:nth-child(6) { --nav-acento: #C084FC; --nav-acento-rgb: 192, 132, 252; }
+.sidebar nav a:nth-child(7) { --nav-acento: #D97CF8; --nav-acento-rgb: 217, 124, 248; }
+.sidebar nav a:nth-child(8) { --nav-acento: #EA73F5; --nav-acento-rgb: 234, 115, 245; }
+.sidebar nav a:nth-child(n+9) { --nav-acento: #F49BF9; --nav-acento-rgb: 244, 155, 249; }
+
 .sidebar a:hover {
-    background: var(--sidebar-link-hover-bg);
-    color: var(--sidebar-link-hover-color);
+    background: rgba(var(--nav-acento-rgb, 207, 242, 124), 0.1);
+    color: var(--nav-acento, var(--sidebar-link-hover-color));
     transform: translateX(4px);
     box-shadow: none;
-    text-shadow: none;
 }
 
 .sidebar .active {
-    background: var(--sidebar-link-active-bg);
-    color: white;
-    border-left: 4px solid var(--sidebar-link-active-border);
-    border-radius: 0 6px 6px 0;
+    background: linear-gradient(90deg, rgba(var(--nav-acento-rgb, 207, 242, 124), 0.28), transparent);
+    color: #ffffff;
+    border-left: 4px solid var(--nav-acento, var(--sidebar-link-active-border));
+    border-radius: 0 calc(8 * var(--u)) calc(8 * var(--u)) 0;
+    font-weight: 600;
+    text-shadow: 0 0 14px rgba(var(--nav-acento-rgb, 207, 242, 124), 0.45);
+}
+
+.sidebar .active:hover {
+    color: #ffffff;
 }
 
 /* ===== BOTÓN HAMBURGUESA ===== */
@@ -45,25 +71,29 @@
     display: none;
     flex-direction: column;
     justify-content: center;
-    gap: 5px;
-    width: 36px;
-    height: 36px;
+    align-items: center;
+    gap: calc(5 * var(--u));
+    width: calc(42 * var(--u));
+    height: calc(42 * var(--u));
+    min-width: calc(42 * var(--u));
+    min-height: calc(42 * var(--u));
     cursor: pointer;
-    background: none;
+    background: transparent;
     border: none;
-    padding: 4px;
-    border-radius: 6px;
+    padding: calc(8 * var(--u));
+    border-radius: calc(8 * var(--u));
     transition: background 0.2s ease;
     z-index: 200;
+    box-sizing: border-box;
 }
 
 .menu-toggle:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .menu-toggle span {
     display: block;
-    width: 100%;
+    width: calc(22 * var(--u));
     height: 2px;
     background: var(--brand-green-light);
     border-radius: 2px;
@@ -85,27 +115,25 @@
     transform: translateY(-7px) rotate(-45deg);
 }
 
-/* Responsivo */
-@media (max-width: 900px) {
-    .menu-toggle {
-        display: flex;
-    }
+/* Controles de moneda/período dentro del menú: solo se muestran en móvil
+   (en escritorio están en el navbar). Ver css/responsive.css */
+.sidebar-controles {
+    display: none;
+    flex-direction: column;
+    gap: calc(22 * var(--u));
+    padding: calc(4 * var(--u)) calc(18 * var(--u)) calc(18 * var(--u));
+    margin: 0 calc(14 * var(--u));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
 
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 260px;
-        height: 100dvh;
-        z-index: 99;
-        transform: translateX(-100%);
-        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-        padding-top: 70px;
-        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.35);
-        overflow-y: auto;
-    }
+.sidebar-saludo {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    font-size: 1.35rem;
+}
 
-    .sidebar.open {
-        transform: translateX(0);
-    }
+.sidebar-saludo span {
+    color: var(--brand-pink);
+    font-weight: 600;
 }

@@ -1,639 +1,562 @@
 /* ==========================================================================
-   TRACKIFY - ARQUITECTURA RESPONSIVE CENTRALIZADA
+   TRACKIFY - SISTEMA RESPONSIVE CENTRALIZADO
+   --------------------------------------------------------------------------
+   Este archivo se enlaza al FINAL del <head> (después de css/pages/...), por
+   lo que sus reglas ganan por orden de cascada: no hace falta !important.
+   Los componentes no definen media queries propias: todo vive acá.
+
+   Puntos de corte:
+     ≤1100px  laptops chicas / tablets apaisadas (menú lateral todavía visible)
+     ≤1000px  tablas → tarjetas de movimiento
+     ≤900px   el menú lateral pasa a cajón (hamburguesa) y los selectores de
+              moneda/período se mueven dentro del menú
+     ≤600px   teléfonos
+     ≤360px   teléfonos muy angostos
    ========================================================================== */
 
-/* ===== CONFIGURACIÓN RESPONSIVE =====
-   Variables centralizadas para la escala y distribución adaptativa.
-   Modificar estos valores para ajustar globalmente la versión móvil.
-   ========================================================================== */
-:root {
-    /* Espaciados y Rellenos Móviles */
-    --mobile-content-padding: 12px 10px;
-    --mobile-section-gap: 12px;
-    --mobile-grid-gap: 8px;
-    --mobile-card-padding: 10px 8px;
-    --mobile-box-padding: 12px 12px;
+/* ===== ≤1100px: laptops chicas y tablets con menú visible ===== */
+@media (max-width: 1100px) {
+    /* El menú lateral ocupa menos para dejarle lugar al contenido */
+    .sidebar {
+        width: calc(200 * var(--u));
+    }
 
-    /* Escala Tipográfica Fluida */
-    --mobile-font-card-title: 0.73rem;
-    --mobile-font-card-value: clamp(0.95rem, 3.8vw, 1.2rem);
-    --mobile-font-section-title: 1.05rem;
-    --mobile-font-sub: 0.72rem;
-    --mobile-font-body: 0.82rem;
+    /* Perfil en una sola columna: con el menú visible no entran tarjeta + secciones */
+    .perfil-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
 
-    /* Botones y Controles */
-    --mobile-btn-padding: 8px 10px;
-    --mobile-btn-font-size: 0.8rem;
-    --mobile-header-height: 52px;
+    .perfil-sidebar-card {
+        position: static;
+    }
 
-    /* Límites visuales */
-    --mobile-chart-max-height: 200px;
-    --mobile-modal-max-width: 92vw;
-}
-
-
-/* ==========================================================================
-   1. TABLET & MOBILE GLOBAL (<= 900px)
-   ========================================================================== */
-@media (max-width: 900px) {
-
-    /* --- LAYOUT Y CONTENEDOR PRINCIPAL --- */
-    .layout {
-        flex-direction: column !important;
+    /* Tablas más compactas */
+    .tabla th,
+    .tabla td {
+        padding: calc(12 * var(--u)) calc(14 * var(--u));
     }
 
     .content {
-        padding: var(--mobile-content-padding) !important;
-        min-width: 0 !important;
-        overflow-x: hidden !important;
+        padding: calc(44 * var(--u)) calc(24 * var(--u)) calc(36 * var(--u));
     }
 
-    .page-header {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        margin-top: 4px !important;
-        margin-bottom: 12px !important;
-        gap: 8px !important;
+    .cards,
+    .dashboard-acciones,
+    .graficos-container,
+    .grid {
+        gap: calc(16 * var(--u));
     }
 
-    .page-header h2 {
-        font-size: var(--mobile-font-section-title) !important;
-        margin: 0 !important;
+    .filtros-movimientos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    /* --- HEADER Y NAVEGACIÓN --- */
+    .filtro-botones {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ===== ≤1000px: tablas → tarjetas =====
+   Con el menú lateral visible, por debajo de ~1000px una tabla de 5-6 columnas
+   ya no entra en el contenido: se muestran las tarjetas de movimiento. */
+@media (max-width: 1000px) {
+    .tabla-desktop {
+        display: none;
+    }
+
+    .movimiento-cards {
+        display: block;
+    }
+}
+
+/* ===== ≤900px: navegación móvil ===== */
+@media (max-width: 900px) {
+    /* --- Navbar: hamburguesa a la izquierda, logo centrado, sin selectores --- */
     .navbar {
-        padding: 8px 12px !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 100 !important;
-        height: var(--mobile-header-height) !important;
-        box-sizing: border-box !important;
-    }
-
-    .logo {
-        display: flex !important;
-        align-items: center !important;
-    }
-
-    .logo img {
-        height: 34px !important;
-        transform: scale(1) !important;
-    }
-
-    .header-controls {
-        gap: 4px !important;
-        margin-left: auto !important;
-        margin-right: 6px !important;
-    }
-
-    .moneda-selector select {
-        padding: 4px 6px !important;
-        font-size: 0.75rem !important;
-        border-radius: 6px !important;
-    }
-
-    .user {
-        font-size: 0.78rem !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        max-width: 90px !important;
+        height: calc(64 * var(--u));
+        padding: 0 calc(14 * var(--u));
+        position: sticky;
+        top: 0;
+        z-index: 1000;
     }
 
     .menu-toggle {
-        display: flex !important;
-        width: 34px !important;
-        height: 34px !important;
-        padding: 2px !important;
+        display: flex;
+    }
+
+    .logo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+    }
+
+    .logo-img {
+        height: max(30px, calc(46 * var(--u)));
+    }
+
+    /* Los selectores de moneda y período pasan al menú lateral para no tapar el logo */
+    .header-controls,
+    .user {
+        display: none;
+    }
+
+    .sidebar-controles {
+        display: flex;
+    }
+
+    /* --- Sidebar como cajón --- */
+    .layout {
+        flex-direction: column;
     }
 
     .sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 250px !important;
-        height: 100dvh !important;
-        z-index: 2000 !important;
-        transform: translateX(-100%) !important;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        padding-top: 60px !important;
-        box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4) !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: min(calc(290 * var(--u)), 84vw);
+        height: 100dvh;
+        min-height: 100dvh;
+        z-index: 2000;
+        transform: translateX(-100%);
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+        padding-top: calc(76 * var(--u));
+        box-shadow: none;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .sidebar.open {
-        transform: translateX(0) !important;
+        transform: translateX(0);
+        box-shadow: 4px 0 30px rgba(0, 0, 0, 0.45);
     }
 
-    /* --- DASHBOARD: CARDS DE RESUMEN COMPACTAS (3 COLUMNAS) --- */
-    .cards,
-    .cards.small {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: var(--mobile-grid-gap) !important;
-        margin-bottom: 16px !important;
-        flex-direction: row !important;
+    .sidebar nav {
+        padding-top: calc(14 * var(--u));
     }
 
-    .card {
-        flex: none !important;
-        width: 100% !important;
-        margin-bottom: 20px !important;
-        box-sizing: border-box !important;
-        padding: var(--mobile-card-padding) !important;
-        min-width: 0 !important;
-        border-radius: 8px !important;
-        min-height: 0 !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    .sidebar-overlay {
+        display: block;
+        pointer-events: none;
     }
 
-    .card h4 {
-        font-size: var(--mobile-font-card-title) !important;
-        margin: 8px 0 10px 0 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        line-height: 1.1 !important;
-        font-weight: 500 !important;
+    .sidebar-overlay.visible {
+        pointer-events: auto;
     }
 
-    .card p,
-    .card p#ingresos,
-    .card p#balance,
-    .card p#gastos {
-        font-size: var(--mobile-font-card-value) !important;
-        font-weight: 700 !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        line-height: 1.2 !important;
-        padding-bottom: 10px;
+    /* --- Contenido --- */
+    .content {
+        padding: calc(40 * var(--u)) calc(18 * var(--u)) calc(32 * var(--u));
     }
 
-    .cards.small .card {
-        padding: var(--mobile-card-padding) !important;
-    }
-
-    .cards.small .card p {
-        font-size: clamp(0.88rem, 3.5vw, 1.12rem) !important;
-    }
-
-    /* --- DASHBOARD: BOTONES DE ACCIÓN LADO A LADO --- */
-    .dashboard-acciones {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 6px !important;
-        width: 100% !important;
-        margin-bottom: 14px !important;
-    }
-
-    .dashboard-acciones .btn {
-        flex: 1 1 0 !important;
-        width: auto !important;
-        margin-bottom: 0 !important;
-        padding: var(--mobile-btn-padding) !important;
-        font-size: var(--mobile-btn-font-size) !important;
-        font-weight: 600 !important;
-        white-space: nowrap !important;
-        text-align: center !important;
-        justify-content: center !important;
-        border-radius: 6px !important;
-    }
-
-    /* --- DASHBOARD: GRÁFICOS COMPACTOS --- */
+    .grid,
     .graficos-container {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important;
-        margin-bottom: 14px !important;
-        max-height: none !important;
+        grid-template-columns: 1fr;
     }
 
-    .grafico-card {
-        padding: 10px 12px 8px !important;
-        max-height: 240px !important;
-        border-radius: 10px !important;
-        flex: none !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    .grafico-card-header {
-        margin-bottom: 4px !important;
-        gap: 6px !important;
-    }
-
-    .grafico-titulo {
-        font-size: 0.82rem !important;
-    }
-
-    .grafico-subtitulo {
-        font-size: 0.7rem !important;
-    }
-
-    .grafico-wrap canvas {
-        max-height: var(--mobile-chart-max-height) !important;
-    }
-
-    /* --- DASHBOARD: LISTA DE MOVIMIENTOS Y RECOMENDACIONES IA --- */
-    .grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important;
-        margin-bottom: 14px !important;
-    }
-
-    .box.movimientos-card,
-    .box.ia-card {
-        padding: var(--mobile-box-padding) !important;
-        border-radius: 10px !important;
-    }
-
-    .movimiento-item {
-        padding: 6px 0 !important;
-        gap: 8px !important;
-    }
-
-    .mov-desc {
-        font-size: 0.82rem !important;
-    }
-
-    .mov-cat {
-        font-size: 0.72rem !important;
-    }
-
-    .mov-monto {
-        font-size: 0.85rem !important;
-    }
-
-    .ia-item {
-        padding: 8px 10px !important;
-        gap: 8px !important;
-        border-radius: 8px !important;
-    }
-
-    .ia-item-titulo {
-        font-size: 0.8rem !important;
-    }
-
-    .ia-item-texto {
-        font-size: 0.75rem !important;
-    }
-
-    .ia-btn-chat {
-        padding: 8px 12px !important;
-        font-size: 0.8rem !important;
-        margin-top: 10px !important;
-        border-radius: 6px !important;
-    }
-
-    /* --- VISTAS DE MOVIMIENTOS, GASTOS E INGRESOS --- */
-    .acciones-filtros-bar {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        margin-bottom: 12px !important;
-    }
-
-    .btn-nuevo-movimiento {
-        width: 100% !important;
-        padding: 9px 12px !important;
-        font-size: 0.85rem !important;
-    }
-
-    .filtros {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 6px !important;
-        width: 100% !important;
-    }
-
-    .filtros input[type="date"],
-    .filtros select {
-        flex: 1 1 0 !important;
-        width: 50% !important;
-        padding: 7px 8px !important;
-        font-size: 0.78rem !important;
-        box-sizing: border-box !important;
-    }
-
-    /* Tablas adaptativas (Scroll interno a la caja, nunca desborde horizontal de página) */
-    .tabla-box {
-        overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        border-radius: 8px !important;
-        margin-bottom: 16px !important;
-        max-width: 100% !important;
-    }
-
-    .tabla-desktop {
-        width: 100% !important;
-        min-width: 480px !important;
-    }
-
-    .tabla-desktop th,
-    .tabla-desktop td {
-        padding: 8px 10px !important;
-        font-size: 0.8rem !important;
-    }
-
-    /* --- PÁGINA CATEGORÍAS --- */
-    .btn-nuevo {
-        padding: 7px 12px !important;
-        font-size: 0.8rem !important;
-        width: auto !important;
-    }
-
-    .tabs {
-        width: 100% !important;
-        display: flex !important;
-        margin-bottom: 12px !important;
-        padding: 3px !important;
-    }
-
-    .tab {
-        flex: 1 !important;
-        text-align: center !important;
-        padding: 7px 10px !important;
-        font-size: 0.82rem !important;
-    }
-
-    .cat-grid {
-        display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-    }
-
-    .cat-card {
-        padding: 10px 10px !important;
-        border-radius: 10px !important;
-    }
-
-    .cat-nombre {
-        font-size: 0.82rem !important;
-    }
-
-    .cat-monto {
-        font-size: 0.95rem !important;
-    }
-
-    .cat-acciones button {
-        padding: 4px 6px !important;
-        font-size: 0.72rem !important;
-    }
-
-    /* --- PÁGINA OBJETIVOS --- */
-    .obj-stats {
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 6px !important;
-        margin-bottom: 12px !important;
-    }
-
-    .obj-stat {
-        padding: 8px 6px !important;
-        border-radius: 8px !important;
-    }
-
-    .obj-stat-num {
-        font-size: 1.1rem !important;
-    }
-
-    .obj-stat-label {
-        font-size: 0.7rem !important;
-    }
-
-    .objetivos-grid {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    .obj-card {
-        padding: 12px 12px !important;
-        border-radius: 10px !important;
-    }
-
-    .obj-card-titulo {
-        font-size: 0.88rem !important;
-    }
-
-    .obj-card-desc {
-        font-size: 0.76rem !important;
-    }
-
-    .obj-monto-actual {
-        font-size: 1.05rem !important;
-    }
-
-    .obj-monto-meta {
-        font-size: 0.76rem !important;
-    }
-
-    /* --- PÁGINA PERFIL --- */
+    /* --- Perfil --- */
     .perfil-layout {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 12px !important;
+        grid-template-columns: 1fr;
     }
 
-    .perfil-sidebar-card,
-    .seccion-card {
-        padding: 14px 12px !important;
-        border-radius: 10px !important;
+    .perfil-sidebar-card {
+        position: static;
     }
 
-    .campo-row {
-        display: grid !important;
-        grid-template-columns: 1fr !important;
-        gap: 6px !important;
+    .perfil-user-stats {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: calc(14 * var(--u));
     }
 
-    .peligro-row {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        gap: 8px !important;
-        padding: 8px 0 !important;
+    .perfil-user-stat {
+        flex-direction: column;
+        gap: 2px;
+        min-width: calc(100 * var(--u));
     }
 
-    .peligro-info strong {
-        font-size: 0.82rem !important;
+    /* --- Categorías --- */
+    .cat-grid {
+        grid-template-columns: repeat(auto-fill, minmax(calc(160 * var(--u)), 1fr));
     }
 
-    .peligro-info span {
-        font-size: 0.72rem !important;
+    .resumen-cat-nombre {
+        min-width: calc(110 * var(--u));
+        font-size: 0.88rem;
     }
 
-    .btn-peligro {
-        width: auto !important;
-        padding: 6px 10px !important;
-        font-size: 0.78rem !important;
-        white-space: nowrap !important;
+    /* --- IA: página completa y chat flotante --- */
+    .ia-chat-shell .chat-container {
+        height: calc(100dvh - calc(210 * var(--u)));
+        min-height: calc(380 * var(--u));
+        max-height: none;
     }
 
-    /* --- PÁGINA IA CHAT COMPLETO --- */
-    .ia-chat-shell {
-        padding: 0 !important;
+    .chat-flotante {
+        width: calc(100vw - calc(24 * var(--u)));
+        right: calc(12 * var(--u));
+        bottom: calc(92 * var(--u));
+        height: min(calc(440 * var(--u)), calc(100dvh - calc(170 * var(--u))));
     }
 
-    .chat-container {
-        height: calc(100dvh - 120px) !important;
-        border-radius: 10px !important;
-    }
-
-    .input-container {
-        padding: 8px 10px !important;
-        gap: 8px !important;
-    }
-
-    .input-chat {
-        padding: 8px 10px !important;
-        font-size: 0.85rem !important;
-    }
-
-    .btn-enviar {
-        padding: 8px 12px !important;
-        font-size: 0.8rem !important;
-    }
-
-    /* --- PÁGINAS DE AUTENTICACIÓN (LOGIN / REGISTRO / VERIFICACIÓN) --- */
-    .login-body {
-        padding: 12px !important;
-    }
-
-    .auth-card {
-        width: 100% !important;
-        max-width: 360px !important;
-        padding: 20px 16px !important;
-        border-radius: 12px !important;
-    }
-
-    .auth-card .logo img {
-        height: 60px !important;
-    }
-
-    .subtitle {
-        font-size: 0.85rem !important;
-        margin-bottom: 14px !important;
-    }
-
-    .form-group input {
-        padding: 10px 12px !important;
-        font-size: 0.9rem !important;
-    }
-
-    .btn-google,
-    .btn-primary {
-        padding: 10px 12px !important;
-        font-size: 0.88rem !important;
-    }
-
-    .codigo-inputs input {
-        width: 36px !important;
-        height: 44px !important;
-        font-size: 1.15rem !important;
-    }
-
-    /* --- FORMULARIOS Y MODALES GENERALES --- */
-    .modal {
-        padding: 10px !important;
-    }
-
-    .modal-content {
-        width: var(--mobile-modal-max-width) !important;
-        max-width: 420px !important;
-        max-height: 86dvh !important;
-        overflow-y: auto !important;
-        padding: 14px 14px !important;
-        border-radius: 12px !important;
-        box-sizing: border-box !important;
-    }
-
-    .modal-content h3 {
-        font-size: 1.05rem !important;
-        margin-bottom: 10px !important;
-    }
-
-    .modal-content input,
-    .modal-content select {
-        padding: 9px 10px !important;
-        font-size: 0.85rem !important;
-        margin-bottom: 8px !important;
-        border-radius: 6px !important;
-    }
-
-    .modal-actions {
-        display: flex !important;
-        gap: 8px !important;
-        margin-top: 10px !important;
-    }
-
-    .modal-actions .btn {
-        flex: 1 !important;
-        padding: 8px 10px !important;
-        font-size: 0.82rem !important;
-        margin-bottom: 0 !important;
+    .boton-ia-wrap {
+        bottom: calc(18 * var(--u));
+        --borde-derecho: 18px;
     }
 }
 
-
-/* ==========================================================================
-   2. BREAKPOINT PANTALLAS PEQUEÑAS (<= 380px)
-   ========================================================================== */
-@media (max-width: 380px) {
-    .user {
-        display: none !important;
-        /* Oculta el saludo del usuario en pantallas súper angostas para dar prioridad a los selectores */
+/* ===== ≤600px: teléfonos ===== */
+@media (max-width: 600px) {
+    .content {
+        padding: calc(36 * var(--u)) calc(16 * var(--u)) calc(28 * var(--u));
     }
 
-    .moneda-selector select {
-        padding: 4px 4px !important;
-        font-size: 0.72rem !important;
+    /* --- Encabezado de página --- */
+    .page-header {
+        margin-bottom: calc(18 * var(--u));
     }
 
-    .cards,
-    .cards.small {
-        gap: 6px !important;
+    .page-header h2,
+    .content > h2.titulo-con-icono:first-child {
+        font-size: 1.3rem;
+    }
+
+    .btn-nuevo {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    /* --- Tarjetas de métricas: cada una ocupa todo el ancho --- */
+    .cards {
+        grid-template-columns: 1fr;
+        gap: calc(12 * var(--u));
+        margin-bottom: calc(14 * var(--u));
     }
 
     .card {
-        padding: 8px 6px !important;
+        padding: calc(16 * var(--u)) calc(18 * var(--u));
     }
 
     .card h4 {
-        font-size: 0.68rem !important;
+        font-size: 0.85rem;
+        margin-bottom: calc(4 * var(--u));
     }
 
     .card p {
-        font-size: 0.95rem !important;
+        font-size: 1.45rem;
+    }
+
+    /* Las secundarias del dashboard en formato fila compacta: etiqueta a la izquierda, valor a la derecha */
+    .cards.small .card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: calc(12 * var(--u));
+        padding: calc(14 * var(--u)) calc(18 * var(--u));
+    }
+
+    .cards.small .card h4 {
+        margin: 0;
+    }
+
+    .cards.small .card p {
+        font-size: 1.15rem;
+        text-align: right;
+    }
+
+    /* --- Botones del dashboard: en fila (no en columna) y bien separados --- */
+    .dashboard-acciones {
+        grid-template-columns: repeat(3, 1fr);
+        gap: calc(10 * var(--u));
+        margin: calc(6 * var(--u)) 0 calc(28 * var(--u));
     }
 
     .dashboard-acciones .btn {
-        padding: 7px 4px !important;
-        font-size: 0.75rem !important;
+        height: calc(52 * var(--u));
+        padding: 0 calc(8 * var(--u));
+        font-size: 0.95rem;
     }
-}
 
+    /* --- Gráficos --- */
+    .grafico-card {
+        padding: calc(14 * var(--u)) calc(14 * var(--u)) calc(12 * var(--u));
+    }
 
-/* ==========================================================================
-   3. BREAKPOINT EXTREMO / ULTRA COMPACTO (<= 340px)
-   ========================================================================== */
-@media (max-width: 340px) {
+    .grafico-wrap {
+        height: calc(260 * var(--u));
+    }
 
-    .cards,
-    .cards.small {
-        grid-template-columns: repeat(2, 1fr) !important;
-        /* Pasa a 2 columnas en celulares extremadamente pequeños */
+    /* --- Ingresos / gastos: acciones y filtros a todo el ancho --- */
+    .acciones-filtros-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: calc(12 * var(--u));
+        margin-bottom: calc(18 * var(--u));
+    }
+
+    .acciones,
+    .btn-nuevo-movimiento {
+        width: 100%;
+    }
+
+    .filtros {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: calc(10 * var(--u));
+    }
+
+    .filtros input,
+    .filtros select,
+    .filtros .select-trackify,
+    .filtros .flatpickr-input,
+    .btn-reset-filtros {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* --- Movimientos: filtros --- */
+    .filtros-movimientos {
+        grid-template-columns: 1fr 1fr;
+        padding: calc(14 * var(--u));
+        gap: calc(10 * var(--u));
+    }
+
+    .filtro-botones .btn,
+    .filtro-botones .btn-reset-filtros {
+        flex: 1;
+    }
+
+    /* --- Dashboard: listas --- */
+    .box.movimientos-card,
+    .box.ia-card {
+        padding: calc(16 * var(--u)) calc(14 * var(--u));
+    }
+
+    .movimiento-item {
+        padding: calc(8 * var(--u)) calc(6 * var(--u));
+        gap: calc(10 * var(--u));
+    }
+
+    /* --- Categorías --- */
+    .tabs,
+    .cat-orden {
+        width: 100%;
+        display: flex;
+    }
+
+    .cat-orden .select-trackify {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .tab {
+        flex: 1;
+        text-align: center;
     }
 
     .cat-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: 1fr 1fr;
+        gap: calc(10 * var(--u));
+    }
+
+    /* Tarjetas de categoría compactas: en 2 columnas el diseño de escritorio queda enorme */
+    .cat-card {
+        padding: calc(14 * var(--u)) calc(12 * var(--u));
+        gap: calc(10 * var(--u));
+        border-radius: calc(14 * var(--u));
+    }
+
+    .cat-icon {
+        width: calc(38 * var(--u));
+        height: calc(38 * var(--u));
+        border-radius: calc(11 * var(--u));
+    }
+
+    .cat-icon img {
+        width: calc(20 * var(--u));
+        height: calc(20 * var(--u));
+    }
+
+    .cat-nombre {
+        font-size: 0.92rem;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .cat-monto {
+        font-size: 1rem;
+    }
+
+    .cat-cant {
+        font-size: 0.75rem;
+    }
+
+    .cat-acciones {
+        flex-wrap: wrap;
+        gap: calc(6 * var(--u));
+        margin-top: 0;
+    }
+
+    .cat-acciones button {
+        padding: calc(6 * var(--u)) calc(10 * var(--u));
+        min-height: max(28px, calc(34 * var(--u)));
+        font-size: 0.8rem;
+    }
+
+    .cat-badge-sistema {
+        font-size: 0.7rem;
+        letter-spacing: 0.01em;
+        padding: calc(3 * var(--u)) calc(7 * var(--u));
+    }
+
+    .cat-acciones .btn-del {
+        min-width: max(28px, calc(34 * var(--u)));
+        padding: calc(6 * var(--u));
+    }
+
+    .tab {
+        padding: calc(8 * var(--u)) calc(12 * var(--u));
+        min-height: max(28px, calc(38 * var(--u)));
+        font-size: 0.88rem;
+    }
+
+    /* iOS hace zoom al enfocar campos con letra menor a 16px: los campos de texto no se achican.
+       Especificidad baja a propósito: los campos grandes (código de verificación) conservan su tamaño. */
+    input:where(:not([type="checkbox"], [type="radio"], [type="color"], [readonly])),
+    select,
+    textarea,
+    .input-chat,
+    .form-group input:not([readonly]) {
+        font-size: 16px;
+    }
+
+    .resumen-barra {
+        display: none;
+    }
+
+    /* --- Objetivos --- */
+    .obj-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: calc(10 * var(--u));
+    }
+
+    .obj-stat {
+        padding: calc(14 * var(--u)) calc(10 * var(--u));
+    }
+
+    .obj-stat-num {
+        font-size: 1.35rem;
+    }
+
+    .obj-card-top {
+        flex-direction: column;
+        gap: calc(8 * var(--u));
+    }
+
+    .obj-montos {
+        text-align: left;
+        align-items: flex-start;
+    }
+
+    .obj-acciones {
+        flex-wrap: wrap;
+    }
+
+    /* --- Perfil --- */
+    .campo-row {
+        grid-template-columns: 1fr;
+    }
+
+    .peligro-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: calc(10 * var(--u));
+    }
+
+    .btn-peligro {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* --- IA página completa --- */
+    .ia-chat-shell .input-container {
+        flex-direction: column;
+    }
+
+    .ia-chat-shell .input-chat,
+    .ia-chat-shell .btn-enviar {
+        width: 100%;
+        min-height: calc(46 * var(--u));
+    }
+
+    /* --- Modales --- */
+    .modal {
+        padding: calc(12 * var(--u));
+    }
+
+    .modal-content {
+        padding: calc(20 * var(--u)) calc(16 * var(--u));
+        gap: calc(12 * var(--u));
+        max-height: calc(100dvh - calc(24 * var(--u)));
+    }
+
+    .modal-actions .btn {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: calc(12 * var(--u)) calc(10 * var(--u));
+    }
+
+    /* Botón del asistente: solo el avatar circular */
+    .boton-ia-texto {
+        display: none;
+    }
+
+    .boton-ia {
+        padding: calc(5 * var(--u));
+    }
+}
+
+/* ===== ≤360px: teléfonos angostos ===== */
+@media (max-width: 360px) {
+    .content {
+        padding: calc(32 * var(--u)) calc(12 * var(--u)) calc(24 * var(--u));
+    }
+
+    .logo-img {
+        height: max(28px, calc(40 * var(--u)));
+    }
+
+    .dashboard-acciones .btn {
+        font-size: 0.85rem;
+    }
+
+    .filtros-movimientos {
+        grid-template-columns: 1fr;
+    }
+
+    .obj-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .obj-stat {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .obj-acciones > * {
+        flex: 1 1 100%;
+    }
+
+    .obj-acciones button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .flatpickr-calendar {
+        font-size: 0.85rem;
     }
 }

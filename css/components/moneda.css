@@ -1,0 +1,108 @@
+/* ===== TRACKIFY: SELECTORES DE MONEDA Y PERÍODO =====
+   Se usan en el navbar (escritorio) y dentro del menú lateral (móvil).
+   Las adaptaciones por tamaño de pantalla están en css/responsive.css */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    margin-left: auto;
+}
+
+.selector-header {
+    display: flex;
+    flex-direction: column;
+    gap: calc(6 * var(--u));
+    margin: 0;
+}
+
+.selector-header-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Píldora con los colores de marca: fondo translúcido, borde y flecha lima */
+.selector-header select,
+.selector-pill-trigger {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: calc(8 * var(--u)) calc(34 * var(--u)) calc(8 * var(--u)) calc(16 * var(--u));
+    min-height: calc(40 * var(--u));
+    min-width: calc(104 * var(--u));
+    border: 1px solid rgba(207, 242, 124, 0.35);
+    border-radius: calc(999 * var(--u));
+    background-color: rgba(207, 242, 124, 0.08);
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    background-size: 13px 13px;
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-family: inherit;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    outline: none;
+    box-shadow: none;
+    transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+.selector-header select:hover,
+.selector-pill-trigger:hover,
+.selector-pill.abierto .selector-pill-trigger {
+    border-color: var(--brand-green-light);
+    background-color: rgba(207, 242, 124, 0.16);
+}
+
+.selector-header select:focus,
+.selector-pill-trigger:focus-visible {
+    border-color: var(--brand-green-light);
+    background-color: rgba(207, 242, 124, 0.16);
+    box-shadow: 0 0 0 3px rgba(207, 242, 124, 0.25);
+}
+
+.selector-header select option {
+    background: var(--brand-dark);
+    color: #F8FAFC;
+}
+
+/* Dentro del menú lateral ocupan todo el ancho */
+.sidebar-controles .selector-header select,
+.sidebar-controles .selector-pill,
+.sidebar-controles .selector-pill-trigger {
+    width: 100%;
+    min-height: calc(44 * var(--u));
+}
+
+#tipoCambioInfo {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+}
+
+/* ===== DESPLEGABLE PROPIO: VARIANTE PÍLDORA (js/main.js → mejorarSelect) ===== */
+.selector-pill {
+    position: relative;
+}
+
+.selector-pill-trigger {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    line-height: 1.2;
+}
+
+.selector-pill.abierto .selector-pill-trigger {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23CFF27C' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 15 12 9 18 15'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
+/* Lista de la píldora: siempre oscura con acento lima (vive en <body>, ver forms.css) */
+.select-lista-pill {
+    --lista-bg: var(--brand-dark);
+    --lista-borde: rgba(207, 242, 124, 0.3);
+    --lista-texto: #F8FAFC;
+    --lista-hover-bg: rgba(207, 242, 124, 0.12);
+    --lista-acento: var(--brand-green-light);
+}

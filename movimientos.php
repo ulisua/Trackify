@@ -1,68 +1,52 @@
 <?php
 $page = 'movimientos';
+$extra_css = '<link rel="stylesheet" href="css/pages/movimientos.css">';
 require_once 'conexion.php';
-if(session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
-$user_id = $_SESSION['usuario_id'];
-
-
-
-// ── ELIMINAR (AJAX) ───────────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'eliminar') {
-    header('Content-Type: application/json');
-    $id = intval($_POST['id_movimiento']);
-    $check = $conn->prepare("SELECT id_movimiento FROM movimientos WHERE id_movimiento=? AND id_usuario=?");
-    $check->bind_param("ii", $id, $user_id);
-    $check->execute();
-    if ($check->get_result()->num_rows === 0) { echo json_encode(['ok' => false]); exit(); }
-    $stmt = $conn->prepare("DELETE FROM movimientos WHERE id_movimiento=?");
-    $stmt->bind_param("i", $id);
-    echo json_encode(['ok' => $stmt->execute()]);
-    exit();
-}
-
+// Editar / eliminar usan el handler común (PRG con return_url)
+require_once 'includes/movimientos_handler.php';
 require_once 'includes/header.php';
 
+$user_id = (int)$_SESSION['usuario_id'];
+
 // ── FILTROS ───────────────────────────────────────────────────────────────────
-$filtro_tipo      = $_GET['tipo'] ?? '';
+$filtro_tipo      = in_array($_GET['tipo'] ?? '', ['ingreso', 'gasto'], true) ? $_GET['tipo'] : '';
 $filtro_categoria = isset($_GET['categoria']) ? intval($_GET['categoria']) : 0;
-$filtro_desde     = $_GET['desde'] ?? '';
-$filtro_hasta     = $_GET['hasta'] ?? '';
+$filtro_desde     = fechaValida($_GET['desde'] ?? '') ?? '';
+$filtro_hasta     = fechaValida($_GET['hasta'] ?? '') ?? '';
 
 // Por defecto mostrar el período activo
 if (!$filtro_desde && !$filtro_hasta) {
     $filtro_desde = $fecha_desde;
     $filtro_hasta = $fecha_hasta;
 }
+if (!$filtro_desde) $filtro_desde = '1970-01-01';
+if (!$filtro_hasta) $filtro_hasta = date('Y-m-d');
+if ($filtro_desde > $filtro_hasta) {
+    [$filtro_desde, $filtro_hasta] = [$filtro_hasta, $filtro_desde];
+}
+$hay_filtros = $filtro_tipo || $filtro_categoria || $filtro_desde !== $fecha_desde || $filtro_hasta !== $fecha_hasta;
 
-// ── TOTALES DEL PERÍODO ───────────────────────────────────────────────────────
+// ── TOTALES DEL RANGO ─────────────────────────────────────────────────────────
 $stmt_tot = $conn->prepare("SELECT
     COALESCE(SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END), 0) as total_ingresos,
-    COALESCE(SUM(CASE WHEN tipo='gasto'   THEN monto ELSE 0 END), 0) as total_gastos,
-    COUNT(*) as cantidad
+    COALESCE(SUM(CASE WHEN tipo='gasto'   THEN monto ELSE 0 END), 0) as total_gastos
     FROM movimientos WHERE id_usuario=? AND fecha BETWEEN ? AND ?");
 $stmt_tot->bind_param("iss", $user_id, $filtro_desde, $filtro_hasta);
 $stmt_tot->execute();
 $totales = $stmt_tot->get_result()->fetch_assoc();
-$total_ingresos = $totales['total_ingresos'];
-$total_gastos   = $totales['total_gastos'];
+$total_ingresos = (float)$totales['total_ingresos'];
+$total_gastos   = (float)$totales['total_gastos'];
 $balance        = $total_ingresos - $total_gastos;
-$cantidad_total = $totales['cantidad'];
 
-// ── CATEGORÍAS PARA EL FILTRO ─────────────────────────────────────────────────
-$stmt_cats = $conn->prepare("SELECT DISTINCT c.id_categoria, c.nombre, c.tipo FROM categorias c INNER JOIN movimientos m ON c.id_categoria = m.id_categoria WHERE m.id_usuario=? ORDER BY c.tipo, c.nombre");
-$stmt_cats->bind_param("i", $user_id);
-$stmt_cats->execute();
-$categorias_filtro = $stmt_cats->get_result()->fetch_all(MYSQLI_ASSOC);
+// ── CATEGORÍAS PARA EL FILTRO (visibles para el usuario) ──────────────────────
+$categorias_filtro = obtenerCategoriasVisibles($conn, $user_id);
 
 // ── QUERY PRINCIPAL CON FILTROS ───────────────────────────────────────────────
 $where  = "m.id_usuario=? AND m.fecha BETWEEN ? AND ?";
 $params = [$user_id, $filtro_desde, $filtro_hasta];
 $types  = "iss";
 
-if ($filtro_tipo && in_array($filtro_tipo, ['ingreso', 'gasto'])) {
+if ($filtro_tipo) {
     $where   .= " AND m.tipo=?";
     $params[] = $filtro_tipo;
     $types   .= "s";
@@ -84,22 +68,38 @@ $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $movimientos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Params GET para mantener filtros en links
-$query_params = http_build_query(array_filter([
-    'tipo'      => $filtro_tipo,
-    'categoria' => $filtro_categoria ?: null,
-    'desde'     => $filtro_desde,
-    'hasta'     => $filtro_hasta,
-]));
+$etiquetas_periodo = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 'mes' => 'Este mes'];
+$subtitulo = ($hay_filtros ? 'Rango elegido' : ($etiquetas_periodo[$periodo_actual] ?? 'Período'))
+    . ' · ' . date('d/m/Y', strtotime($filtro_desde)) . ' — ' . date('d/m/Y', strtotime($filtro_hasta));
+
+function argsEditarMov($mov) {
+    return implode(', ', [
+        (int)$mov['id_movimiento'],
+        jsAttr((float)$mov['monto']),
+        jsAttr($mov['categoria_nombre']),
+        jsAttr($mov['descripcion'] ?? ''),
+        jsAttr($mov['fecha']),
+        jsAttr($mov['tipo']),
+    ]);
+}
+
+function badgeTipo($tipo) {
+    return $tipo === 'ingreso'
+        ? '<span class="badge-tipo badge-tipo-ingreso"><img src="iconos/generales/flechaarriba.png" alt="" class="icono-badge"> Ingreso</span>'
+        : '<span class="badge-tipo badge-tipo-gasto"><img src="iconos/generales/flechaabajo.png" alt="" class="icono-badge"> Gasto</span>';
+}
+
+$return_url_mov = htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'movimientos.php', ENT_QUOTES);
 ?>
 
-<h2>📋 Movimientos</h2>
-<p style="color:#64748b;font-size:.85rem;margin:-8px 0 20px;">
-    <?php
-    $labels = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 'mes' => 'Este mes'];
-    echo ($labels[$periodo_actual] ?? 'Período') . ' · ' . date('d/m/Y', strtotime($filtro_desde)) . ' — ' . date('d/m/Y', strtotime($filtro_hasta));
-    ?>
-</p>
+<div class="pagina-movimientos">
+
+<div class="page-header">
+    <div class="page-header-texto">
+        <h2 class="titulo-con-icono"><img src="iconos/generales/listaultmov1.png" alt="" class="icono-titulo"> Movimientos</h2>
+        <p class="page-subtitle"><?php echo htmlspecialchars($subtitulo); ?></p>
+    </div>
+</div>
 
 <!-- RESUMEN -->
 <section class="cards">
@@ -109,7 +109,7 @@ $query_params = http_build_query(array_filter([
     </div>
     <div class="card highlight">
         <h4>Balance</h4>
-        <p data-ars="<?= $balance ?>" style="color:<?= $balance >= 0 ? '#10B981' : '#EF4444' ?>">$<?= number_format($balance, 2, ',', '.') ?></p>
+        <p data-ars="<?= $balance ?>">$<?= number_format($balance, 2, ',', '.') ?></p>
     </div>
     <div class="card gasto-card">
         <h4>Gastos</h4>
@@ -118,49 +118,48 @@ $query_params = http_build_query(array_filter([
 </section>
 
 <!-- FILTROS -->
-<section class="filtros" style="margin-bottom:20px;">
-    <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <input type="date" name="desde" value="<?= htmlspecialchars($filtro_desde) ?>" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:.9rem;">
-        <input type="date" name="hasta" value="<?= htmlspecialchars($filtro_hasta) ?>" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:.9rem;">
-
-        <select name="tipo" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:.9rem;background:#fff;">
+<form method="GET" class="filtros-movimientos">
+    <label class="filtro-campo">
+        <span class="filtro-etiqueta">Desde</span>
+        <input type="text" name="desde" class="js-fecha-filtro" value="<?= htmlspecialchars($filtro_desde) ?>" readonly>
+    </label>
+    <label class="filtro-campo">
+        <span class="filtro-etiqueta">Hasta</span>
+        <input type="text" name="hasta" class="js-fecha-filtro" value="<?= htmlspecialchars($filtro_hasta) ?>" readonly>
+    </label>
+    <label class="filtro-campo">
+        <span class="filtro-etiqueta">Tipo</span>
+        <select name="tipo">
             <option value="">Todos los tipos</option>
-            <option value="ingreso" <?= $filtro_tipo === 'ingreso' ? 'selected' : '' ?>>💰 Ingresos</option>
-            <option value="gasto"   <?= $filtro_tipo === 'gasto'   ? 'selected' : '' ?>>💸 Gastos</option>
+            <option value="ingreso" <?= $filtro_tipo === 'ingreso' ? 'selected' : '' ?>>Ingresos</option>
+            <option value="gasto"   <?= $filtro_tipo === 'gasto'   ? 'selected' : '' ?>>Gastos</option>
         </select>
-
-        <select name="categoria" style="padding:10px 12px;border:1px solid #E2E8F0;border-radius:6px;font-size:.9rem;background:#fff;">
+    </label>
+    <label class="filtro-campo">
+        <span class="filtro-etiqueta">Categoría</span>
+        <select name="categoria">
             <option value="0">Todas las categorías</option>
-            <?php
-            $tipo_actual = '';
-            foreach ($categorias_filtro as $cat):
-                if ($cat['tipo'] !== $tipo_actual):
-                    if ($tipo_actual !== '') echo '</optgroup>';
-                    echo '<optgroup label="' . ($cat['tipo'] === 'ingreso' ? '💰 Ingresos' : '💸 Gastos') . '">';
-                    $tipo_actual = $cat['tipo'];
-                endif;
-            ?>
-                <option value="<?= $cat['id_categoria'] ?>" <?= $filtro_categoria === $cat['id_categoria'] ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($cat['nombre']) ?>
-                </option>
+            <?php foreach (['ingreso' => 'Ingresos', 'gasto' => 'Gastos'] as $tipo_cat => $etiqueta_cat): ?>
+                <optgroup label="<?= $etiqueta_cat ?>">
+                    <?php foreach ($categorias_filtro[$tipo_cat] as $cat): ?>
+                        <option value="<?= (int)$cat['id_categoria'] ?>" <?= $filtro_categoria === (int)$cat['id_categoria'] ? 'selected' : '' ?>><?= htmlspecialchars($cat['nombre']) ?></option>
+                    <?php endforeach; ?>
+                </optgroup>
             <?php endforeach; ?>
-            <?php if ($tipo_actual !== '') echo '</optgroup>'; ?>
         </select>
-
-        <button type="submit" style="padding:10px 20px;background:#084734;color:#CFF27C;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.9rem;">Filtrar</button>
-        <?php if ($filtro_tipo || $filtro_categoria || ($filtro_desde !== $fecha_desde) || ($filtro_hasta !== $fecha_hasta)): ?>
-            <a href="movimientos.php" style="padding:10px 14px;color:#64748b;text-decoration:none;font-size:.9rem;">✕ Limpiar</a>
+    </label>
+    <div class="filtro-botones">
+        <button type="submit" class="btn btn-filtrar">Filtrar</button>
+        <?php if ($hay_filtros): ?>
+            <a href="movimientos.php" class="btn-reset-filtros">Limpiar</a>
         <?php endif; ?>
-    </form>
-</section>
+    </div>
+</form>
 
-<!-- INFO CANTIDAD -->
-<?php if (count($movimientos) > 0): ?>
-<p style="color:#64748b;font-size:.85rem;margin:0 0 12px;">
+<p class="movimientos-cantidad">
     <?= count($movimientos) ?> movimiento<?= count($movimientos) != 1 ? 's' : '' ?>
-    <?= ($filtro_tipo || $filtro_categoria) ? '<span style="color:#F97316;">(filtrado)</span>' : '' ?>
+    <?php if ($filtro_tipo || $filtro_categoria): ?><span class="etiqueta-filtrado">filtrado</span><?php endif; ?>
 </p>
-<?php endif; ?>
 
 <!-- TABLA desktop -->
 <section class="tabla-box">
@@ -172,42 +171,33 @@ $query_params = http_build_query(array_filter([
                 <th>Categoría</th>
                 <th>Tipo</th>
                 <th>Monto</th>
-                <th></th>
+                <th><span class="sr-only">Acciones</span></th>
             </tr>
         </thead>
         <tbody>
-            <?php if (count($movimientos) > 0): ?>
-                <?php foreach ($movimientos as $mov): ?>
-                    <tr id="fila-<?= $mov['id_movimiento'] ?>">
-                        <td><?= date('d/m/Y', strtotime($mov['fecha'])) ?></td>
-                        <td><?= htmlspecialchars($mov['descripcion'] ?: 'Sin descripción') ?></td>
-                        <td><?= htmlspecialchars($mov['categoria_nombre']) ?></td>
-                        <td>
-                            <span style="
-                                padding:3px 10px;
-                                border-radius:99px;
-                                font-size:.78rem;
-                                font-weight:600;
-                                background:<?= $mov['tipo'] === 'ingreso' ? '#DCFCE7' : '#FEE2E2' ?>;
-                                color:<?= $mov['tipo'] === 'ingreso' ? '#16A34A' : '#DC2626' ?>;">
-                                <?= $mov['tipo'] === 'ingreso' ? '💰 Ingreso' : '💸 Gasto' ?>
-                            </span>
-                        </td>
-                        <td class="<?= $mov['tipo'] === 'ingreso' ? 'positivo' : 'negativo' ?>">
-                            <span data-ars="<?= $mov['monto'] ?>" data-prefijo="<?= $mov['tipo'] === 'ingreso' ? '+' : '-' ?>">
-                                <?= $mov['tipo'] === 'ingreso' ? '+' : '-' ?>$<?= number_format($mov['monto'], 2, ',', '.') ?>
-                            </span>
-                        </td>
-                        <td>
-                            <button class="delete" title="Eliminar" onclick="eliminar(<?= $mov['id_movimiento'] ?>, 'fila-<?= $mov['id_movimiento'] ?>')">🗑️</button>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
+            <?php foreach ($movimientos as $mov): $signo = $mov['tipo'] === 'ingreso' ? '+' : '-'; ?>
                 <tr>
-                    <td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">
-                        No hay movimientos <?= ($filtro_tipo || $filtro_categoria) ? 'con esos filtros' : 'en este período' ?>.
+                    <td><?= date('d/m/Y', strtotime($mov['fecha'])) ?></td>
+                    <td><?= htmlspecialchars($mov['descripcion'] ?: 'Sin descripción') ?></td>
+                    <td><?= htmlspecialchars($mov['categoria_nombre']) ?></td>
+                    <td><?= badgeTipo($mov['tipo']) ?></td>
+                    <td class="<?= $mov['tipo'] === 'ingreso' ? 'positivo' : 'negativo' ?>">
+                        <span data-ars="<?= (float)$mov['monto'] ?>" data-prefijo="<?= $signo ?>"><?= $signo ?>$<?= number_format($mov['monto'], 2, ',', '.') ?></span>
                     </td>
+                    <td class="celda-acciones">
+                        <button type="button" class="edit" aria-label="Editar" onclick="abrirModalEditarMovimiento(<?= argsEditarMov($mov) ?>)"><img src="iconos/generales/lapiz.png" alt="" class="icono-boton"></button>
+                        <form method="POST" action="movimientos.php" class="form-inline" onsubmit="confirmarEliminacion(event, '¿Eliminar este movimiento?');">
+                            <input type="hidden" name="form_type" value="eliminar_movimiento">
+                            <input type="hidden" name="id_movimiento" value="<?= (int)$mov['id_movimiento'] ?>">
+                            <input type="hidden" name="return_url" value="<?= $return_url_mov ?>">
+                            <button type="submit" class="delete" aria-label="Eliminar"><img src="iconos/generales/tachodebasura.png" alt="" class="icono-boton"></button>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            <?php if (!$movimientos): ?>
+                <tr class="fila-vacia">
+                    <td colspan="6">No hay movimientos <?= ($filtro_tipo || $filtro_categoria) ? 'con esos filtros' : 'en este período' ?>.</td>
                 </tr>
             <?php endif; ?>
         </tbody>
@@ -215,57 +205,34 @@ $query_params = http_build_query(array_filter([
 
     <!-- CARDS mobile -->
     <div class="movimiento-cards">
-        <?php if (count($movimientos) > 0): ?>
-            <?php foreach ($movimientos as $mov): ?>
-                <div class="movimiento-card" id="card-<?= $mov['id_movimiento'] ?>">
-                    <div class="mc-top">
-                        <span class="mc-desc"><?= htmlspecialchars($mov['descripcion'] ?: 'Sin descripción') ?></span>
-                        <span class="mc-monto <?= $mov['tipo'] === 'ingreso' ? 'positivo' : 'negativo' ?>"
-                              data-ars="<?= $mov['monto'] ?>"
-                              data-prefijo="<?= $mov['tipo'] === 'ingreso' ? '+' : '-' ?>">
-                            <?= $mov['tipo'] === 'ingreso' ? '+' : '-' ?>$<?= number_format($mov['monto'], 2, ',', '.') ?>
-                        </span>
-                    </div>
-                    <div class="mc-bottom">
-                        <span class="mc-tag"><?= htmlspecialchars($mov['categoria_nombre']) ?></span>
-                        <span class="mc-fecha"><?= date('d/m/Y', strtotime($mov['fecha'])) ?></span>
-                        <span style="
-                            padding:2px 8px;
-                            border-radius:99px;
-                            font-size:.72rem;
-                            font-weight:600;
-                            background:<?= $mov['tipo'] === 'ingreso' ? '#DCFCE7' : '#FEE2E2' ?>;
-                            color:<?= $mov['tipo'] === 'ingreso' ? '#16A34A' : '#DC2626' ?>;">
-                            <?= $mov['tipo'] === 'ingreso' ? 'Ingreso' : 'Gasto' ?>
-                        </span>
-                        <div class="mc-acciones">
-                            <button class="delete" onclick="eliminar(<?= $mov['id_movimiento'] ?>, 'card-<?= $mov['id_movimiento'] ?>')">🗑️</button>
-                        </div>
+        <?php foreach ($movimientos as $mov): $signo = $mov['tipo'] === 'ingreso' ? '+' : '-'; ?>
+            <div class="movimiento-card">
+                <div class="mc-top">
+                    <span class="mc-desc"><?= htmlspecialchars($mov['descripcion'] ?: 'Sin descripción') ?></span>
+                    <span class="mc-monto <?= $mov['tipo'] === 'ingreso' ? 'positivo' : 'negativo' ?>" data-ars="<?= (float)$mov['monto'] ?>" data-prefijo="<?= $signo ?>"><?= $signo ?>$<?= number_format($mov['monto'], 2, ',', '.') ?></span>
+                </div>
+                <div class="mc-bottom">
+                    <?= badgeTipo($mov['tipo']) ?>
+                    <span class="mc-tag"><?= htmlspecialchars($mov['categoria_nombre']) ?></span>
+                    <span class="mc-fecha"><?= date('d/m/Y', strtotime($mov['fecha'])) ?></span>
+                    <div class="mc-acciones">
+                        <button type="button" class="edit" aria-label="Editar" onclick="abrirModalEditarMovimiento(<?= argsEditarMov($mov) ?>)"><img src="iconos/generales/lapiz.png" alt="" class="icono-boton"></button>
+                        <form method="POST" action="movimientos.php" class="form-inline" onsubmit="confirmarEliminacion(event, '¿Eliminar este movimiento?');">
+                            <input type="hidden" name="form_type" value="eliminar_movimiento">
+                            <input type="hidden" name="id_movimiento" value="<?= (int)$mov['id_movimiento'] ?>">
+                            <input type="hidden" name="return_url" value="<?= $return_url_mov ?>">
+                            <button type="submit" class="delete" aria-label="Eliminar"><img src="iconos/generales/tachodebasura.png" alt="" class="icono-boton"></button>
+                        </form>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div style="text-align:center;padding:40px;color:#94a3b8;">
-                No hay movimientos <?= ($filtro_tipo || $filtro_categoria) ? 'con esos filtros' : 'en este período' ?>.
             </div>
+        <?php endforeach; ?>
+        <?php if (!$movimientos): ?>
+            <div class="texto-vacio">No hay movimientos <?= ($filtro_tipo || $filtro_categoria) ? 'con esos filtros' : 'en este período' ?>.</div>
         <?php endif; ?>
     </div>
 </section>
 
-<script>
-function eliminar(id, elementId) {
-    if (!confirm('¿Eliminar este movimiento?')) return;
-    const fd = new FormData();
-    fd.append('accion', 'eliminar');
-    fd.append('id_movimiento', id);
-    fetch('movimientos.php', { method: 'POST', body: fd })
-        .then(r => r.json())
-        .then(data => {
-            if (data.ok) document.getElementById(elementId)?.remove();
-            else alert('No se pudo eliminar.');
-        })
-        .catch(() => alert('Error de conexión.'));
-}
-</script>
+</div>
 
 <?php require_once 'includes/footer.php'; ?>

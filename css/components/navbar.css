@@ -1,53 +1,66 @@
 /* ===== COMPONENT: NAVBAR ===== */
+/* Las adaptaciones por tamaño de pantalla están en css/responsive.css */
 .navbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 18px 35px;
-    background: linear-gradient(90deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    padding: 0 calc(35 * var(--u));
+    height: calc(74 * var(--u));
+    /* Orbes muy difuminados: verde a la izquierda, magenta a la derecha (ver --barra-* en variables.css) */
+    background: var(--barra-header-bg);
     color: white;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    z-index: 50;
-    position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    z-index: 100;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-sizing: border-box;
+    width: 100%;
 }
 
 .logo {
-    font-weight: 700;
-    font-size: 1.4rem;
-    letter-spacing: -0.5px;
-    background: linear-gradient(90deg, var(--brand-green-light), var(--brand-pink));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    margin-right: calc(20 * var(--u));
 }
 
-/* Responsivo */
-@media (max-width: 900px) {
-    .navbar {
-        padding: 14px 20px;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
+.logo-link {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
 }
 
-@media (max-width: 480px) {
-    .navbar {
-        padding: 12px 16px;
-    }
-
-    .logo {
-        font-size: 1.2rem;
-    }
+.logo-img {
+    height: calc(54 * var(--u));
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.2s ease;
 }
+
+.logo-img:hover {
+    transform: scale(1.02);
+}
+
+.user {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin-left: calc(16 * var(--u));
+    white-space: nowrap;
+}
+
+#usuarioNombre {
+    color: var(--brand-pink);
+    font-weight: 600;
+}
+
 /* ===== COMPONENT: FOOTER ===== */
 .footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 18px 35px;
-    background: linear-gradient(90deg, #000000 0%, #000000 66%, var(--brand-purple) 100%);
+    padding: calc(18 * var(--u)) calc(35 * var(--u));
+    /* Orbes: magenta a la izquierda (continúa el del menú lateral), verde a la derecha */
+    background: var(--barra-footer-bg);
     color: rgba(255, 255, 255, 0.65);
     font-family: var(--font-family);
     font-size: 0.9rem;
@@ -71,62 +84,3 @@
 .footer a:hover {
     color: var(--brand-pink);
 }
-
-/* Controles en navbar: Moneda y Período */
-.header-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-    margin-right: 16px;
-}
-
-.moneda-selector {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.moneda-selector select {
-    padding: 6px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
-    font-size: 0.85rem;
-    font-family: inherit;
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
-}
-
-.moneda-selector select:hover {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.14);
-}
-
-.moneda-selector select option {
-    background: #1E1B26;
-    color: #ffffff;
-}
-
-#tipoCambioInfo {
-    font-size: 0.75rem;
-    color: #94A3B8;
-    white-space: nowrap;
-}
-
-@media (max-width: 768px) {
-    .header-controls {
-        margin-right: 10px;
-        gap: 6px;
-    }
-    .moneda-selector select {
-        padding: 5px 8px;
-        font-size: 0.8rem;
-    }
-    #tipoCambioInfo {
-        display: none;
-    }
-}
-

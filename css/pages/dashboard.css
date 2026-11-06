@@ -2,14 +2,14 @@
 
 /* ===== MOVIMIENTOS RECIENTES ===== */
 .movimientos-card {
-    padding: 18px 20px;
+    padding: calc(18 * var(--u)) calc(20 * var(--u));
 }
 
 .movimientos-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: calc(14 * var(--u));
 }
 
 .movimientos-header h3 {
@@ -48,9 +48,9 @@
 .movimiento-item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    gap: calc(12 * var(--u));
+    padding: calc(10 * var(--u)) calc(12 * var(--u));
+    border-radius: calc(8 * var(--u));
     transition: background 0.18s;
     cursor: default;
 }
@@ -61,9 +61,9 @@
 
 .mov-icono {
     font-size: 1.25rem;
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: calc(36 * var(--u));
+    height: calc(36 * var(--u));
+    border-radius: calc(8 * var(--u));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,14 +120,14 @@
 
 .movimientos-empty {
     text-align: center;
-    padding: 30px 0;
+    padding: calc(30 * var(--u)) 0;
     color: var(--text-muted);
 }
 
 .movimientos-empty span {
     font-size: 2rem;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: calc(8 * var(--u));
 }
 
 .movimientos-empty p {
@@ -137,21 +137,21 @@
 
 /* ===== RECOMENDACIONES IA ===== */
 .ia-card {
-    padding: 18px 20px;
+    padding: calc(18 * var(--u)) calc(20 * var(--u));
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
 .ia-header {
-    margin-bottom: 14px;
+    margin-bottom: calc(14 * var(--u));
 }
 
 .ia-titulo-wrap {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 4px;
+    gap: calc(10 * var(--u));
+    margin-bottom: calc(4 * var(--u));
 }
 
 .ia-titulo-wrap h3 {
@@ -159,35 +159,6 @@
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
-}
-
-.ia-badge {
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 20px;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-}
-
-.ia-badge-simulacion {
-    background: rgba(234, 115, 245, 0.15);
-    color: var(--brand-purple);
-    border: 1px solid rgba(234, 115, 245, 0.3);
-}
-
-[data-theme="dark"] .ia-badge-simulacion {
-    color: var(--brand-pink);
-}
-
-.ia-badge-conectada {
-    background: rgba(207, 242, 124, 0.2);
-    color: var(--brand-green-dark);
-    border: 1px solid rgba(8, 71, 52, 0.2);
-}
-
-[data-theme="dark"] .ia-badge-conectada {
-    color: var(--brand-green-light);
 }
 
 .ia-subtitulo {
@@ -199,19 +170,18 @@
 .ia-lista {
     list-style: none;
     padding: 0;
-    margin: 0 0 14px 0;
+    margin: 0 0 calc(14 * var(--u)) 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: calc(8 * var(--u));
 }
 
 .ia-item {
     display: flex;
     align-items: flex-start;
-    gap: 11px;
-    padding: 11px 13px;
-    border-radius: 99px; /* wait, let's keep original border radius if it was 9px: line 1792 has border-radius: 9px; */
-    border-radius: 9px;
+    gap: calc(11 * var(--u));
+    padding: calc(11 * var(--u)) calc(13 * var(--u));
+    border-radius: calc(9 * var(--u));
     border-left: 3px solid transparent;
     transition: background 0.18s;
 }
@@ -274,13 +244,13 @@
 .ia-btn-chat {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: calc(6 * var(--u));
     font-size: 0.83rem;
     font-weight: 600;
     color: white;
     background: linear-gradient(90deg, var(--brand-green-dark), #0f6b4f);
-    padding: 9px 16px;
-    border-radius: 8px;
+    padding: calc(9 * var(--u)) calc(16 * var(--u));
+    border-radius: calc(8 * var(--u));
     text-decoration: none;
     transition: all 0.2s ease;
     align-self: flex-start;
@@ -293,136 +263,359 @@
     color: var(--brand-green-light);
 }
 
-/* ===== CARDS DE MOVIMIENTOS (MOBILE) ===== */
-.movimiento-cards {
-    display: none;
-}
-
-.movimiento-card {
-    padding: 16px 18px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.movimiento-card:last-child {
-    border-bottom: none;
-}
-
-.mc-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.mc-desc {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 1rem;
-}
-
-.mc-monto {
-    font-size: 1.05rem;
-    font-weight: 700;
-}
-
-.mc-bottom {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.mc-tag {
-    background: var(--bg-hover);
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.mc-fecha {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    margin-left: auto;
-}
-
-.mc-acciones {
-    display: flex;
-    gap: 4px;
-}
-
 /* ===== BOTON FLOTANTE DE IA ===== */
-.boton-ia {
+.boton-ia-wrap {
+    --borde-derecho: 24px;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #2c2c3e;
-    color: white;
-    font-size: 20px;
-    padding: 15px;
-    border-radius: 50%;
+    bottom: calc(24 * var(--u));
+    right: var(--borde-derecho);
+    z-index: 1102;
+    /* El contenedor no captura clics: solo sus botones visibles */
+    pointer-events: none;
+}
+
+/* Píldora + cruz: se animan juntas al minimizar / restaurar */
+.boton-ia-cuerpo {
+    position: relative;
+    pointer-events: auto;
+    transform-origin: right center;
+    transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1) 0.12s, opacity 0.28s ease 0.12s;
+}
+
+/* Vidrio del botón y la pestaña: translúcido según el tema, con reflejos verde lima y
+   magenta de la marca y un borde degradado lima → magenta (ver .boton-ia::before) */
+.boton-ia-wrap {
+    --ia-vidrio:
+        radial-gradient(120% 160% at 0% 0%, rgba(207, 242, 124, 0.38), transparent 60%),
+        radial-gradient(120% 160% at 100% 100%, rgba(234, 115, 245, 0.32), transparent 60%),
+        rgba(255, 255, 255, 0.55);
+    --ia-texto: var(--brand-green-dark);
+    --ia-sombra: 0 10px 30px rgba(8, 71, 52, 0.18), 0 0 22px rgba(234, 115, 245, 0.18);
+}
+
+[data-theme="dark"] .boton-ia-wrap {
+    --ia-vidrio:
+        radial-gradient(120% 160% at 0% 0%, rgba(207, 242, 124, 0.22), transparent 60%),
+        radial-gradient(120% 160% at 100% 100%, rgba(234, 115, 245, 0.3), transparent 60%),
+        rgba(30, 27, 38, 0.5);
+    --ia-texto: var(--brand-green-light);
+    --ia-sombra: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 22px rgba(207, 242, 124, 0.14);
+}
+
+/* Píldora "Asistente IA" de vidrio con avatar */
+.boton-ia {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    padding: calc(6 * var(--u)) calc(20 * var(--u)) calc(6 * var(--u)) calc(6 * var(--u));
+    border: none;
+    border-radius: calc(999 * var(--u));
+    background: var(--ia-vidrio);
+    backdrop-filter: blur(16px) saturate(170%);
+    -webkit-backdrop-filter: blur(16px) saturate(170%);
+    color: var(--ia-texto);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 700;
     cursor: pointer;
-    z-index: 999;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s;
+    box-shadow: var(--ia-sombra), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+/* Borde degradado de marca (máscara: solo se pinta el contorno de 1.5px) */
+.boton-ia::before,
+.boton-ia-pestana::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1.5px;
+    border-radius: inherit;
+    background: linear-gradient(120deg, var(--brand-green-light), var(--brand-pink) 70%, var(--brand-purple));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* Brillo que recorre la píldora */
+.boton-ia::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.16) 50%, transparent 70%);
+    transform: translateX(-120%);
+    animation: brillo-ia 4.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes brillo-ia {
+    0%, 60% { transform: translateX(-120%); }
+    100% { transform: translateX(120%); }
 }
 
 .boton-ia:hover {
-    transform: scale(1.1);
+    transform: translateY(-2px);
+    box-shadow: var(--ia-sombra), 0 0 30px rgba(234, 115, 245, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
+/* Avatar: esfera lima → magenta con reflejo de vidrio (también en el header del chat) */
+.boton-ia-avatar,
+.chat-header-avatar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.75), transparent 42%),
+        linear-gradient(140deg, var(--brand-green-light) 15%, var(--brand-pink) 95%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 2px 10px rgba(234, 115, 245, 0.35);
+}
+
+.boton-ia-avatar {
+    width: calc(44 * var(--u));
+    height: calc(44 * var(--u));
+}
+
+/* El robot va oscuro sobre el avatar claro (anula el filtro de íconos sobre fondo oscuro) */
+.boton-ia .boton-ia-avatar img {
+    width: calc(26 * var(--u));
+    height: calc(26 * var(--u));
+    filter: none;
+}
+
+/* Con el chat abierto el botón queda compacto */
+.boton-ia-wrap.chat-abierto .boton-ia-texto {
+    display: none;
+}
+
+.boton-ia-wrap.chat-abierto .boton-ia {
+    padding-right: calc(6 * var(--u));
+}
+
+/* Cruz para minimizar */
+.boton-ia-cerrar {
+    position: absolute;
+    top: calc(-7 * var(--u));
+    right: calc(-7 * var(--u));
+    width: calc(24 * var(--u));
+    height: calc(24 * var(--u));
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-body);
+    border-radius: 50%;
+    background: var(--brand-pink);
+    color: var(--brand-dark);
+    font-size: calc(16 * var(--uf));
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    z-index: 1;
+}
+
+.boton-ia-cerrar:hover {
+    background: #f39bf9;
+}
+
+/* Pestaña minimizada pegada al borde derecho (mismo vidrio que la píldora) */
+.boton-ia-pestana {
+    position: absolute;
+    right: calc(-1 * var(--borde-derecho));
+    bottom: calc(3 * var(--u));
+    display: flex;
+    width: calc(42 * var(--u));
+    height: calc(50 * var(--u));
+    padding: 0 0 0 calc(4 * var(--u));
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: calc(14 * var(--u)) 0 0 calc(14 * var(--u));
+    background: var(--ia-vidrio);
+    backdrop-filter: blur(16px) saturate(170%);
+    -webkit-backdrop-filter: blur(16px) saturate(170%);
+    cursor: pointer;
+    box-shadow: var(--ia-sombra);
+    /* Oculta: fuera de pantalla a la derecha */
+    transform: translateX(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, width 0.2s;
+}
+
+.boton-ia-pestana:hover {
+    width: calc(50 * var(--u));
+}
+
+.boton-ia-pestana img {
+    width: calc(24 * var(--u));
+    height: calc(24 * var(--u));
+}
+
+/* Minimizar: la píldora se achica y se desliza hacia el borde; después entra la pestaña
+   con un leve rebote. Al restaurar ocurre al revés (la pestaña sale primero). */
+.boton-ia-wrap.minimizado .boton-ia-cuerpo {
+    transform: translateX(calc(100% + var(--borde-derecho))) scale(0.55);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.boton-ia-wrap.minimizado .boton-ia-pestana {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+    transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) 0.28s, opacity 0.2s ease 0.28s, width 0.2s;
+}
+
+/* Estado inicial ya minimizado (al cargar la página): sin animación */
+.boton-ia-wrap.sin-transicion .boton-ia-cuerpo,
+.boton-ia-wrap.sin-transicion .boton-ia-pestana {
+    transition: none;
+}
+
+/* Fondo difuminado y oscurecido mientras el chat está abierto */
+.chat-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(12, 10, 18, 0.42);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s;
+}
+
+.chat-fondo.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Panel flotante: misma tarjeta que la página IA (fondo de tarjeta, borde, orbes
+   de color suaves). Las burbujas e input vienen de css/components/chat.css */
 .chat-flotante {
     position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 340px;
-    height: 450px;
-    background: rgba(30, 27, 38, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    bottom: calc(100 * var(--u));
+    right: calc(24 * var(--u));
+    width: calc(380 * var(--u));
+    height: min(calc(520 * var(--u)), calc(100dvh - calc(140 * var(--u))));
     display: flex;
     flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-    z-index: 999;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: calc(20 * var(--u));
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+    isolation: isolate;
+    z-index: 1101;
+    animation: fadeIn 0.2s ease;
+}
+
+/* Orbes de color de fondo, como en la página IA */
+.chat-flotante::before,
+.chat-flotante::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.chat-flotante::before {
+    width: calc(200 * var(--u));
+    height: calc(200 * var(--u));
+    top: calc(10 * var(--u));
+    left: calc(-60 * var(--u));
+    background: var(--brand-green-light);
+}
+
+.chat-flotante::after {
+    width: calc(240 * var(--u));
+    height: calc(240 * var(--u));
+    right: calc(-70 * var(--u));
+    bottom: calc(-80 * var(--u));
+    background: var(--brand-pink);
 }
 
 .chat-header {
-    background: rgba(8, 71, 52, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    color: var(--brand-green-light);
-    padding: 15px;
-    border-radius: 12px 12px 0 0;
     display: flex;
     justify-content: space-between;
-    font-weight: 600;
+    align-items: center;
+    gap: calc(12 * var(--u));
+    padding: calc(12 * var(--u)) calc(14 * var(--u)) calc(12 * var(--u)) calc(14 * var(--u));
+    background: linear-gradient(110deg, var(--brand-dark) 0%, var(--brand-green-dark) 70%, var(--brand-purple) 140%);
+    color: #F8FAFC;
+    flex-shrink: 0;
+}
+
+.chat-header-info {
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    min-width: 0;
+}
+
+.chat-header-info strong {
+    display: block;
+    font-size: 1.02rem;
+    color: var(--brand-green-light);
+    line-height: 1.2;
+}
+
+.chat-header-avatar {
+    width: calc(36 * var(--u));
+    height: calc(36 * var(--u));
+}
+
+.chat-header .chat-header-avatar img {
+    width: calc(21 * var(--u));
+    height: calc(21 * var(--u));
+    filter: none;
+}
+
+.chat-flotante .chat {
+    margin: calc(14 * var(--u)) calc(14 * var(--u)) 0;
+}
+
+.chat-flotante .input-container {
+    margin: calc(10 * var(--u)) calc(14 * var(--u)) calc(14 * var(--u));
+}
+
+.chat-cerrar {
+    background: none;
+    border: none;
+    width: calc(32 * var(--u));
+    height: calc(32 * var(--u));
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    color: #F8FAFC;
+    font-size: calc(22 * var(--uf));
+    line-height: 1;
+    min-height: 0;
+    cursor: pointer;
+    display: flex;
+    border-radius: calc(6 * var(--u));
+}
+
+.chat-cerrar:hover {
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .oculto {
     display: none;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
-    .movimiento-cards {
-        display: block;
-    }
-
-    .chat-flotante {
-        width: calc(100vw - 24px);
-        right: 12px;
-        bottom: 75px;
-        height: 420px;
-    }
-
-    .boton-ia {
-        bottom: 16px;
-        right: 16px;
-    }
+.movimientos-empty-icono {
+    width: calc(48 * var(--u));
+    height: calc(48 * var(--u));
+    display: block;
+    margin: 0 auto calc(8 * var(--u));
 }

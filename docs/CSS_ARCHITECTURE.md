@@ -19,7 +19,6 @@
 ```
 trackify/
 ├── styles.css                       # ENTRY POINT: Orquestador global con directivas @import
-├── moneda.css                       # Estilos del selector de divisas y períodos en el navbar
 └── css/
     ├── variables.css                # 1. Tokens inmutables de marca y fuentes
     ├── themes.css                   # 2. Variables contextuales de tema (Claro / Oscuro)
@@ -31,7 +30,8 @@ trackify/
     │   ├── cards.css                #    Tarjetas genéricas, cajas .box y estados glow
     │   ├── forms.css                #    Inputs, custom select dropdowns, Flatpickr y modales
     │   ├── buttons.css              #    Botones de acción, variantes y hover states
-    │   └── charts.css               #    Contenedores de gráficos Chart.js
+    │   ├── charts.css               #    Contenedores de gráficos Chart.js
+    │   └── chat.css                 #    Chat del asistente IA (página ia.php y panel flotante del dashboard)
     └── pages/                       # 6. Hojas de estilo específicas por página (carga diferida)
         ├── auth.css                 #    Login, Registro y Verificación (orbes de luz, tarjetas auth)
         ├── categorias.css           #    Grid de categorías, tabs y las 7 paletas pastel
@@ -62,13 +62,36 @@ trackify/
 @import url('css/components/forms.css');
 @import url('css/components/buttons.css');
 @import url('css/components/charts.css');
-
-/* 4. Sistema Responsive Centralizado */
-@import url('css/responsive.css');
+@import url('css/components/chat.css');
 ```
+
+### Orden real de carga en el `<head>` (`includes/header.php`)
+
+```
+1. flatpickr.min.css (CDN)        ← librerías primero, para poder sobrescribirlas
+2. styles.css                     ← tokens, base, layout y componentes (incluye components/moneda.css)
+3. css/pages/<pagina>.css         ← $extra_css de cada página
+4. css/responsive.css             ← SIEMPRE al final
+```
+
+> [!IMPORTANT]
+> `css/responsive.css` **no se importa en `styles.css`**: se enlaza al final del `<head>` (en `header.php` y en las páginas de acceso). Así sus media queries ganan sobre las hojas de página por orden de cascada, sin necesidad de `!important`.
+> Antes se importaba dentro de `styles.css`, quedaba antes que `css/pages/` y perdía contra ellas: por eso había acumulado más de 200 `!important`.
 
 > [!NOTE]
 > Las hojas de `css/pages/` **NO se importan en `styles.css`**. Se inyectan bajo demanda en el `<head>` mediante la variable PHP `$extra_css` dentro de cada página específica (ej. `$extra_css = '<link rel="stylesheet" href="css/pages/dashboard.css">';`).
+
+### Puntos de corte (todos en `css/responsive.css`)
+
+| Corte | Qué cambia |
+| :--- | :--- |
+| `≤1100px` | Menú lateral más angosto, perfil en 1 columna, tablas compactas, filtros de movimientos en 2 columnas |
+| `≤1000px` | Tablas → tarjetas de movimiento |
+| `≤900px` | Menú lateral como cajón (hamburguesa), logo centrado, selectores de moneda/período **dentro del menú**, grillas a 1 columna |
+| `≤600px` | Teléfono: tarjetas de métricas a todo el ancho, botones del dashboard en fila de 3, filtros apilados, modales compactos |
+| `≤360px` | Teléfono angosto: grillas de categorías/objetivos a 1 columna |
+
+Los componentes (`css/components/`) y las páginas (`css/pages/`) **no definen media queries propias**.
 
 ---
 
@@ -87,6 +110,26 @@ Son constantes de identidad visual que **no cambian** con el tema claro u oscuro
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 ```
+
+### Escala fluida (`--u` y `--uf`)
+Los tamaños **no se escriben en `px` fijos** sino con dos unidades fluidas que se achican de forma continua desde 1440px hasta 320px:
+
+```css
+--u:  clamp(0.6px,  calc(0.4858px + 0.03572vw), 1px);  /* cajas: 1 → 0.6  */
+--uf: clamp(0.76px, calc(0.6915px + 0.02143vw), 1px);  /* textos: 1 → 0.76 */
+
+.mi-tarjeta {
+    padding: calc(16 * var(--u)) calc(20 * var(--u));   /* cajas: padding, márgenes, gaps, anchos/altos, íconos, radios */
+    font-size: 0.9rem;                                   /* textos: rem (html usa calc(16 * var(--uf))) o calc(N * var(--uf)) */
+}
+```
+
+- Desde 1440px de ancho ambas valen exactamente `1px`: el diseño de escritorio no cambia.
+- Las cajas se achican más que el texto: por debajo de 0.76 la letra deja de ser legible.
+- **No** usar para bordes de 1–3px, sombras, `transform` ni breakpoints de `` (los breakpoints siguen en `px`).
+- Para elementos que se tocan con el dedo o que no deben quedar diminutos, poné un piso con `max()`: `min-height: max(28px, calc(38 * var(--u)))`.
+- Los campos de texto editables quedan en `16px` en ≤600px (regla en `responsive.css`): con menos, iOS hace zoom al enfocarlos. Los de solo lectura (calendarios) no la necesitan.
+- Los gráficos de Chart.js (index.php) leen el `font-size` de `html` para escalar sus textos y se redibujan al cambiar el ancho.
 
 ---
 
@@ -133,13 +176,30 @@ El aspecto visual se conmuta mediante el atributo `data-theme` en la etiqueta `<
    document.documentElement.setAttribute('data-theme', nuevoTema);
    localStorage.setItem('theme', nuevoTema);
    ```
-3. **Resaltado de Iconos en Modo Oscuro:**
-   En `themes.css`, todas las imágenes e iconos PNG (excepto el logo institucional) reciben automáticamente un filtro de resplandor sutil para maximizar visibilidad sobre fondos oscuros:
+3. **Íconos en Modo Oscuro:**
+   Los PNG de `iconos/` son de trazo negro. En `themes.css` reciben el token `--icon-filter`: ninguno en claro e `invert(1)` en oscuro, así se ven en claro sobre fondos oscuros (antes solo tenían un resplandor gris y el trazo seguía negro).
    ```css
-   [data-theme="dark"] img:not([alt="Trackify Icon"]) {
-       filter: drop-shadow(0px 0px 4px rgba(228, 228, 228, 0.76));
-   }
+   img[src*="iconos/"] { filter: var(--icon-filter); }
    ```
+   Los íconos sobre fondos oscuros fijos (botón de IA, `.ia-btn-chat`, botones verdes de los modales) se invierten siempre. `--icon-aura` agrega un halo más marcado (se usa en la página de movimientos).
+
+### Tokens agregados
+| Token | Uso |
+| :--- | :--- |
+| `--color-positivo` / `--color-negativo` | Montos de ingreso / gasto (legibles en ambos temas) |
+| `--color-peligro`, `--bg-peligro`, `--texto-peligro`, `--borde-peligro` | Avisos y botones destructivos |
+| `--table-gastos-text` / `--table-ingresos-text` | Encabezados de tabla por tipo |
+| `--badge-vencido-bg` / `--badge-vencido-text` | Objetivos vencidos |
+| `--select-chevron` | Flecha de marca de todos los `<select>` |
+| `--icon-filter` / `--icon-aura` | Íconos PNG según tema |
+| `--glow-verde(-borde)` / `--glow-rosa(-borde)` | Estela al pasar el mouse por tarjetas y gráficos (alternan verde/rosa con `:nth-child(even)`) |
+| `--nav-acento` / `--nav-acento-rgb` | (en `sidebar.css`) color de cada enlace del menú: degradé lima → menta → lila → rosa |
+| `--barra-header-bg` / `--barra-sidebar-bg` / `--barra-footer-bg` | (en `variables.css`) fondo casi negro con orbes radiales muy difuminados para header, menú y footer |
+
+### Selects
+Ningún `<select>` se muestra con el popup nativo: `mejorarSelect()` en `js/main.js` lo oculta y muestra un botón (`.selector-pill-trigger` en el header, `.select-trackify-trigger` en el resto) más una lista `.select-lista` que vive en `<body>` con `position: fixed` (así no la recortan los modales ni las tarjetas). El `<select>` sigue siendo la fuente de verdad: se envía con el formulario y recibe `change`; asignar `.value`, `.selectedIndex` o `.disabled` por código actualiza el botón. Estilos: `css/components/forms.css` (variante formulario y lista) y `css/components/moneda.css` (variante píldora).
+
+
 
 ---
 
@@ -221,7 +281,10 @@ Sobrescrito con tema Trackify:
 | **Fondo general o color de texto claro/oscuro** | `css/themes.css` | `--bg-primary`, `--text-primary` en `[data-theme="..."]` |
 | **Estilo o ancho de la barra lateral** | `css/components/sidebar.css` | `.sidebar`, `.sidebar a` |
 | **Barra de navegación superior o logo** | `css/components/navbar.css` | `.navbar`, `.navbar .logo` |
-| **Diseño del selector ARS/USD del header** | `moneda.css` | `.moneda-selector select` |
+| **Diseño del selector ARS/USD del header** | `css/components/moneda.css` | `.selector-header select` |
+| **Título y subtítulo de cada página** | `css/layout.css` | `.page-header`, `.page-subtitle` |
+| **Cualquier comportamiento por tamaño de pantalla** | `css/responsive.css` | bloque del punto de corte correspondiente |
+| **Listado de movimientos y sus filtros** | `css/pages/movimientos.css` | `.filtros-movimientos`, `.badge-tipo` |
 | **Efectos de tarjetas (sombra, elevación, glow)** | `css/components/cards.css` | `.card:hover`, `.box:hover` |
 | **Inputs, selects o modales de formularios** | `css/components/forms.css` | `.input`, `.modal-content`, `.custom-select-*` |
 | **Aspecto de los botones (Nuevo ingreso/gasto)** | `css/components/buttons.css` | `.btn`, `.btn.ingreso`, `.btn.gasto` |
@@ -239,4 +302,7 @@ Sobrescrito con tema Trackify:
 1. **PROHIBIDO escribir estilos masivos en `styles.css`:** Este archivo debe contener exclusivamente `@import`. Todo estilo nuevo debe colocarse en su componente correspondiente o en su página respectiva.
 2. **NUNCA usar colores hexadecimales "hardcodeados" dentro de los componentes:** Utiliza siempre variables (`var(--bg-card)`, `var(--text-primary)`, `var(--border-color)`). De lo contrario, romperás el modo oscuro.
 3. **No contaminar con estilos inline en PHP:** No escribas `style="background: #123456;"` en bucles de PHP. Utiliza clases CSS declaradas (como `.card-mint` o `.fill-teal`).
-4. **Si creas una página nueva:** Crea su correspondiente archivo dentro de `css/pages/nombre_pagina.css` y cárgalo en el archivo PHP mediante la variable `$extra_css` antes de invocar `includes/header.php`.
+4. **Si creas una página nueva:** Crea su correspondiente archivo dentro de `css/pages/nombre_pagina.css` y cárgalo en el archivo PHP mediante la variable `$extra_css` antes de invocar `includes/header.php`. Empezá el contenido con un `.page-header` para que el título quede alineado con el resto.
+5. **Media queries solo en `css/responsive.css`**, en el bloque del punto de corte que corresponda. No agregues `!important` para ganarle a una hoja de página: `responsive.css` ya se carga después.
+6. **No fuerces el tamaño de un `<canvas>` de Chart.js con CSS:** la altura se fija en `.grafico-wrap`; forzar `width/height` del canvas deja el gráfico vacío o diminuto.
+7. **Reglas de dos clases que compiten** (`.acciones` vs `.dashboard-acciones`, `.tabla td` vs `.negativo`): revisá especificidad y orden antes de agregar otra regla.
