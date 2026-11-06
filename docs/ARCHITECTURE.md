@@ -36,7 +36,8 @@ Navegador (Cliente)
 ```
 trackify/
 ├── api/
-│   └── cambiar_moneda.php           # Endpoint AJAX: actualiza moneda principal del usuario
+│   ├── cambiar_moneda.php           # Endpoint AJAX: actualiza moneda principal del usuario
+│   └── cambiar_password.php         # Endpoint JSON: cambiar contraseña / crearla con código por email (cuentas Google)
 ├── auth/
 │   └── google/
 │       └── callback.php             # OAuth 2.0 Google: canje de token y login/registro
@@ -53,9 +54,9 @@ trackify/
 │   └── ingreso/                     # Iconos específicos de categorías de ingreso
 ├── includes/
 │   ├── categorias_meta.php          # Metadatos (nombre -> icono/color) y helpers de categorías visibles por usuario
-│   ├── footer.php                   # Pie global, modales centrales, token CSRF en formularios, mensajes flash, SweetAlert2, Flatpickr
+│   ├── footer.php                   # Pie global, modales compartidos, librerías (SweetAlert2, Flatpickr) y mensaje flash para js/main.js
 │   ├── header.php                   # Cabecera global, control de sesión, selectores de moneda/período (navbar + menú móvil)
-│   ├── mailer.php                   # Envío del código de verificación (PHPMailer, credenciales desde .env)
+│   ├── mailer.php                   # Envío de códigos por email: verificación de cuenta y creación de contraseña (PHPMailer, .env)
 │   ├── movimientos_handler.php      # Controlador POST central: CRUD movimientos, borrar historial, eliminar cuenta
 │   ├── periodo.php                  # Cálculo centralizado de fechas (semana, quincena, mes) y moneda
 │   ├── seguridad.php                # CSRF, URL de retorno segura, validación de montos/fechas, jsAttr(), flash()
@@ -63,12 +64,12 @@ trackify/
 ├── js/
 │   ├── utils/
 │   │   └── exportCSV.js             # Utilidad modular: conversión a CSV con BOM UTF-8 y descarga Blob
-│   ├── categorias.js                # Tabs e interacción de edición de categorías
+│   ├── categorias.js                # Tabs, orden de tarjetas (recordado en localStorage) y modal de edición
 │   ├── filtros_movimientos.js       # Filtro por fecha/categoría de ingresos.php y gastos.php
 │   ├── ia.js                        # Chat del asistente (escapa HTML, fetch con CSRF, botón flotante ocultable)
-│   ├── main.js                      # Controlador global de UI, modales, menú responsive y selects con desplegable propio (mejorarSelect)
+│   ├── main.js                      # Global: CSRF en formularios, alertas SweetAlert2 de marca, menú, Flatpickr, modales y selects propios
 │   ├── moneda.js                    # Conversor bimoneda (ExchangeRate API + Frankfurter + cache) y formularios con monto
-│   └── perfil.js                    # Edición de datos/contraseña, exportación CSV, tema oscuro y confirmaciones críticas
+│   └── perfil.js                    # Datos personales, contraseña (vía api/cambiar_password.php), tema oscuro y zona de peligro
 ├── phpmailer/                       # Librería PHPMailer (Exception.php, PHPMailer.php, SMTP.php)
 ├── categorias.php                   # Vista y CRUD de categorías
 ├── .env.example                     # Plantilla de configuración (copiar como .env, que NO se versiona)
@@ -82,8 +83,8 @@ trackify/
 ├── login.php                        # Pantalla de inicio de sesión (credenciales + botón Google OAuth)
 ├── logout.php                       # Cierre de sesión seguro y destrucción de cookies
 ├── movimientos.php                  # Listado completo con filtros por rango, tipo y categoría
-├── objetivos.php                    # Metas de ahorro: CRUD, aportes, progreso y vencimientos
-├── perfil.php                       # Perfil: nombre, moneda, contraseña, tema oscuro y zona de peligro
+├── objetivos.php                    # Metas de ahorro: CRUD, aportes (gasto) y reintegro al eliminar (ingreso)
+├── perfil.php                       # Perfil: datos personales (nombre, apellido, teléfono, país, moneda), seguridad, modo oscuro y zona de peligro
 ├── reenviar_codigo.php              # Reenvío de código OTP de verificación de email vía PHPMailer
 ├── registro.php                     # Registro de usuarios con contraseña Bcrypt y envío de OTP
 ├── styles.css                       # Hoja de estilos raíz (entry point que importa módulos CSS)
@@ -107,10 +108,10 @@ trackify/
 
 | Tabla | Columnas Clave | Propósito / Relación |
 | :--- | :--- | :--- |
-| **`usuarios`** | `id_usuario` (PK, AI), `nombre`, `email` (UNIQUE), `clave` (Bcrypt), `fecha_registro`, `uuid`, `email_verificado`, `codigo_verificacion`, `codigo_expiracion`, `google_id`, `Foto_perfil`, `moneda_principal` (ENUM 'ARS','USD') | Entidad central de autenticación y preferencia del usuario. |
+| **`usuarios`** | `id_usuario` (PK, AI), `nombre`, `email` (UNIQUE), `clave` (Bcrypt), `fecha_registro`, `uuid`, `email_verificado`, `codigo_verificacion`, `codigo_expiracion`, `google_id`, `Foto_perfil`, `moneda_principal` (ENUM 'ARS','USD'), `apellido`, `telefono`, `pais` (opcionales, se editan en el perfil) | Entidad central de autenticación y preferencia del usuario. Las cuentas de Google tienen `clave = ''` hasta que crean una contraseña con código por email (`api/cambiar_password.php`). |
 | **`categorias`** | `id_categoria` (PK, AI), `nombre`, `tipo` (ENUM 'ingreso','gasto'), `icono`, `color`, `id_usuario` (NULL o id) | `id_usuario NULL` = categoría **predeterminada** (compartida, solo lectura). Con id = categoría **propia** de ese usuario (solo él la ve, edita y elimina). |
 | **`movimientos`** | `id_movimiento` (PK, AI), `id_usuario` (FK), `id_categoria` (FK), `monto` (DECIMAL 12,2), `tipo` (ENUM 'ingreso','gasto'), `descripcion`, `fecha` (DATE), `es_hormiga` (TINYINT 1) | Registro transaccional central. **Siempre almacena montos convertidos a ARS**. |
-| **`metas_ahorro`**| `id_meta` (PK, AI), `id_usuario` (FK), `nombre_meta`, `descripcion`, `monto_objetivo` (DECIMAL 12,2), `monto_actual` (DECIMAL 12,2), `fecha_limite` (DATE), `estado` (ENUM 'activo','inactivo','logrado') | Objetivos de ahorro individuales por usuario. Montos en ARS. |
+| **`metas_ahorro`**| `id_meta` (PK, AI), `id_usuario` (FK), `nombre_meta`, `descripcion`, `monto_objetivo` (DECIMAL 12,2), `monto_actual` (DECIMAL 12,2), `fecha_limite` (DATE), `estado` (ENUM 'activo','inactivo','logrado') | Objetivos de ahorro individuales por usuario. Montos en ARS. Cada aporte genera un gasto "Ahorro para meta"; al eliminar el objetivo, `monto_actual` vuelve como ingreso "Reintegro de meta" (misma transacción). |
 | **`consejos_ia`** | `id_consejos` (PK, AI), `id_usuario` (FK), `mensaje` (TEXT), `fecha` (TIMESTAMP) | Tabla en esquema para histórico de consejos (reservada). |
 
 ### Auto-Migraciones y Seeding en Tiempo de Ejecución (`conexion.php`)
@@ -146,7 +147,7 @@ Además, si `SELECT COUNT(*) FROM categorias` devuelve `<= 5`, se ejecuta un **s
   1. Valida el parámetro `state` (obligatorio, comparación con `hash_equals`).
   2. Solicita el token de acceso vía cURL contra `https://oauth2.googleapis.com/token`.
   3. Consulta el perfil en `https://www.googleapis.com/oauth2/v2/userinfo` y exige `verified_email`.
-  4. Si el `google_id` ya existe, inicia sesión. Si el email coincide con un usuario existente, vincula `google_id` y `Foto_perfil` (y lo marca verificado). Si es nuevo, lo inserta con `clave = ''` (sin contraseña; puede definir una desde el perfil).
+  4. Si el `google_id` ya existe, inicia sesión. Si el email coincide con un usuario existente, vincula `google_id` y `Foto_perfil` (y lo marca verificado). Si es nuevo, lo inserta con `clave = ''` (sin contraseña; puede crear una desde el perfil validando un código de 6 dígitos enviado por email, vía `api/cambiar_password.php`).
   5. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` se leen de `.env`.
 
 ### Cierre de Sesión y Destrucción de Cuenta
@@ -189,11 +190,10 @@ require_once 'includes/footer.php';       // 9. Cierra contenedor, inyecta modal
   * Centraliza el filtrado temporal en sesión (`semana`, `quincena`, `mes`), calculando `$fecha_desde` y `$fecha_hasta`.
   * Inicializa `$_SESSION['moneda']` desde `usuarios.moneda_principal`.
 * **`includes/footer.php`**:
-  * Contiene los modales globales del sistema: `#modal` (nuevo movimiento), `#modalObjetivo`, `#modalAhorro`, `#modalEditarObjetivo`, `#modalCategoria`, `#modalEditarCategoria`, `#modalEditarMovimiento`, `#modalBorrarHistorial`, `#modalEliminarCuenta`.
-  * Carga e inicializa librerías externas (**SweetAlert2**, **Flatpickr** con localización al español).
-  * Contiene las funciones globales de confirmación: `confirmarEliminacion(e, mensaje)` y `confirmarLogout()`.
-  * Agrega el campo `csrf_token` a todos los formularios POST y muestra el mensaje flash de la última operación (`flash()` en PHP) con SweetAlert2.
-  * Carga `js/main.js`, `js/moneda.js` y `$extra_js`. Las librerías externas están fijadas a versión exacta (SweetAlert2 11.26.25, Flatpickr 4.6.13, Chart.js 4.6.1 en el dashboard).
+  * Contiene los modales compartidos: `#modal` (nuevo movimiento), `#modalObjetivo`, `#modalAhorro`, `#modalEditarObjetivo`, `#modalCategoria`, `#modalEditarCategoria`, `#modalEditarMovimiento`. Los modales de la zona de peligro (`#modalBorrarHistorial`, `#modalEliminarCuenta`) están en `perfil.php`, el único lugar donde se usan.
+  * Carga las librerías externas (**SweetAlert2**, **Flatpickr** con localización al español), fijadas a versión exacta (SweetAlert2 11.26.25, Flatpickr 4.6.13, Chart.js 4.6.1 en el dashboard).
+  * Deja el mensaje flash de la última operación (`flash()` en PHP) en `window.trackifyFlash`; `js/main.js` lo muestra.
+  * Carga `js/main.js`, `js/moneda.js` y `$extra_js`. Todo el JS común (CSRF, alertas, calendarios) vive en `js/main.js`, no en línea.
 * **`includes/categorias_meta.php`**:
   * Función `obtenerMetaCategoriaPorNombre($nombre, $tipo)`: normaliza tildes y mayúsculas para emparejar con iconos PNG en `iconos/gasto/` o `iconos/ingreso/` y colores pastel por defecto.
 * **`includes/movimientos_handler.php`**:
@@ -224,6 +224,7 @@ Trackify utiliza una combinación de tres estrategias de comunicación:
    Modales y vistas envían formularios multipart/urlencoded mediante POST a `includes/movimientos_handler.php`, `categorias.php` u `objetivos.php`. El backend procesa y redirige con un código HTTP 302 hacia la URL de origen (`return_url`).
 3. **Peticiones Asíncronas (AJAX / Fetch API):**
    * `api/cambiar_moneda.php`: Recibe `POST` con `FormData` (y cabecera `X-CSRF-Token`) para persistir la preferencia de moneda en BD.
+   * `api/cambiar_password.php`: `POST` con `accion` = `cambiar` | `enviar_codigo` | `crear` (cabecera `X-CSRF-Token`). Responde `{ ok, mensaje | error }`. Valida largo (8–72 bytes), que no contenga el nombre ni el email, límite de 5 intentos de código y 60 s entre envíos.
    * `export_movimientos.php`: Endpoint autenticado (`GET`) que responde con array JSON formateado con `JSON_UNESCAPED_UNICODE` para consumo de `TrackifyExportCSV.fetchAndExport()`.
    * `ia.php`: `js/ia.js` realiza `fetch('./ia.php')` enviando payload JSON `{ pregunta: ... }` con cabecera `X-CSRF-Token`; espera `{ respuesta }`.
 
@@ -256,7 +257,8 @@ Trackify utiliza una combinación de tres estrategias de comunicación:
 1. **NO alterar la regla de moneda en BD:** Nunca guardes valores en USD directamente en la tabla `movimientos`. Si agregas un formulario nuevo de movimientos, asegúrate de enviar el monto convertido a ARS.
 2. **Categorías predeterminadas vs. propias:** las de `id_usuario IS NULL` son compartidas y de solo lectura. Las consultas de categorías para un usuario usan `id_usuario IS NULL OR id_usuario = ?` (helpers en `includes/categorias_meta.php`). Al eliminar una categoría propia, sus movimientos pasan a "Otros gastos"/"Otros ingresos"; nunca se borran movimientos por borrar una categoría.
 3. **Respetar el filtro `id_usuario`:** Cada `SELECT`, `UPDATE` o `DELETE` sobre movimientos, objetivos o categorías propias debe contener la cláusula `id_usuario = ?`.
-4. **Respetar el orden de carga de scripts y modales:** Todo el HTML de modales se encuentra centralizado en `includes/footer.php`. Si se crea un nuevo modal, debe agregarse en `footer.php` e incluir su `id` en el array `modales` de `js/main.js` para que `cerrarModal()` funcione de manera universal. Si el modal tiene un monto, debe seguir la estructura `data-form-moneda` (ver sección 7).
+4. **Modales:** los que se usan en varias páginas van en `includes/footer.php`; los de una sola página, en esa página. Todos usan la clase `.modal`, así `cerrarModal()` y la tecla Escape los cierran sin registrarlos en ningún lado. Si el modal tiene un monto, debe seguir la estructura `data-form-moneda` (ver sección 7).
+4a. **Alertas:** nunca `alert()`/`confirm()` ni `Swal.fire` suelto: usar `alertaTrackify()`, `confirmarTrackify()`, `avisoTrackify()` o `confirmarEliminacion()` de `js/main.js`, que aplican la estética Trackify.
 4b. **POST nuevos:** cualquier formulario POST recibe el token CSRF automáticamente; un `fetch` POST debe enviar la cabecera `X-CSRF-Token: window.csrfToken`.
 5. **No romper la compatibilidad de selectores:** Para selectores personalizados de categorías, se debe mantener la estructura `.custom-select-wrapper > .custom-select-trigger + .custom-select-options` que inicializa `js/main.js`.
 6. **Validación de fechas en Flatpickr:** Los objetivos solo aceptan fechas presentes o futuras (`minDate: today`), mientras que los movimientos solo aceptan fechas pasadas o presentes (`maxDate: today`).

@@ -140,7 +140,13 @@ function jsAttr($valor) {
     );
 }
 
-// Mensajes de una sola lectura (Post/Redirect/Get) que footer.php muestra con SweetAlert2
+// Email parcialmente oculto para mostrar en pantalla: "ag*****@gmail.com"
+function mascaraEmail($email) {
+    [$local, $dominio] = array_pad(explode('@', (string)$email, 2), 2, '');
+    return mb_substr($local, 0, 2) . str_repeat('*', max(mb_strlen($local) - 2, 1)) . '@' . $dominio;
+}
+
+// Mensajes de una sola lectura (Post/Redirect/Get) que js/main.js muestra con SweetAlert2
 function flash($mensaje, $tipo = 'error') {
     $_SESSION['flash'] = ['mensaje' => $mensaje, 'tipo' => $tipo];
 }

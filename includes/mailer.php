@@ -49,7 +49,8 @@ function enviarNuevoCodigo($conn, $asunto, $introduccion) {
 }
 
 // Devuelve true si el email se envió. Los errores se registran en el log de PHP, no se muestran.
-function enviarEmailCodigo($email, $nombre, $codigo, $asunto, $introduccion) {
+// Lo usan la verificación de cuenta y la creación de contraseña (api/cambiar_password.php).
+function enviarEmailCodigo($email, $nombre, $codigo, $asunto, $introduccion, $titulo = 'Verificá tu email') {
     $host    = env('SMTP_HOST');
     $usuario = env('SMTP_USER');
     $clave   = env('SMTP_PASS');
@@ -61,6 +62,7 @@ function enviarEmailCodigo($email, $nombre, $codigo, $asunto, $introduccion) {
     $appUrl     = rtrim(env('APP_URL', 'http://localhost/trackify'), '/');
     $codigoHtml = htmlspecialchars($codigo, ENT_QUOTES, 'UTF-8');
     $introHtml  = htmlspecialchars($introduccion, ENT_QUOTES, 'UTF-8');
+    $tituloHtml = htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8');
 
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
     try {
@@ -80,7 +82,7 @@ function enviarEmailCodigo($email, $nombre, $codigo, $asunto, $introduccion) {
         $mail->Body = "
             <div style='font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'>
                 <img src='{$appUrl}/logo.png' alt='Trackify' style='height:60px;margin-bottom:24px;'>
-                <h2 style='color:#1E1B26;margin:0 0 8px;'>Verificá tu email</h2>
+                <h2 style='color:#1E1B26;margin:0 0 8px;'>{$tituloHtml}</h2>
                 <p style='color:#64748b;margin:0 0 24px;'>{$introHtml}</p>
                 <div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>
                     {$codigoHtml}

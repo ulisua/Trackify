@@ -94,14 +94,17 @@
     min-height: calc(44 * var(--u));
 }
 
-.modal-actions .cancel {
+/* Botón secundario (Cancelar) en modales y en las acciones de contraseña del perfil */
+.modal-actions .cancel,
+.btn.cancel {
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid var(--border-color);
     box-shadow: none;
 }
 
-.modal-actions .cancel:hover {
+.modal-actions .cancel:hover,
+.btn.cancel:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
     box-shadow: none;
@@ -122,9 +125,9 @@
     margin: calc(10 * var(--u)) calc(14 * var(--u)) calc(20 * var(--u));
     padding: calc(12 * var(--u));
     min-height: calc(44 * var(--u));
-    background: rgba(244, 63, 94, 0.1);
-    color: #ef4444;
-    border: 1px solid rgba(244, 63, 94, 0.2);
+    background: var(--bg-peligro);
+    color: var(--color-peligro);
+    border: 1px solid var(--borde-peligro);
     border-radius: calc(8 * var(--u));
     font-weight: 600;
     font-size: 0.9rem;
@@ -137,11 +140,6 @@
 }
 
 .btn-logout:hover {
-    background: rgba(244, 63, 94, 0.2);
+    box-shadow: 0 0 14px var(--glow-rosa);
 }
 
-/* Utilidad para botón de ancho completo cuando se requiere */
-.btn-block {
-    width: 100%;
-    display: flex;
-}

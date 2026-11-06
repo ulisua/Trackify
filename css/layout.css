@@ -64,11 +64,6 @@
     color: var(--text-secondary);
 }
 
-.page-header-acciones {
-    display: flex;
-    gap: calc(10 * var(--u));
-    flex-wrap: wrap;
-}
 
 /* OVERLAY (menú responsivo) */
 .sidebar-overlay {

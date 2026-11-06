@@ -222,16 +222,8 @@
         font-size: 1.3rem;
     }
 
-    .page-header-acciones,
     .btn-nuevo {
         width: 100%;
-    }
-
-    .page-header-acciones .btn {
-        flex: 1;
-    }
-
-    .btn-nuevo {
         justify-content: center;
         text-align: center;
     }
@@ -349,9 +341,15 @@
     }
 
     /* --- Categorías --- */
-    .tabs {
+    .tabs,
+    .cat-orden {
         width: 100%;
         display: flex;
+    }
+
+    .cat-orden .select-trackify {
+        flex: 1;
+        min-width: 0;
     }
 
     .tab {

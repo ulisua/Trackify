@@ -181,7 +181,7 @@ function renderGridCategorias($categorias, $total, $id, $oculto) {
             $cant = $cat['cantidad'] ?? 0;
             $pct = $total > 0 ? round(($monto / $total) * 100) : 0;
         ?>
-        <div class="cat-card <?php echo htmlspecialchars($cat['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" style="--card-accent: <?php echo htmlspecialchars($cat['color']); ?>;">
+        <div class="cat-card <?php echo htmlspecialchars($cat['color_class']); ?> <?php echo $monto > 0 ? 'con-monto' : ''; ?>" data-nombre="<?php echo htmlspecialchars($cat['nombre']); ?>" data-monto="<?php echo (float)$monto; ?>" data-cant="<?php echo (int)$cant; ?>" style="--card-accent: <?php echo htmlspecialchars($cat['color']); ?>;">
             <div class="cat-icon">
                 <img src="<?php echo htmlspecialchars($cat['icono']); ?>" alt="<?php echo htmlspecialchars($cat['nombre']); ?>">
             </div>
@@ -220,10 +220,23 @@ function renderGridCategorias($categorias, $total, $id, $oculto) {
                 <button class="btn-nuevo" onclick="abrirModalCategoria()">+ Nueva categoría</button>
             </div>
 
-            <!-- Tabs -->
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('gastos', this)">Gastos</button>
-                <button class="tab" onclick="switchTab('ingresos', this)">Ingresos</button>
+            <!-- Tabs + orden de las tarjetas (js/categorias.js) -->
+            <div class="cat-toolbar">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('gastos', this)">Gastos</button>
+                    <button class="tab" onclick="switchTab('ingresos', this)">Ingresos</button>
+                </div>
+                <label class="cat-orden">
+                    <span>Ordenar por</span>
+                    <select id="ordenCategorias">
+                        <option value="monto-desc">Mayor monto</option>
+                        <option value="monto-asc">Menor monto</option>
+                        <option value="nombre-asc">Nombre (A–Z)</option>
+                        <option value="nombre-desc">Nombre (Z–A)</option>
+                        <option value="cant-desc">Más movimientos</option>
+                        <option value="cant-asc">Menos movimientos</option>
+                    </select>
+                </label>
             </div>
 
             <div class="resumen-cats" id="resumenGastos">

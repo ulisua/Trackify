@@ -12,8 +12,6 @@
 * **Zero-Build-Step:** Los scripts se sirven directamente al navegador sin necesidad de transpilación, minificación compleja ni compiladores.
 * **Ubicación de Scripts:** Todos los scripts funcionales se encuentran en el directorio `js/`.
 
-> [!WARNING]
-> Existe un archivo `main.js` en la **raíz del proyecto** con un tamaño de 0 bytes (vestigio histórico). **NO LO UTILICES NI DEPENDAS DE ÉL**. El archivo maestro de control es [js/main.js](file:///c:/Users/C3/Desktop/trackify/js/main.js).
 
 ---
 
@@ -22,15 +20,14 @@
 ```
 trackify/
 ├── js/
-│   ├── main.js                      # 1. Controlador maestro: menú móvil, modales globales, custom selects y descripciones
+│   ├── main.js                      # 1. Global: CSRF, alertas SweetAlert2 de marca, menú móvil, Flatpickr, modales y selects propios
 │   ├── moneda.js                    # 2. Motor reactivo de divisas (ExchangeRate API + Frankfurter + localStorage)
 │   ├── ia.js                        # 3. Asistente IA: chat flotante, autosize de textarea y fetch
-│   ├── perfil.js                    # 4. Control de perfil: tabs de edición, exportación CSV, switch de tema oscuro y zona de peligro
-│   ├── categorias.js                # 5. Gestión de categorías: cambio de tabs (Gastos/Ingresos) y modal de edición
-│   ├── objetivos.js                 # 6. Módulo complementario de metas de ahorro
+│   ├── perfil.js                    # 4. Perfil: datos personales, contraseña (api/cambiar_password.php), modo oscuro y zona de peligro
+│   ├── categorias.js                # 5. Categorías: tabs (Gastos/Ingresos), orden de tarjetas y modal de edición
+│   ├── filtros_movimientos.js       # 6. Filtros de ingresos.php / gastos.php
 │   └── utils/
 │       └── exportCSV.js             # 7. Utilidad modular de exportación CSV con BOM UTF-8 y descarga Blob
-└── main.js                          # [LEGACY 0 BYTES] Inactivo, no tocar.
 ```
 
 ---
@@ -145,14 +142,14 @@ Módulo cliente puro encapsulado bajo el namespace global `window.TrackifyExport
 
 ### 4. Perfil y Operaciones Críticas (`js/perfil.js`)
 
-* **Edición de Secciones:** Controla la alternancia entre modo lectura y modo edición en los campos del formulario de usuario (`toggleEditar('datos')` y `toggleEditar('seg')`).
-* **Avatar Dinámico:** Escucha el evento `input` sobre el campo del nombre para actualizar en caliente la inicial del avatar (`actualizarAvatar()`).
+* **Datos personales (`inicializarDatosPersonales()`):** "Editar" habilita nombre, apellido, teléfono, país y moneda; "Guardar" envía el formulario a `perfil.php` (PRG). La inicial del avatar se actualiza mientras se escribe el nombre.
+* **Contraseña (`inicializarSeguridad()`):** panel desplegable que habla con `api/cambiar_password.php` (JSON, cabecera `X-CSRF-Token`). Cuentas con contraseña: actual + nueva + confirmación. Cuentas de Google: código de 6 dígitos por email + nueva + confirmación. Incluye medidor de seguridad y requisitos en vivo; el servidor repite todas las validaciones.
 * **Exportación de Datos:** Conecta el botón `#btnExportarDatos` con `window.TrackifyExportCSV.fetchAndExport()`.
 * **Control del Modo Oscuro:**
   Función `inicializarControlTema()`: Vincula el switch deslizante `#btnModoOscuro` con `localStorage` y actualiza el atributo `data-theme` en el elemento raíz (`<html>`).
 * **Seguridad y Doble Confirmación:**
-  * **Borrado de Historial (`abrirModalBorrar()` / `validarConfirmacionBorrar()`):** Requiere que el usuario escriba exactamente `"SI, ESTOY SEGURO"` para habilitar el botón de envío.
-  * **Eliminación de Cuenta (`abrirModalEliminarCuenta()` / `validarConfirmacionEliminarCuenta()`):** Requiere que el usuario digite `"ELIMINAR MI CUENTA"` o `"SI, ESTOY SEGURO"`. Antes de enviar el formulario oculto, ejecuta `limpiarLocalStorageTrackify()` para purgar claves residuales de sesión local.
+  * **Borrado de Historial:** requiere escribir exactamente `"SI, ESTOY SEGURO"` para habilitar el botón (`configurarModalConfirmacion()`).
+  * **Eliminación de Cuenta:** requiere escribir `"ELIMINAR MI CUENTA"`. Antes de enviar, `limpiarLocalStorageTrackify()` borra las preferencias guardadas en el navegador.
 
 ---
 
@@ -172,22 +169,24 @@ Controla tanto el widget flotante (`#chatFlotante`) como la vista a pantalla com
 
 ---
 
-### 6. Categorías y Metas de Ahorro (`js/categorias.js`, `js/objetivos.js`)
+### 6. Categorías (`js/categorias.js`)
 
-* **`switchTab(tipo, btn)` en `js/categorias.js`:** Alterna la visualización del grid entre `gridGastos` y `gridIngresos` sin recargar la página.
-* **`abrirModalEditarCategoria(id, nombre, tipo, icono, color)`:** Puebla los inputs y el selector de emojis/iconos antes de desplegar el modal.
-* **`js/objetivos.js`:** Mantenido como script modular complementario; sus handlers principales de modales se encuentran centralizados en `js/main.js` para evitar colisiones globales.
+* **`switchTab(tipo, btn)`:** Alterna la visualización del grid entre `gridGastos` y `gridIngresos` sin recargar la página.
+* **Orden de tarjetas (`#ordenCategorias`):** por monto, nombre o cantidad de movimientos, usando los atributos `data-monto`, `data-nombre` y `data-cant` de cada `.cat-card`. La elección se recuerda en `localStorage`.
+* **`abrirModalEditarCategoria(id, nombre, tipo, icono, color)`:** Puebla los inputs antes de desplegar el modal.
+* Los modales de objetivos (`abrirModalAhorro`, `abrirModalEditarObj`) están en `js/main.js`.
 
 ---
 
-## 5. Alertas Globales con SweetAlert2 (`includes/footer.php`)
+## 5. Alertas Globales con SweetAlert2 (`js/main.js`)
 
-Para evitar diálogos bloqueantes nativos del navegador (`confirm()`), Trackify expone dos funciones globales integradas con SweetAlert2 y estilizadas con la paleta del proyecto:
+Nunca se usan `alert()`/`confirm()` nativos ni `Swal.fire` suelto: todo pasa por estas funciones, que aplican las clases `.swal-trackify` / `.swal-btn-*` / `.swal-toast-trackify` de `css/components/forms.css` (vidrio con orbes verde y magenta, íconos en la paleta de la marca):
 
-1. **`confirmarEliminacion(e, mensaje)`:**
-   Detiene el envío inicial (`e.preventDefault()`), despliega el modal oscuro con acentos de color Trackify y sólo envía el formulario (`form.submit()`) si el usuario hace clic en "Eliminar".
-2. **`confirmarLogout()`:**
-   Solicita confirmación antes de redirigir a `logout.php`.
+1. **`alertaTrackify(titulo, texto, icon)`:** aviso con un botón ("Entendido").
+2. **`confirmarTrackify({ titulo, texto, confirmar, icon, peligro })`:** devuelve `Promise<boolean>`. Con `peligro: true` (por defecto) el botón es bordó/magenta.
+3. **`avisoTrackify(mensaje)`:** toast breve abajo a la derecha.
+4. **`confirmarEliminacion(e, mensaje)`:** para `onsubmit` de formularios de borrado; envía el formulario solo si se confirma.
+5. **`confirmarLogout()`:** confirma antes de ir a `logout.php`.
 
 ---
 
@@ -207,4 +206,4 @@ Para evitar diálogos bloqueantes nativos del navegador (`confirm()`), Trackify 
 1. **No sobrescribir `window.dbCategorias`:** Este objeto es inyectado por `header.php`. Si se modifica su estructura, los modales de creación de movimientos fallarán.
 2. **Respetar la convención `[data-ars]`:** Nunca renderices un valor monetario estático sin el atributo `data-ars`, de lo contrario no responderá al selector bimoneda ARS/USD.
 3. **No alterar la firma de `TrackifyExportCSV`:** El archivo `perfil.js` depende de `TrackifyExportCSV.fetchAndExport(url, filename, columns)`.
-4. **No eliminar IDs de los modales:** Las funciones `cerrarModal()` y `Escape` asumen la existencia de los modales estándar definidos en `includes/footer.php`.
+4. **No eliminar IDs de los modales:** las funciones `abrirModal*()` de `js/main.js` buscan los IDs de los modales de `includes/footer.php`. `cerrarModal()` y Escape cierran cualquier `.modal`.

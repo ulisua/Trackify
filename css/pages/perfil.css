@@ -54,17 +54,6 @@
     opacity: 0.85;
 }
 
-.perfil-avatar-edit {
-    position: absolute;
-    bottom: 2px;
-    right: calc(50% - calc(42 * var(--u)));
-    background: var(--brand-dark);
-    color: white;
-    font-size: 0.6rem;
-    padding: 2px calc(5 * var(--u));
-    border-radius: calc(99 * var(--u));
-}
-
 .perfil-nombre-box {
     text-align: center;
     padding: 0 calc(20 * var(--u)) calc(20 * var(--u));
@@ -294,25 +283,16 @@
 
 /* Zona de peligro */
 .zona-peligro {
-    border-color: #FECDD3;
+    border-color: var(--borde-peligro);
 }
 
 .zona-peligro .seccion-header {
-    background: rgba(254, 205, 211, 0.15);
-    border-bottom-color: #FECDD3;
-}
-
-[data-theme="dark"] .zona-peligro {
-    border-color: rgba(220, 38, 38, 0.4);
-}
-
-[data-theme="dark"] .zona-peligro .seccion-header {
-    background: rgba(220, 38, 38, 0.1);
-    border-bottom-color: rgba(220, 38, 38, 0.3);
+    background: var(--bg-peligro);
+    border-bottom-color: var(--borde-peligro);
 }
 
 .zona-peligro .seccion-header h3 {
-    color: #ef4444;
+    color: var(--color-peligro);
 }
 
 .peligro-row {
@@ -348,9 +328,9 @@
     padding: calc(10 * var(--u)) calc(18 * var(--u));
     min-height: calc(42 * var(--u));
     background: transparent;
-    border: 1px solid #FECDD3;
+    border: 1px solid var(--borde-peligro);
     border-radius: calc(8 * var(--u));
-    color: #ef4444;
+    color: var(--color-peligro);
     font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
@@ -363,31 +343,10 @@
     box-sizing: border-box;
 }
 
-[data-theme="dark"] .btn-peligro {
-    border-color: rgba(220, 38, 38, 0.4);
-}
-
 .btn-peligro:hover {
-    background: rgba(244, 63, 94, 0.15);
+    background: var(--bg-peligro);
+    box-shadow: 0 0 14px var(--glow-rosa);
 }
-
-/* ===== MODAL BORRAR HISTORIAL ===== */
-.modal-confirmacion {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: calc(12 * var(--u));
-    padding: calc(24 * var(--u));
-    box-shadow: var(--shadow-card);
-}
-
-.modal-confirmacion h3 {
-    margin: 0 0 calc(16 * var(--u)) 0;
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-/* ===== RESPONSIVE ===== */
-
 
 .campo-ayuda {
     display: block;
@@ -403,5 +362,159 @@
 .btn-peligro.btn-peligro-fuerte {
     border-color: var(--color-peligro);
     background: var(--bg-peligro);
+}
+
+/* ===== SEGURIDAD: CAMBIAR / CREAR CONTRASEÑA ===== */
+.pw-intro {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.pw-panel,
+.pw-form {
+    display: flex;
+    flex-direction: column;
+    gap: calc(16 * var(--u));
+}
+
+.pw-panel[hidden],
+.pw-form[hidden],
+.pw-msg[hidden] {
+    display: none;
+}
+
+/* Campo oculto para que el gestor de contraseñas asocie el usuario */
+.pw-oculto {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.pw-wrap {
+    position: relative;
+}
+
+.campo .pw-wrap input {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: calc(84 * var(--u));
+}
+
+.campo input.pw-codigo {
+    text-align: center;
+    letter-spacing: 0.45em;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.pw-toggle {
+    position: absolute;
+    right: calc(6 * var(--u));
+    top: 50%;
+    transform: translateY(-50%);
+    padding: calc(6 * var(--u)) calc(10 * var(--u));
+    border: none;
+    border-radius: calc(6 * var(--u));
+    background: transparent;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.pw-toggle:hover {
+    color: var(--brand-green-dark);
+    background: var(--bg-hover);
+}
+
+[data-theme="dark"] .pw-toggle:hover {
+    color: var(--brand-green-light);
+}
+
+/* Medidor de seguridad: de magenta (débil) a verde lima (fuerte), colores en js/perfil.js */
+.pw-fuerza {
+    height: calc(6 * var(--u));
+    margin-top: calc(8 * var(--u));
+    border-radius: 99px;
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+
+.pw-fuerza > span {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.2s ease, background-color 0.2s ease;
+}
+
+.pw-fuerza-txt {
+    min-height: 1.2em;
+    margin-top: calc(4 * var(--u));
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.pw-reqs {
+    display: flex;
+    flex-direction: column;
+    gap: calc(4 * var(--u));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.pw-reqs li::before {
+    content: '○';
+    display: inline-block;
+    width: 1.4em;
+}
+
+.pw-reqs li.ok {
+    color: var(--color-positivo);
+}
+
+.pw-reqs li.ok::before {
+    content: '✓';
+}
+
+.pw-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(10 * var(--u));
+}
+
+.pw-acciones .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mensaje de resultado: tarjeta con borde completo en los colores de la marca */
+.pw-msg {
+    padding: calc(11 * var(--u)) calc(14 * var(--u));
+    border: 1px solid transparent;
+    border-radius: calc(10 * var(--u));
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.pw-msg.error {
+    background: var(--bg-peligro);
+    border-color: var(--borde-peligro);
     color: var(--color-peligro);
+}
+
+.pw-msg.ok {
+    background: rgba(207, 242, 124, 0.18);
+    border-color: var(--glow-verde-borde);
+    color: var(--color-positivo);
 }

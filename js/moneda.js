@@ -143,26 +143,32 @@ function inicializarFormularioMoneda(form) {
             return;
         }
 
+        let ars = monto;
         if (select.value === 'USD') {
             const tc = await obtenerTipoCambio();
             if (!(tc > 0)) {
                 mostrarAvisoMonto('No se pudo obtener la cotización del dólar. Cargá el monto en ARS o intentá más tarde.');
                 return;
             }
-            oculto.value = (monto * tc).toFixed(2);
-        } else {
-            oculto.value = monto.toFixed(2);
+            ars = monto * tc;
         }
+        ars = Math.round(ars * 100) / 100;
+
+        // Mismo rango que acepta el servidor (columnas DECIMAL(12,2), ver montoValido())
+        if (ars < 0.01 || ars > MONTO_MAXIMO) {
+            mostrarAvisoMonto('El monto es demasiado chico o demasiado grande.');
+            visible.focus();
+            return;
+        }
+        oculto.value = ars.toFixed(2);
         HTMLFormElement.prototype.submit.call(form);
     });
 }
 
+const MONTO_MAXIMO = 9999999999.99;
+
 function mostrarAvisoMonto(texto) {
-    if (window.Swal) {
-        Swal.fire({ icon: 'warning', title: 'Revisá el monto', text: texto, customClass: { popup: 'swal-trackify', confirmButton: 'btn swal-btn-primary' }, buttonsStyling: false });
-    } else {
-        alert(texto);
-    }
+    alertaTrackify('Revisá el monto', texto, 'warning');
 }
 
 window.convertirMontos = convertirMontos;

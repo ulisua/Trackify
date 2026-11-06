@@ -18,7 +18,7 @@ require_once __DIR__ . '/includes/seguridad.php';
 // esquema ya está al día y las migraciones solo se ejecutan cuando falta algo.
 // Al agregar una migración, sumá su columna a $columnas_esperadas.
 $columnas_esperadas = [
-    'usuarios'     => ['uuid', 'email_verificado', 'codigo_verificacion', 'codigo_expiracion', 'google_id', 'Foto_perfil', 'moneda_principal'],
+    'usuarios'     => ['uuid', 'email_verificado', 'codigo_verificacion', 'codigo_expiracion', 'google_id', 'Foto_perfil', 'moneda_principal', 'apellido', 'telefono', 'pais'],
     'metas_ahorro' => ['descripcion', 'estado'],
     'categorias'   => ['icono', 'color', 'id_usuario'],
 ];
@@ -42,6 +42,10 @@ if ((int)$estado_esquema['columnas'] < count($columnas_esperadas, COUNT_RECURSIV
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) DEFAULT NULL",
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS Foto_perfil VARCHAR(255) DEFAULT NULL",
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS moneda_principal ENUM('ARS','USD') NOT NULL DEFAULT 'ARS'",
+        // Datos personales opcionales del perfil
+        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS apellido VARCHAR(50) DEFAULT NULL",
+        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(30) DEFAULT NULL",
+        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS pais VARCHAR(50) DEFAULT NULL",
         "ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) DEFAULT NULL",
         "ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS estado ENUM('activo', 'inactivo', 'logrado') DEFAULT 'activo'",
         "ALTER TABLE categorias ADD COLUMN IF NOT EXISTS icono VARCHAR(255) DEFAULT NULL",

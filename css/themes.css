@@ -50,10 +50,11 @@
     /* Montos y estados */
     --color-positivo: #15803D;
     --color-negativo: var(--brand-purple);
-    --color-peligro: #BE123C;
-    --bg-peligro: #FFF1F2;
-    --texto-peligro: #7F1D1D;
-    --borde-peligro: #FECDD3;
+    /* Peligro: bordó y magenta de la marca (no rojo genérico) */
+    --color-peligro: var(--brand-purple);
+    --bg-peligro: rgba(234, 115, 245, 0.1);
+    --texto-peligro: #4A0237;
+    --borde-peligro: rgba(234, 115, 245, 0.42);
 
     /* Badges */
     --badge-activo-bg: #DCFCE7;
@@ -130,10 +131,10 @@
     /* Montos y estados */
     --color-positivo: #4ADE80;
     --color-negativo: #F0A3F8;
-    --color-peligro: #FB7185;
-    --bg-peligro: rgba(190, 18, 60, 0.14);
-    --texto-peligro: #FECDD3;
-    --borde-peligro: rgba(251, 113, 133, 0.35);
+    --color-peligro: #F0A3F8;
+    --bg-peligro: rgba(112, 3, 83, 0.24);
+    --texto-peligro: #F8D4FB;
+    --borde-peligro: rgba(234, 115, 245, 0.38);
 
     /* Badges */
     --badge-activo-bg: rgba(22, 163, 74, 0.15);
@@ -167,8 +168,6 @@ img[src*="iconos/"] {
 }
 
 /* Sobre fondos oscuros que no cambian con el tema, el ícono siempre va en claro */
-.icono-sobre-oscuro,
-.boton-ia img,
 .chat-header img,
 .ia-btn-chat img,
 .btn-guardar-modal img,

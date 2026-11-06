@@ -79,13 +79,44 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
         header("Location: objetivos.php");
         exit();
     } elseif($form_type === 'eliminar_objetivo') {
+        // Cada aporte se registró como gasto ("Ahorro para meta"). Al eliminar el objetivo,
+        // lo ahorrado vuelve al saldo como un ingreso ("Reintegro de meta"), en la misma transacción.
         $id_meta = intval($_POST['id_meta'] ?? 0);
-        $stmt_del = $conn->prepare("DELETE FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?");
-        $stmt_del->bind_param("ii", $id_meta, $user_id);
-        $stmt_del->execute();
-        if ($stmt_del->affected_rows > 0) {
-            flash('Objetivo eliminado.', 'success');
+
+        $stmt_meta = $conn->prepare("SELECT nombre_meta, monto_actual FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?");
+        $stmt_meta->bind_param("ii", $id_meta, $user_id);
+        $stmt_meta->execute();
+        $meta = $stmt_meta->get_result()->fetch_assoc();
+
+        if (!$meta) {
+            flash('El objetivo no existe.');
+        } else {
+            $reintegro = (float)$meta['monto_actual'];
+            $conn->begin_transaction();
+            try {
+                if ($reintegro > 0) {
+                    $id_categoria = obtenerCategoriaSistema($conn, 'Reintegro de meta', 'ingreso');
+                    $desc = 'Reintegro de: ' . $meta['nombre_meta'];
+                    $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, 'ingreso', ?, ?)");
+                    $stmt_mov->bind_param("iidss", $user_id, $id_categoria, $reintegro, $desc, $hoy);
+                    $stmt_mov->execute();
+                }
+
+                $stmt_del = $conn->prepare("DELETE FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?");
+                $stmt_del->bind_param("ii", $id_meta, $user_id);
+                $stmt_del->execute();
+                $conn->commit();
+
+                flash($reintegro > 0
+                    ? 'Objetivo eliminado. Lo ahorrado ($' . number_format($reintegro, 2, ',', '.') . ') volvió como ingreso.'
+                    : 'Objetivo eliminado.', 'success');
+            } catch (mysqli_sql_exception $e) {
+                $conn->rollback();
+                error_log('Trackify: error al eliminar objetivo: ' . $e->getMessage());
+                flash('No se pudo eliminar el objetivo.');
+            }
         }
+
         header("Location: objetivos.php");
         exit();
     }
@@ -162,8 +193,11 @@ if(isset($_SESSION['usuario_id'])) {
         $pct_format = number_format($pct, 0);
         $id_meta = (int)$row['id_meta'];
 
+        $aviso_eliminar = $row['monto_actual'] > 0
+            ? 'Lo que ahorraste ($' . number_format($row['monto_actual'], 2, ',', '.') . ') vuelve a tu saldo como un ingreso.'
+            : 'El objetivo no tiene ahorros, así que no se genera ningún movimiento.';
         $form_eliminar = '
-                <form method="POST" action="objetivos.php" class="form-inline" onsubmit="confirmarEliminacion(event, \'¿Eliminar este objetivo?\');">
+                <form method="POST" action="objetivos.php" class="form-inline" onsubmit="confirmarEliminacion(event, ' . jsAttr($aviso_eliminar) . ');">
                     <input type="hidden" name="form_type" value="eliminar_objetivo">
                     <input type="hidden" name="id_meta" value="' . $id_meta . '">
                     <button type="submit" class="btn-eliminar-obj' . ($es_vencido ? ' btn-eliminar-vencido' : '') . '"><img src="iconos/generales/tachodebasura.png" alt="" class="icono-boton"> Eliminar</button>

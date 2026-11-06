@@ -6,10 +6,6 @@
     filter: var(--icon-aura);
 }
 
-.page-header-acciones .btn-header {
-    min-height: calc(44 * var(--u));
-    padding: calc(10 * var(--u)) calc(20 * var(--u));
-}
 
 /* ===== FILTROS ===== */
 .filtros-movimientos {

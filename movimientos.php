@@ -99,10 +99,6 @@ $return_url_mov = htmlspecialchars($_SERVER['REQUEST_URI'] ?? 'movimientos.php',
         <h2 class="titulo-con-icono"><img src="iconos/generales/listaultmov1.png" alt="" class="icono-titulo"> Movimientos</h2>
         <p class="page-subtitle"><?php echo htmlspecialchars($subtitulo); ?></p>
     </div>
-    <div class="page-header-acciones">
-        <button class="btn ingreso btn-header" onclick="abrirModal('ingreso')">+ Ingreso</button>
-        <button class="btn gasto btn-header" onclick="abrirModal('gasto')">+ Gasto</button>
-    </div>
 </div>
 
 <!-- RESUMEN -->

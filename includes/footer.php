@@ -72,7 +72,7 @@
         <input type="hidden" name="form_type" value="agregar_ahorro">
         <input type="hidden" id="ahorro_id_meta" name="id_meta" value="">
         <h3>Agregar ahorro</h3>
-        <p class="modal-ayuda">El aporte se registra también como un gasto de la categoría "Ahorro para meta".</p>
+        <p class="modal-ayuda">El aporte se registra como un gasto ("Ahorro para meta"). Si después eliminás el objetivo, lo ahorrado vuelve como ingreso.</p>
 
         <div class="monto-moneda">
             <input type="number" step="0.01" min="0.01" id="monto_ahorro" class="js-monto-visible" placeholder="Monto a sumar" required>
@@ -216,59 +216,6 @@
     </form>
 </div>
 
-<!-- MODAL BORRAR HISTORIAL COMPLETO -->
-<div id="modalBorrarHistorial" class="modal hidden">
-    <div class="modal-content modal-confirmacion">
-        <h3 class="modal-peligro-titulo">Borrar todo el historial</h3>
-
-        <div class="aviso-peligro">
-            <p class="aviso-peligro-titulo"><img src="iconos/generales/triangulopeligro.png" alt="" class="icono-inline"> Advertencia</p>
-            <p>Esta acción eliminará <strong>TODOS</strong> tus movimientos (ingresos y gastos) permanentemente.</p>
-            <p><strong>No se puede deshacer.</strong></p>
-        </div>
-
-        <p class="modal-ayuda">Para confirmar, escribí "SI, ESTOY SEGURO" en el campo de abajo:</p>
-
-        <form id="formBorrarHistorial" class="form-confirmacion" method="POST" action="includes/movimientos_handler.php">
-            <input type="hidden" name="form_type" value="borrar_historial_completo">
-            <input type="hidden" name="return_url" value="<?php echo $return_url_actual; ?>">
-
-            <input type="text" id="inputConfirmacionBorrar" name="confirmacion_borrar" class="input-confirmacion" placeholder="SI, ESTOY SEGURO" autocomplete="off" required>
-
-            <div class="modal-actions">
-                <button type="button" class="btn cancel" onclick="cerrarModalBorrar()">Cancelar</button>
-                <button type="submit" class="btn btn-peligro-solido" id="btnConfirmarBorrar" disabled>Eliminar todo</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- MODAL ELIMINAR CUENTA -->
-<div id="modalEliminarCuenta" class="modal hidden">
-    <div class="modal-content modal-confirmacion">
-        <h3 class="modal-peligro-titulo">Eliminar cuenta</h3>
-
-        <div class="aviso-peligro">
-            <p class="aviso-peligro-titulo"><img src="iconos/generales/triangulopeligro.png" alt="" class="icono-inline"> Advertencia crítica</p>
-            <p>Esta acción eliminará <strong>permanentemente tu cuenta</strong>, tus movimientos, objetivos y categorías propias.</p>
-            <p><strong>No se puede deshacer.</strong></p>
-        </div>
-
-        <p class="modal-ayuda">Para confirmar, escribí "ELIMINAR MI CUENTA" en el campo de abajo:</p>
-
-        <form id="formEliminarCuentaModal" class="form-confirmacion" method="POST" action="includes/movimientos_handler.php">
-            <input type="hidden" name="form_type" value="eliminar_cuenta">
-
-            <input type="text" id="inputConfirmacionEliminarCuenta" name="confirmacion_eliminar" class="input-confirmacion" placeholder="ELIMINAR MI CUENTA" autocomplete="off" required>
-
-            <div class="modal-actions">
-                <button type="button" class="btn cancel" onclick="cerrarModalEliminarCuenta()">Cancelar</button>
-                <button type="submit" class="btn btn-peligro-solido" id="btnConfirmarEliminarCuenta" disabled>Eliminar cuenta</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <footer class="footer">
     <p>Trackify © <?php echo date('Y'); ?></p>
 </footer>
@@ -279,126 +226,15 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
 
+<?php if (!empty($_SESSION['flash'])): ?>
 <script>
-    // Token CSRF: se agrega a todos los formularios POST y queda disponible para fetch
-    window.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-    document.querySelectorAll('form').forEach(form => {
-        if ((form.getAttribute('method') || '').toUpperCase() !== 'POST' || form.querySelector('input[name="csrf_token"]')) return;
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'csrf_token';
-        input.value = window.csrfToken;
-        form.appendChild(input);
-    });
-
-    // Inicializar Flatpickr separando Objetivos de Movimientos
-    document.addEventListener('DOMContentLoaded', function() {
-        const pad = n => String(n).padStart(2, '0');
-        const ahora = new Date();
-        // Fecha local (toISOString usaría UTC y de noche en Argentina daría el día siguiente)
-        const today = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
-        const opcionesBase = { dateFormat: "Y-m-d", altInput: true, altFormat: "d/m/Y", locale: "es", disableMobile: true };
-
-        // 1. Inputs de Objetivos (fecha_limite): PERMITE HOY Y FECHAS FUTURAS (bloquea pasadas)
-        const objDateInputs = document.querySelectorAll("#fecha_limite, #edit_fecha_limite");
-        objDateInputs.forEach(input => {
-            input.min = today;
-            if (!input.placeholder) input.placeholder = "Selecciona fecha límite";
-            if (!input.value || input.value < today) input.value = today;
-        });
-        if (objDateInputs.length > 0 && window.flatpickr) {
-            flatpickr(objDateInputs, { ...opcionesBase, minDate: today });
-        }
-
-        // 2. Inputs de Movimientos (fecha): PERMITE PASADAS Y HOY (BLOQUEA FUTURAS)
-        const movDateInputs = document.querySelectorAll("#fecha, #edit_mov_fecha");
-        movDateInputs.forEach(input => {
-            input.max = today;
-            if (!input.placeholder) input.placeholder = "Selecciona una fecha";
-            if (!input.value || input.value > today) input.value = today;
-        });
-        if (movDateInputs.length > 0 && window.flatpickr) {
-            flatpickr(movDateInputs, { ...opcionesBase, maxDate: today });
-        }
-
-        // 3. Filtros de fecha (sin restricciones)
-        const filtroDateInputs = document.querySelectorAll(".js-fecha-filtro");
-        if (filtroDateInputs.length > 0 && window.flatpickr) {
-            flatpickr(filtroDateInputs, { ...opcionesBase, allowInput: false });
-        }
-
-        // Cerrar calendario al hacer scroll en cualquier contenedor
-        window.addEventListener('scroll', function(e) {
-            if (e.target.closest && e.target.closest('.flatpickr-calendar')) return;
-            document.querySelectorAll("input").forEach(input => {
-                if(input._flatpickr && input._flatpickr.isOpen) {
-                    input._flatpickr.close();
-                }
-            });
-        }, true);
-    });
-
-    const swalBase = {
-        buttonsStyling: false,
-        customClass: {
-            popup: 'swal-trackify',
-            confirmButton: 'btn swal-btn-primary',
-            cancelButton: 'btn swal-btn-cancel'
-        }
-    };
-
-    // Función global para confirmaciones con SweetAlert2
-    function confirmarEliminacion(e, mensaje) {
-        e.preventDefault();
-        const form = e.target;
-        Swal.fire({
-            ...swalBase,
-            title: '¿Estás seguro?',
-            text: mensaje || "Esta acción no se puede deshacer.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Eliminar',
-            cancelButtonText: 'Cancelar',
-            customClass: { ...swalBase.customClass, confirmButton: 'btn swal-btn-danger' }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit();
-            }
-        });
-    }
-
-    function confirmarLogout() {
-        Swal.fire({
-            ...swalBase,
-            title: '¿Cerrar sesión?',
-            text: "Tendrás que volver a ingresar tus credenciales.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Salir',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = 'logout.php';
-            }
-        });
-    }
-
-    <?php if (!empty($_SESSION['flash'])): $flash = $_SESSION['flash']; unset($_SESSION['flash']); ?>
-    // Mensaje de la última operación (patrón Post/Redirect/Get)
-    document.addEventListener('DOMContentLoaded', () => {
-        const flash = <?php echo json_encode($flash, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
-        if (flash.tipo === 'success') {
-            // Aviso compacto abajo a la derecha (estilos en forms.css: .swal-toast-trackify)
-            Swal.fire({ toast: true, position: 'bottom-end', icon: 'success', title: flash.mensaje, showConfirmButton: false, timer: 2600, timerProgressBar: true, customClass: { popup: 'swal-toast-trackify' } });
-        } else {
-            Swal.fire({ ...swalBase, icon: 'error', title: 'No se pudo completar', text: flash.mensaje });
-        }
-    });
-    <?php endif; ?>
+    // Mensaje de la última operación (patrón Post/Redirect/Get). Lo muestra js/main.js.
+    window.trackifyFlash = <?php echo json_encode($_SESSION['flash'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE); ?>;
 </script>
+<?php unset($_SESSION['flash']); endif; ?>
 
-<script src="js/main.js?v=6"></script>
-<script src="js/moneda.js?v=2"></script>
+<script src="js/main.js?v=7"></script>
+<script src="js/moneda.js?v=3"></script>
 <?php if(isset($extra_js)) echo $extra_js; ?>
 
 </body>
