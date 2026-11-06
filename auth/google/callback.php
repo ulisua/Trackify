@@ -78,8 +78,9 @@ if ($user) {
 
 // clave es NOT NULL: las cuentas de Google se crean sin contraseña ('')
 $uuid = generarUuid();
-$stmt = $conn->prepare("INSERT INTO usuarios (nombre, Foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, '', NOW(), ?, ?, 1)");
-$stmt->bind_param("sssss", $nombre, $foto, $email, $uuid, $google_id);
+$nombre_usuario = generarNombreUsuario($conn, $email);
+$stmt = $conn->prepare("INSERT INTO usuarios (nombre, nombre_usuario, Foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, ?, '', NOW(), ?, ?, 1)");
+$stmt->bind_param("ssssss", $nombre, $nombre_usuario, $foto, $email, $uuid, $google_id);
 $stmt->execute();
 
 iniciarSesionUsuario($conn->insert_id, $nombre);

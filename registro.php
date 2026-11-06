@@ -32,9 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $password = password_hash($clave, PASSWORD_DEFAULT);
             $uuid = generarUuid();
+            $nombre_usuario = generarNombreUsuario($conn, $email); // editable después desde el perfil
 
-            $query = $conn->prepare("INSERT INTO usuarios (nombre, email, clave, fecha_registro, uuid, email_verificado, Foto_perfil) VALUES (?, ?, ?, NOW(), ?, 0, '')");
-            $query->bind_param("ssss", $nombre, $email, $password, $uuid);
+            $query = $conn->prepare("INSERT INTO usuarios (nombre, nombre_usuario, email, clave, fecha_registro, uuid, email_verificado, Foto_perfil) VALUES (?, ?, ?, ?, NOW(), ?, 0, '')");
+            $query->bind_param("sssss", $nombre, $nombre_usuario, $email, $password, $uuid);
 
             if ($query->execute()) {
                 // La pantalla de verificación genera y envía el código al abrirse

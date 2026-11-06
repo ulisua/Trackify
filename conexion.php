@@ -18,7 +18,7 @@ require_once __DIR__ . '/includes/seguridad.php';
 // esquema ya está al día y las migraciones solo se ejecutan cuando falta algo.
 // Al agregar una migración, sumá su columna a $columnas_esperadas.
 $columnas_esperadas = [
-    'usuarios'     => ['uuid', 'email_verificado', 'codigo_verificacion', 'codigo_expiracion', 'google_id', 'Foto_perfil', 'moneda_principal', 'apellido', 'telefono', 'pais'],
+    'usuarios'     => ['uuid', 'email_verificado', 'codigo_verificacion', 'codigo_expiracion', 'google_id', 'Foto_perfil', 'moneda_principal', 'nombre_usuario'],
     'metas_ahorro' => ['descripcion', 'estado'],
     'categorias'   => ['icono', 'color', 'id_usuario'],
 ];
@@ -42,10 +42,9 @@ if ((int)$estado_esquema['columnas'] < count($columnas_esperadas, COUNT_RECURSIV
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) DEFAULT NULL",
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS Foto_perfil VARCHAR(255) DEFAULT NULL",
         "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS moneda_principal ENUM('ARS','USD') NOT NULL DEFAULT 'ARS'",
-        // Datos personales opcionales del perfil
-        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS apellido VARCHAR(50) DEFAULT NULL",
-        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS telefono VARCHAR(30) DEFAULT NULL",
-        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS pais VARCHAR(50) DEFAULT NULL",
+        // Nombre de usuario único (@usuario), se edita en el perfil
+        "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nombre_usuario VARCHAR(30) DEFAULT NULL",
+        "ALTER TABLE usuarios ADD UNIQUE INDEX IF NOT EXISTS uq_usuarios_nombre_usuario (nombre_usuario)",
         "ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS descripcion VARCHAR(255) DEFAULT NULL",
         "ALTER TABLE metas_ahorro ADD COLUMN IF NOT EXISTS estado ENUM('activo', 'inactivo', 'logrado') DEFAULT 'activo'",
         "ALTER TABLE categorias ADD COLUMN IF NOT EXISTS icono VARCHAR(255) DEFAULT NULL",
@@ -55,6 +54,14 @@ if ((int)$estado_esquema['columnas'] < count($columnas_esperadas, COUNT_RECURSIV
         "ALTER TABLE categorias ADD INDEX IF NOT EXISTS idx_categorias_usuario (id_usuario)",
     ] as $sql) {
         $conn->query($sql);
+    }
+    // Los usuarios que ya existían reciben un nombre de usuario generado desde su email
+    $sin_usuario = $conn->query("SELECT id_usuario, email FROM usuarios WHERE nombre_usuario IS NULL")->fetch_all(MYSQLI_ASSOC);
+    $stmt_nu = $conn->prepare("UPDATE usuarios SET nombre_usuario = ? WHERE id_usuario = ?");
+    foreach ($sin_usuario as $u) {
+        $nu = generarNombreUsuario($conn, $u['email']);
+        $stmt_nu->bind_param("si", $nu, $u['id_usuario']);
+        $stmt_nu->execute();
     }
 }
 

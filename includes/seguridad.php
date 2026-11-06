@@ -146,6 +146,36 @@ function mascaraEmail($email) {
     return mb_substr($local, 0, 2) . str_repeat('*', max(mb_strlen($local) - 2, 1)) . '@' . $dominio;
 }
 
+// ── Nombre de usuario (@usuario) ─────────────────────────────────────────────
+// Único, de 3 a 30 caracteres: minúsculas, números, punto y guion bajo.
+const NOMBRE_USUARIO_REGEX = '/^[a-z0-9._]{3,30}$/';
+
+// Normaliza lo que escribe el usuario: sin "@" inicial, sin espacios, en minúsculas.
+function normalizarNombreUsuario($texto) {
+    return mb_strtolower(ltrim(trim((string)$texto), '@'));
+}
+
+function nombreUsuarioDisponible(mysqli $conn, string $nombre_usuario, int $excluir_id = 0): bool {
+    $stmt = $conn->prepare('SELECT 1 FROM usuarios WHERE nombre_usuario = ? AND id_usuario <> ? LIMIT 1');
+    $stmt->bind_param('si', $nombre_usuario, $excluir_id);
+    $stmt->execute();
+    return $stmt->get_result()->num_rows === 0;
+}
+
+// Genera un nombre de usuario libre a partir del email (ej.: juan.perez@x.com -> juan.perez, juan.perez2...)
+function generarNombreUsuario(mysqli $conn, string $email): string {
+    $base = preg_replace('/[^a-z0-9._]/', '', mb_strtolower(explode('@', $email)[0]));
+    $base = substr($base, 0, 24);
+    if (strlen($base) < 3) {
+        $base = 'usuario' . $base;
+    }
+    $candidato = $base;
+    for ($n = 2; !nombreUsuarioDisponible($conn, $candidato); $n++) {
+        $candidato = $base . $n;
+    }
+    return $candidato;
+}
+
 // Mensajes de una sola lectura (Post/Redirect/Get) que js/main.js muestra con SweetAlert2
 function flash($mensaje, $tipo = 'error') {
     $_SESSION['flash'] = ['mensaje' => $mensaje, 'tipo' => $tipo];

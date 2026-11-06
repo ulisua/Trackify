@@ -84,7 +84,7 @@ trackify/
 ├── logout.php                       # Cierre de sesión seguro y destrucción de cookies
 ├── movimientos.php                  # Listado completo con filtros por rango, tipo y categoría
 ├── objetivos.php                    # Metas de ahorro: CRUD, aportes (gasto) y reintegro al eliminar (ingreso)
-├── perfil.php                       # Perfil: datos personales (nombre, apellido, teléfono, país, moneda), seguridad, modo oscuro y zona de peligro
+├── perfil.php                       # Perfil: datos personales (nombre, @usuario, email), seguridad, modo oscuro y zona de peligro
 ├── reenviar_codigo.php              # Reenvío de código OTP de verificación de email vía PHPMailer
 ├── registro.php                     # Registro de usuarios con contraseña Bcrypt y envío de OTP
 ├── styles.css                       # Hoja de estilos raíz (entry point que importa módulos CSS)
@@ -108,7 +108,7 @@ trackify/
 
 | Tabla | Columnas Clave | Propósito / Relación |
 | :--- | :--- | :--- |
-| **`usuarios`** | `id_usuario` (PK, AI), `nombre`, `email` (UNIQUE), `clave` (Bcrypt), `fecha_registro`, `uuid`, `email_verificado`, `codigo_verificacion`, `codigo_expiracion`, `google_id`, `Foto_perfil`, `moneda_principal` (ENUM 'ARS','USD'), `apellido`, `telefono`, `pais` (opcionales, se editan en el perfil) | Entidad central de autenticación y preferencia del usuario. Las cuentas de Google tienen `clave = ''` hasta que crean una contraseña con código por email (`api/cambiar_password.php`). |
+| **`usuarios`** | `id_usuario` (PK, AI), `nombre`, `email` (UNIQUE), `clave` (Bcrypt), `fecha_registro`, `uuid`, `email_verificado`, `codigo_verificacion`, `codigo_expiracion`, `google_id`, `Foto_perfil`, `moneda_principal` (ENUM 'ARS','USD'), `nombre_usuario` (UNIQUE, 3-30 caracteres `[a-z0-9._]`; se genera desde el email al registrarse y se edita en el perfil) | Entidad central de autenticación y preferencia del usuario. Las cuentas de Google tienen `clave = ''` hasta que crean una contraseña con código por email (`api/cambiar_password.php`). |
 | **`categorias`** | `id_categoria` (PK, AI), `nombre`, `tipo` (ENUM 'ingreso','gasto'), `icono`, `color`, `id_usuario` (NULL o id) | `id_usuario NULL` = categoría **predeterminada** (compartida, solo lectura). Con id = categoría **propia** de ese usuario (solo él la ve, edita y elimina). |
 | **`movimientos`** | `id_movimiento` (PK, AI), `id_usuario` (FK), `id_categoria` (FK), `monto` (DECIMAL 12,2), `tipo` (ENUM 'ingreso','gasto'), `descripcion`, `fecha` (DATE), `es_hormiga` (TINYINT 1) | Registro transaccional central. **Siempre almacena montos convertidos a ARS**. |
 | **`metas_ahorro`**| `id_meta` (PK, AI), `id_usuario` (FK), `nombre_meta`, `descripcion`, `monto_objetivo` (DECIMAL 12,2), `monto_actual` (DECIMAL 12,2), `fecha_limite` (DATE), `estado` (ENUM 'activo','inactivo','logrado') | Objetivos de ahorro individuales por usuario. Montos en ARS. Cada aporte genera un gasto "Ahorro para meta"; al eliminar el objetivo, `monto_actual` vuelve como ingreso "Reintegro de meta" (misma transacción). |

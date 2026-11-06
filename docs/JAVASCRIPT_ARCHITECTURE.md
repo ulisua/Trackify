@@ -142,7 +142,7 @@ Módulo cliente puro encapsulado bajo el namespace global `window.TrackifyExport
 
 ### 4. Perfil y Operaciones Críticas (`js/perfil.js`)
 
-* **Datos personales (`inicializarDatosPersonales()`):** "Editar" habilita nombre, apellido, teléfono, país y moneda; "Guardar" envía el formulario a `perfil.php` (PRG). La inicial del avatar se actualiza mientras se escribe el nombre.
+* **Datos personales (`inicializarDatosPersonales()`):** "Editar" habilita nombre y nombre de usuario (el email no se edita; la moneda se cambia desde el encabezado); "Guardar" envía el formulario a `perfil.php` (PRG). La inicial del avatar se actualiza mientras se escribe el nombre.
 * **Contraseña (`inicializarSeguridad()`):** panel desplegable que habla con `api/cambiar_password.php` (JSON, cabecera `X-CSRF-Token`). Cuentas con contraseña: actual + nueva + confirmación. Cuentas de Google: código de 6 dígitos por email + nueva + confirmación. Incluye medidor de seguridad y requisitos en vivo; el servidor repite todas las validaciones.
 * **Exportación de Datos:** Conecta el botón `#btnExportarDatos` con `window.TrackifyExportCSV.fetchAndExport()`.
 * **Control del Modo Oscuro:**

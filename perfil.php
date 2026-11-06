@@ -1,43 +1,27 @@
 <?php
 $page = 'perfil';
-$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css">';
+$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css?v=2">';
 require_once 'conexion.php';
 
-// Países disponibles en "Datos personales" (el valor guardado es el texto)
-const PAISES_PERFIL = ['Argentina', 'Uruguay', 'Chile', 'Paraguay', 'Bolivia', 'Brasil', 'Perú', 'Colombia', 'México', 'España', 'Estados Unidos', 'Otro'];
-
-// ── Guardar datos personales (PRG) ───────────────────────────────────────────
-// La contraseña se cambia por separado, vía api/cambiar_password.php (ver js/perfil.js).
+// ── Guardar datos personales: nombre y nombre de usuario (PRG) ───────────────
+// El email no se edita. La contraseña se cambia por separado, vía api/cambiar_password.php (ver js/perfil.js).
+// La moneda se elige con el selector del encabezado (api/cambiar_moneda.php).
 if (isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_type'] ?? '') === 'actualizar_datos') {
-    $user_id = (int)$_SESSION['usuario_id'];
-
-    $nuevo_nombre = trim($_POST['nombre'] ?? '');
-    $apellido     = trim($_POST['apellido'] ?? '');
-    $telefono     = trim($_POST['telefono'] ?? '');
-    $pais         = trim($_POST['pais'] ?? '');
-    $nueva_moneda = $_POST['moneda'] ?? 'ARS';
+    $user_id        = (int)$_SESSION['usuario_id'];
+    $nuevo_nombre   = trim($_POST['nombre'] ?? '');
+    $nombre_usuario = normalizarNombreUsuario($_POST['nombre_usuario'] ?? '');
 
     if ($nuevo_nombre === '' || mb_strlen($nuevo_nombre) > 50) {
         flash('El nombre es obligatorio (máximo 50 caracteres).');
-    } elseif (mb_strlen($apellido) > 50) {
-        flash('El apellido puede tener hasta 50 caracteres.');
-    } elseif ($telefono !== '' && !preg_match('/^\+?[0-9\s\-()]{6,30}$/', $telefono)) {
-        flash('Revisá el teléfono: solo números, espacios, guiones, paréntesis y un + inicial.');
-    } elseif ($pais !== '' && !in_array($pais, PAISES_PERFIL, true)) {
-        flash('País inválido.');
-    } elseif (!in_array($nueva_moneda, ['ARS', 'USD'], true)) {
-        flash('Moneda inválida.');
+    } elseif (!preg_match(NOMBRE_USUARIO_REGEX, $nombre_usuario)) {
+        flash('El nombre de usuario debe tener entre 3 y 30 caracteres: letras minúsculas, números, punto o guion bajo.');
+    } elseif (!nombreUsuarioDisponible($conn, $nombre_usuario, $user_id)) {
+        flash('Ese nombre de usuario ya está en uso. Probá con otro.');
     } else {
-        // Los campos opcionales vacíos se guardan como NULL
-        $apellido = $apellido !== '' ? $apellido : null;
-        $telefono = $telefono !== '' ? $telefono : null;
-        $pais     = $pais !== '' ? $pais : null;
-
-        $stmt = $conn->prepare("UPDATE usuarios SET nombre = ?, apellido = ?, telefono = ?, pais = ?, moneda_principal = ? WHERE id_usuario = ?");
-        $stmt->bind_param("sssssi", $nuevo_nombre, $apellido, $telefono, $pais, $nueva_moneda, $user_id);
+        $stmt = $conn->prepare("UPDATE usuarios SET nombre = ?, nombre_usuario = ? WHERE id_usuario = ?");
+        $stmt->bind_param("ssi", $nuevo_nombre, $nombre_usuario, $user_id);
         $stmt->execute();
         $_SESSION['usuario_nombre'] = $nuevo_nombre;
-        $_SESSION['moneda'] = $nueva_moneda;
         flash('Datos actualizados.', 'success');
     }
 
@@ -48,18 +32,25 @@ if (isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && (
 require_once 'includes/header.php';
 
 $user_id = (int)$_SESSION['usuario_id'];
-$query = $conn->prepare("SELECT nombre, apellido, email, telefono, pais, fecha_registro, clave, moneda_principal FROM usuarios WHERE id_usuario=?");
+$query = $conn->prepare("SELECT nombre, nombre_usuario, email, fecha_registro, clave, moneda_principal FROM usuarios WHERE id_usuario=?");
 $query->bind_param("i", $user_id);
 $query->execute();
 $user_data = $query->get_result()->fetch_assoc() ?: [];
 
 $nombre         = $user_data['nombre'] ?? 'Usuario';
-$apellido       = $user_data['apellido'] ?? '';
 $email          = $user_data['email'] ?? '';
-$telefono       = $user_data['telefono'] ?? '';
-$pais           = $user_data['pais'] ?? '';
+$nombre_usuario = $user_data['nombre_usuario'] ?? '';
 $tiene_clave    = !empty($user_data['clave']); // las cuentas creadas con Google no tienen contraseña
 $moneda_usuario = $user_data['moneda_principal'] ?? 'ARS';
+
+// Por si la cuenta se creó sin nombre de usuario (por ejemplo, desde otro código): se le asigna uno
+if ($nombre_usuario === '' && $email !== '') {
+    $nombre_usuario = generarNombreUsuario($conn, $email);
+    $stmt_nu = $conn->prepare("UPDATE usuarios SET nombre_usuario = ? WHERE id_usuario = ?");
+    $stmt_nu->bind_param("si", $nombre_usuario, $user_id);
+    $stmt_nu->execute();
+}
+
 $meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 $fecha_registro = isset($user_data['fecha_registro'])
     ? $meses[(int)date('n', strtotime($user_data['fecha_registro'])) - 1] . ' ' . date('Y', strtotime($user_data['fecha_registro']))
@@ -73,7 +64,6 @@ $query_stats->bind_param("ii", $user_id, $user_id);
 $query_stats->execute();
 $stats = $query_stats->get_result()->fetch_assoc();
 
-$nombre_completo = trim($nombre . ' ' . $apellido);
 $inicial = mb_strtoupper(mb_substr(trim($nombre) ?: 'U', 0, 1));
 
 // Campos de contraseña nueva + confirmación (compartidos por "cambiar" y "crear")
@@ -116,8 +106,8 @@ function camposClaveNueva() {
                             <div class="perfil-avatar perfil-avatar-inicial"><?php echo htmlspecialchars($inicial); ?></div>
                         </div>
                         <div class="perfil-nombre-box">
-                            <strong id="nombreMostrado"><?php echo htmlspecialchars($nombre_completo); ?></strong>
-                            <span id="emailMostrado"><?php echo htmlspecialchars($email); ?></span>
+                            <strong><?php echo htmlspecialchars($nombre); ?></strong>
+                            <span>@<?php echo htmlspecialchars($nombre_usuario); ?></span>
                         </div>
                         <div class="perfil-divider"></div>
                         <div class="perfil-user-stats">
@@ -159,41 +149,20 @@ function camposClaveNueva() {
                             <div class="campo-row">
                                 <div class="campo">
                                     <label for="inputNombre">Nombre</label>
-                                    <input type="text" id="inputNombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" maxlength="50" autocomplete="given-name" required disabled data-editable>
+                                    <input type="text" id="inputNombre" name="nombre" value="<?php echo htmlspecialchars($nombre); ?>" maxlength="50" autocomplete="name" required disabled data-editable>
                                 </div>
                                 <div class="campo">
-                                    <label for="inputApellido">Apellido</label>
-                                    <input type="text" id="inputApellido" name="apellido" value="<?php echo htmlspecialchars($apellido); ?>" maxlength="50" placeholder="Completame" autocomplete="family-name" disabled data-editable>
+                                    <label for="inputUsuario">Nombre de usuario</label>
+                                    <div class="campo-arroba">
+                                        <span aria-hidden="true">@</span>
+                                        <input type="text" id="inputUsuario" name="nombre_usuario" value="<?php echo htmlspecialchars($nombre_usuario); ?>" minlength="3" maxlength="30" pattern="[a-z0-9._]{3,30}" title="De 3 a 30 caracteres: minúsculas, números, punto o guion bajo" autocomplete="nickname" spellcheck="false" autocapitalize="off" required disabled data-editable>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="campo-row">
-                                <div class="campo">
-                                    <label for="inputEmail">Email</label>
-                                    <input type="email" id="inputEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
-                                    <span class="campo-ayuda">El email identifica tu cuenta y no se puede cambiar.</span>
-                                </div>
-                                <div class="campo">
-                                    <label for="inputTel">Teléfono</label>
-                                    <input type="tel" id="inputTel" name="telefono" value="<?php echo htmlspecialchars($telefono); ?>" maxlength="30" placeholder="Completame" autocomplete="tel" disabled data-editable>
-                                </div>
-                            </div>
-                            <div class="campo-row">
-                                <div class="campo">
-                                    <label for="inputPais">País</label>
-                                    <select id="inputPais" name="pais" disabled data-editable>
-                                        <option value="" <?php echo $pais === '' ? 'selected' : ''; ?>>Sin especificar</option>
-                                        <?php foreach (PAISES_PERFIL as $opcion_pais): ?>
-                                            <option value="<?php echo htmlspecialchars($opcion_pais); ?>" <?php echo $pais === $opcion_pais ? 'selected' : ''; ?>><?php echo htmlspecialchars($opcion_pais); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="campo">
-                                    <label for="inputMoneda">Moneda principal</label>
-                                    <select id="inputMoneda" name="moneda" disabled data-editable>
-                                        <option value="ARS" <?php echo $moneda_usuario === 'ARS' ? 'selected' : ''; ?>>ARS — Peso argentino</option>
-                                        <option value="USD" <?php echo $moneda_usuario === 'USD' ? 'selected' : ''; ?>>USD — Dólar estadounidense</option>
-                                    </select>
-                                </div>
+                            <div class="campo">
+                                <label for="inputEmail">Email</label>
+                                <input type="email" id="inputEmail" value="<?php echo htmlspecialchars($email); ?>" disabled>
+                                <span class="campo-ayuda">El email identifica tu cuenta y no se puede cambiar.</span>
                             </div>
                         </div>
                     </form>
@@ -278,7 +247,7 @@ function camposClaveNueva() {
                         </div>
                     </div>
 
-                    <!-- Zona de peligro (los modales de confirmación están en includes/footer.php) -->
+                    <!-- Zona de peligro (los modales de confirmación están al final de esta página) -->
                     <div class="seccion-card zona-peligro">
                         <div class="seccion-header">
                             <h3 class="titulo-con-icono"><img src="iconos/generales/triangulopeligro.png" alt="" class="icono-titulo"> Zona de peligro</h3>
@@ -366,5 +335,5 @@ function camposClaveNueva() {
 </div>
 
 <?php
-$extra_js = '<script src="js/utils/exportCSV.js"></script><script src="js/perfil.js?v=2"></script>';
+$extra_js = '<script src="js/utils/exportCSV.js"></script><script src="js/perfil.js?v=3"></script>';
 require_once 'includes/footer.php';

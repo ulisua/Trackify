@@ -182,8 +182,7 @@
     letter-spacing: 0.05em;
 }
 
-.campo input,
-.campo select {
+.campo input {
     padding: calc(11 * var(--u)) calc(14 * var(--u));
     border: 1px solid var(--border-color);
     border-radius: calc(6 * var(--u));
@@ -195,8 +194,7 @@
     transition: all 0.2s;
 }
 
-.campo input:focus,
-.campo select:focus {
+.campo input:focus {
     border-color: var(--brand-green-dark);
     background: var(--bg-card);
     box-shadow: 0 0 0 3px rgba(8, 71, 52, 0.1);
@@ -206,6 +204,28 @@
     background: var(--bg-hover) !important;
     color: var(--text-muted) !important;
     cursor: default;
+}
+
+/* Nombre de usuario con "@" fijo adelante */
+.campo-arroba {
+    position: relative;
+    display: flex;
+}
+
+.campo-arroba span {
+    position: absolute;
+    left: calc(14 * var(--u));
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.campo-arroba input {
+    flex: 1;
+    min-width: 0;
+    padding-left: calc(30 * var(--u));
 }
 
 /* Toggle switches */

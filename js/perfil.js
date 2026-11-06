@@ -29,6 +29,13 @@ function inicializarDatosPersonales() {
         const inicial = nombre.value.trim()[0];
         if (avatar && inicial) avatar.textContent = inicial.toUpperCase();
     });
+
+    // Nombre de usuario: sin "@", sin espacios y en minúsculas (el servidor valida lo mismo)
+    const usuario = $id('inputUsuario');
+    usuario?.addEventListener('input', () => {
+        const limpio = usuario.value.toLowerCase().replace(/[^a-z0-9._]/g, '');
+        if (limpio !== usuario.value) usuario.value = limpio;
+    });
 }
 
 // ============== SEGURIDAD: CAMBIAR / CREAR CONTRASEÑA ==============
