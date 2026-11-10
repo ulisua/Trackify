@@ -1,0 +1,426 @@
+=====================================================================
+  TRACKIFY — DIAGRAMAS UML, DFD Y DER
+=====================================================================
+
+Los diagramas están escritos en Mermaid. Para verlos como imagen:
+  1. Abrir https://mermaid.live
+  2. Pegar el bloque (sin las líneas de "-----" de este archivo).
+  3. Exportar como PNG o SVG.
+También se ven directamente en GitHub o VS Code si se pegan en un
+archivo .md entre ```mermaid y ```.
+
+Contenido:
+  1. UML — Diagrama de casos de uso
+  2. UML — Diagrama de clases (modelo de dominio)
+  3. UML — Diagrama de secuencia: registro y verificación de email
+  4. UML — Diagrama de secuencia: consulta al asistente IA
+  5. UML — Diagrama de secuencia: aporte y eliminación de un objetivo
+  6. UML — Diagrama de actividades: cargar un movimiento
+  7. DFD — Nivel 0 (diagrama de contexto)
+  8. DFD — Nivel 1
+  9. DER — Diagrama entidad-relación
+
+
+=====================================================================
+1. UML — DIAGRAMA DE CASOS DE USO
+=====================================================================
+(Mermaid no tiene casos de uso nativos; se representa con flowchart.)
+
+flowchart LR
+    U((Usuario))
+    G((Google))
+    IA((Groq IA))
+    M((Servidor SMTP))
+
+    subgraph Trackify
+        CU1([Registrarse])
+        CU2([Verificar email])
+        CU3([Iniciar sesión])
+        CU4([Iniciar sesión con Google])
+        CU5([Cerrar sesión])
+        CU6([Gestionar movimientos])
+        CU7([Filtrar movimientos])
+        CU8([Gestionar categorías propias])
+        CU9([Gestionar objetivos de ahorro])
+        CU10([Aportar a un objetivo])
+        CU11([Ver dashboard])
+        CU12([Cambiar moneda y período])
+        CU13([Consultar asistente IA])
+        CU14([Editar perfil])
+        CU15([Cambiar o crear contraseña])
+        CU16([Exportar datos CSV])
+        CU17([Borrar historial])
+        CU18([Eliminar cuenta])
+        CU19([Activar modo oscuro])
+    end
+
+    U --- CU1 & CU3 & CU4 & CU5 & CU6 & CU8 & CU9 & CU11 & CU12 & CU13 & CU14 & CU16 & CU17 & CU18 & CU19
+    CU1 -. include .-> CU2
+    CU15 -. extend .-> CU14
+    CU7 -. extend .-> CU6
+    CU10 -. extend .-> CU9
+    CU2 --- M
+    CU15 --- M
+    CU4 --- G
+    CU13 --- IA
+
+
+=====================================================================
+2. UML — DIAGRAMA DE CLASES (modelo de dominio)
+=====================================================================
+
+classDiagram
+    class Usuario {
+        +int id_usuario
+        +string nombre
+        +string nombre_usuario
+        +string email
+        -string clave
+        +datetime fecha_registro
+        +string uuid
+        +string foto_perfil
+        +string google_id
+        +bool email_verificado
+        -string codigo_verificacion
+        -datetime codigo_expiracion
+        +Moneda moneda_principal
+        +registrarse()
+        +verificarEmail(codigo)
+        +iniciarSesion()
+        +cambiarPassword()
+        +cambiarMoneda()
+        +borrarHistorial()
+        +eliminarCuenta()
+    }
+    class Movimiento {
+        +int id_movimiento
+        +decimal monto
+        +TipoMovimiento tipo
+        +date fecha
+        +string descripcion
+        +bool es_hormiga
+        +crear()
+        +editar()
+        +eliminar()
+    }
+    class Categoria {
+        +int id_categoria
+        +string nombre
+        +TipoMovimiento tipo
+        +string icono
+        +string color
+        +esDelSistema() bool
+        +crear()
+        +editar()
+        +eliminar()
+    }
+    class MetaAhorro {
+        +int id_meta
+        +string nombre_meta
+        +string descripcion
+        +decimal monto_objetivo
+        +decimal monto_actual
+        +date fecha_limite
+        +EstadoMeta estado
+        +aportar(monto)
+        +eliminarConReintegro()
+        +progreso() float
+    }
+    class ConsejoIA {
+        +int id_consejos
+        +string mensaje
+        +timestamp fecha
+    }
+    class TipoMovimiento {
+        <<enumeration>>
+        ingreso
+        gasto
+    }
+    class EstadoMeta {
+        <<enumeration>>
+        activo
+        inactivo
+        logrado
+    }
+    class Moneda {
+        <<enumeration>>
+        ARS
+        USD
+    }
+
+    Usuario "1" --> "0..*" Movimiento : registra
+    Usuario "1" --> "0..*" MetaAhorro : define
+    Usuario "1" --> "0..*" ConsejoIA : recibe
+    Usuario "0..1" --> "0..*" Categoria : crea (propias)
+    Categoria "1" --> "0..*" Movimiento : clasifica
+    MetaAhorro ..> Movimiento : genera "Ahorro para meta" / "Reintegro de meta"
+
+
+=====================================================================
+3. UML — SECUENCIA: REGISTRO Y VERIFICACIÓN DE EMAIL
+=====================================================================
+
+sequenceDiagram
+    actor U as Usuario
+    participant N as Navegador
+    participant R as registro.php
+    participant BD as MySQL
+    participant ML as mailer.php
+    participant S as Servidor SMTP
+    participant V as verificar_email.php
+
+    U->>N: Completa nombre, email, contraseña
+    N->>R: POST /registro.php
+    R->>R: Valida datos, password_hash(), generarUuid()
+    R->>BD: INSERT usuarios (email_verificado = 0)
+    R->>ML: iniciarVerificacionEmail()
+    ML->>BD: UPDATE codigo_verificacion, codigo_expiracion (+15 min)
+    ML->>S: Envía email con código de 6 dígitos
+    R-->>N: Redirect a verificar_email.php
+    S-->>U: Email con el código
+    U->>N: Ingresa el código
+    N->>V: POST código
+    V->>BD: SELECT codigo, expiracion
+    alt Código correcto y vigente
+        V->>BD: UPDATE email_verificado = 1, borra código
+        V-->>N: Inicia sesión, redirect a index.php
+    else Código incorrecto / vencido (máx. 5 intentos)
+        V-->>N: Mensaje de error
+    end
+
+
+=====================================================================
+4. UML — SECUENCIA: CONSULTA AL ASISTENTE IA
+=====================================================================
+
+sequenceDiagram
+    actor U as Usuario
+    participant JS as js/ia.js
+    participant IA as ia.php
+    participant BD as MySQL
+    participant G as API Groq
+
+    U->>JS: Escribe una pregunta
+    JS->>IA: POST JSON {pregunta, historial} + X-CSRF-Token
+    IA->>IA: Verifica sesión, CSRF, largo y límite de 2 s
+    IA->>BD: SELECT totales por mes, gastos por categoría, metas
+    BD-->>IA: Datos del usuario
+    IA->>G: POST chat/completions (sistema + contexto + pregunta)
+    G-->>IA: Respuesta generada
+    IA-->>JS: JSON {respuesta}
+    JS-->>U: Muestra la respuesta en el chat
+
+
+=====================================================================
+5. UML — SECUENCIA: APORTE Y ELIMINACIÓN DE UN OBJETIVO
+=====================================================================
+
+sequenceDiagram
+    actor U as Usuario
+    participant O as objetivos.php
+    participant BD as MySQL
+
+    U->>O: POST aporte (monto en ARS)
+    O->>BD: BEGIN
+    O->>BD: UPDATE metas_ahorro SET monto_actual = monto_actual + monto
+    O->>BD: INSERT movimientos (gasto, "Ahorro para meta")
+    O->>BD: COMMIT
+    O-->>U: Redirect + aviso
+
+    U->>O: POST eliminar objetivo
+    O->>BD: BEGIN
+    O->>BD: INSERT movimientos (ingreso, "Reintegro de meta", monto_actual)
+    O->>BD: DELETE metas_ahorro
+    O->>BD: COMMIT
+    O-->>U: Redirect + aviso
+
+
+=====================================================================
+6. UML — ACTIVIDADES: CARGAR UN MOVIMIENTO
+=====================================================================
+
+flowchart TD
+    A([Inicio]) --> B[Abrir modal + Ingreso / + Gasto]
+    B --> C[Ingresar monto, moneda, categoría, fecha, descripción]
+    C --> D{¿Monto > 0?}
+    D -- No --> C
+    D -- Sí --> E{¿Moneda USD?}
+    E -- Sí --> F{¿Hay cotización?}
+    F -- No --> G[Avisar y no enviar] --> C
+    F -- Sí --> H[Convertir a ARS]
+    E -- No --> I[Enviar formulario]
+    H --> I
+    I --> J{Servidor: CSRF, monto, fecha y categoría válidos?}
+    J -- No --> K[Mensaje de error] --> L
+    J -- Sí --> M[INSERT en movimientos] --> N[Mensaje de éxito] --> L
+    L[Redirigir a la página de origen] --> Z([Fin])
+
+
+=====================================================================
+7. DFD — NIVEL 0 (DIAGRAMA DE CONTEXTO)
+=====================================================================
+
+flowchart LR
+    U[Usuario]
+    G[Google OAuth]
+    S[Servidor SMTP]
+    IA[Groq IA]
+    C[API de cotización]
+
+    P((0<br/>Sistema<br/>Trackify))
+
+    U -- datos de registro, login, movimientos,<br/>categorías, objetivos, preguntas --> P
+    P -- dashboard, listados, gráficos,<br/>respuestas IA, archivo CSV --> U
+    P -- solicitud de autenticación --> G
+    G -- datos de la cuenta Google --> P
+    P -- email con código --> S
+    S -- código --> U
+    P -- pregunta + contexto financiero --> IA
+    IA -- respuesta --> P
+    C -- cotización USD/ARS --> P
+
+
+=====================================================================
+8. DFD — NIVEL 1
+=====================================================================
+Almacenes: D1 usuarios, D2 movimientos, D3 categorias,
+D4 metas_ahorro, D5 consejos_ia (sin uso actual).
+
+flowchart LR
+    U[Usuario]
+    G[Google OAuth]
+    S[Servidor SMTP]
+    IA[Groq IA]
+    C[API de cotización]
+
+    P1((1.0<br/>Autenticar<br/>usuario))
+    P2((2.0<br/>Gestionar<br/>movimientos))
+    P3((3.0<br/>Gestionar<br/>categorías))
+    P4((4.0<br/>Gestionar<br/>objetivos))
+    P5((5.0<br/>Generar<br/>reportes y<br/>dashboard))
+    P6((6.0<br/>Asistente IA))
+    P7((7.0<br/>Gestionar<br/>perfil))
+    P8((8.0<br/>Convertir<br/>moneda))
+
+    D1[(D1 usuarios)]
+    D2[(D2 movimientos)]
+    D3[(D3 categorias)]
+    D4[(D4 metas_ahorro)]
+
+    U -- email, contraseña, código --> P1
+    G -- perfil Google --> P1
+    P1 -- código de verificación --> S
+    P1 <--> D1
+    P1 -- sesión --> U
+
+    U -- monto, tipo, fecha, categoría --> P2
+    P8 -- monto en ARS --> P2
+    C -- cotización --> P8
+    U -- monto en USD --> P8
+    P2 <--> D2
+    D3 -- categorías visibles --> P2
+
+    U -- nombre, tipo, ícono, color --> P3
+    P3 <--> D3
+    P3 -- reasigna a "Otros" --> D2
+
+    U -- meta, aporte --> P4
+    P4 <--> D4
+    P4 -- gasto / reintegro --> D2
+
+    D2 -- movimientos del período --> P5
+    D3 -- categorías --> P5
+    P5 -- KPIs, gráficos, CSV --> U
+
+    U -- pregunta --> P6
+    D2 -- resumen de movimientos --> P6
+    D4 -- metas --> P6
+    P6 -- pregunta + contexto --> IA
+    IA -- respuesta --> P6
+    P6 -- respuesta --> U
+
+    U -- nombre, @usuario, contraseña, moneda --> P7
+    P7 <--> D1
+    P7 -- borrar historial / eliminar cuenta --> D2
+
+
+=====================================================================
+9. DER — DIAGRAMA ENTIDAD-RELACIÓN
+=====================================================================
+
+erDiagram
+    USUARIOS ||--o{ MOVIMIENTOS : "registra"
+    USUARIOS ||--o{ METAS_AHORRO : "define"
+    USUARIOS ||--o{ CONSEJOS_IA : "recibe"
+    USUARIOS |o--o{ CATEGORIAS : "crea (NULL = del sistema)"
+    CATEGORIAS ||--o{ MOVIMIENTOS : "clasifica"
+
+    USUARIOS {
+        int id_usuario PK
+        varchar nombre
+        varchar nombre_usuario UK
+        varchar email UK
+        varchar clave
+        datetime fecha_registro
+        varchar uuid
+        varchar Foto_perfil
+        varchar google_id
+        tinyint email_verificado
+        varchar codigo_verificacion
+        datetime codigo_expiracion
+        enum moneda_principal
+    }
+    MOVIMIENTOS {
+        int id_movimiento PK
+        int id_usuario FK
+        int id_categoria FK
+        decimal monto
+        enum tipo
+        varchar descripcion
+        date fecha
+        tinyint es_hormiga
+    }
+    CATEGORIAS {
+        int id_categoria PK
+        int id_usuario "índice, sin FK"
+        varchar nombre
+        enum tipo
+        varchar icono
+        varchar color
+    }
+    METAS_AHORRO {
+        int id_meta PK
+        int id_usuario FK
+        varchar nombre_meta
+        varchar descripcion
+        decimal monto_objetivo
+        decimal monto_actual
+        date fecha_limite
+        enum estado
+    }
+    CONSEJOS_IA {
+        int id_consejos PK
+        int id_usuario FK
+        text mensaje
+        timestamp fecha
+    }
+
+
+DER EN TEXTO (por si no se puede renderizar)
+
+  ┌──────────────┐ 1      N ┌──────────────┐ N      1 ┌──────────────┐
+  │   USUARIOS   │──────────│ MOVIMIENTOS  │──────────│  CATEGORIAS  │
+  │ PK id_usuario│          │PK id_movim.  │          │PK id_categ.  │
+  └──────┬───────┘          │FK id_usuario │          │   id_usuario │
+         │                  │FK id_categ.  │          └──────┬───────┘
+         │                  └──────────────┘                 │
+         │ 1                                       0..1      │ N
+         ├──────────────────────── crea ─────────────────────┘
+         │ 1        N ┌──────────────┐
+         ├────────────│ METAS_AHORRO │
+         │            │FK id_usuario │
+         │            └──────────────┘
+         │ 1        N ┌──────────────┐
+         └────────────│ CONSEJOS_IA  │
+                      │FK id_usuario │
+                      └──────────────┘

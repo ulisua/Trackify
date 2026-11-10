@@ -1,0 +1,180 @@
+=====================================================================
+  TRACKIFY — TABLA DE MÓDULOS IMPLEMENTADOS (actualizada al 06/11/2026)
+=====================================================================
+
+Estados:  ✅ Terminado   🔄 En progreso / parcial   ⏳ Pendiente
+
+Responsables: se completaron según la autoría de los commits
+(aguscecchsagrado = Cecch, ulisua = Suarez) y la tabla anterior.
+Revisar y agregar a quien haya colaborado sin commitear (diseño,
+pruebas, documentación).
+
+Formato: Módulo / Funcionalidad | Responsable | Estado | Observaciones
+
+
+---------------------------------------------------------------------
+MÓDULOS DE LA TABLA ANTERIOR (actualizados)
+---------------------------------------------------------------------
+
+Login / Autenticación
+  Responsable: Suarez / Cecch
+  Estado: ✅
+  Observaciones: Login con email y contraseña (bcrypt) e inicio de
+  sesión con Google (OAuth 2.0). Las claves locales se resguardan en
+  .env, fuera del repositorio. El error de login no revela si el email
+  existe. Cierre de sesión destruye sesión y cookie.
+
+CRUD Movimientos (Entidad principal: Ingresos/Gastos)
+  Responsable: Cecch / Suarez / Combetta
+  Estado: ✅
+  Observaciones: Conectado a la tabla unificada "movimientos". Alta,
+  edición y baja, filtros por fecha/tipo/categoría y período
+  (semana/quincena/mes). Validación de monto > 0 en el servidor
+  (caso de prueba de números negativos resuelto).
+
+Módulo de IA (Chat y Recomendaciones)
+  Responsable: Cecch
+  Estado: ✅ chat / 🔄 recomendaciones
+  Observaciones: Chat (página completa y botón flotante) funcional con
+  la API de Groq, usando los datos reales del usuario. Las
+  recomendaciones del dashboard son reglas fijas en PHP, todavía no
+  generadas por IA. La tabla consejos_ia no se usa.
+
+
+---------------------------------------------------------------------
+MÓDULOS NUEVOS
+---------------------------------------------------------------------
+
+Registro y verificación de email
+  Responsable: Suarez / Cecch
+  Estado: ✅
+  Observaciones: Código de 6 dígitos por email (PHPMailer + SMTP),
+  vence en 15 min, 5 intentos, reenvío cada 60 s.
+
+Cambio / creación de contraseña
+  Responsable: Suarez
+  Estado: ✅
+  Observaciones: Desde el perfil. Las cuentas de Google crean su
+  contraseña con un código por email. Medidor de seguridad.
+
+Categorías (predeterminadas y propias)
+  Responsable: Cecch / Suarez
+  Estado: ✅
+  Observaciones: 27 categorías del sistema con ícono y color. CRUD de
+  categorías propias; al borrar una, sus movimientos pasan a "Otros".
+  Orden de tarjetas resuelto.
+
+Objetivos de ahorro
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: Alta, aportes (registrados como gasto), edición de
+  estado y baja con reintegro como ingreso, en una sola transacción.
+
+Dashboard y gráficos
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: KPIs, gráfico de torta por categoría, gasto mensual,
+  ingresos vs. gastos (Chart.js) y últimos movimientos.
+
+Sistema bimoneda ARS / USD
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: Cotización de ExchangeRate-API con respaldo en
+  Frankfurter. La base guarda todo en ARS. Euro y libra descartados.
+
+Perfil de usuario
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: Nombre y @usuario únicos editables. Se descartaron
+  apellido, teléfono y país.
+
+Zona de peligro
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: Exportar datos (CSV, no PDF), borrar historial y
+  eliminar cuenta, con frase de confirmación validada en el servidor.
+
+Modo oscuro
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: Sin parpadeo al cargar. Requirió 3 iteraciones.
+
+Diseño responsive
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: 7 iteraciones (V.01 a V.05). Menú hamburguesa con
+  selectores de moneda y período en pantallas ≤ 900 px.
+
+Seguridad transversal
+  Responsable: Cecch / Suarez
+  Estado: ✅
+  Observaciones: Prepared statements, CSRF, escape de salidas,
+  redirecciones seguras, aislamiento de datos por usuario, UUID.
+
+Migraciones automáticas de BD
+  Responsable: Cecch
+  Estado: ✅
+  Observaciones: conexion.php agrega columnas faltantes y carga las
+  categorías iniciales. Solo aditivas.
+
+Gasto hormiga
+  Responsable: (a definir)
+  Estado: ⏳
+  Observaciones: Columna es_hormiga creada en la base; falta la
+  interfaz para marcarlos y analizarlos.
+
+Historial de consejos IA
+  Responsable: Cecch
+  Estado: ⏳
+  Observaciones: Tabla consejos_ia creada, sin uso.
+
+Contenedores Docker
+  Responsable: (a definir)
+  Estado: 🔄
+  Observaciones: Trabajado en clase (Sem 31); no hay Dockerfile ni
+  docker-compose en el repositorio.
+
+Hosting / despliegue
+  Responsable: Equipo
+  Estado: ⏳
+  Observaciones: Hostings gratuitos bloquean puertos salientes. Corre
+  solo en local (XAMPP).
+
+Testing (QA / QC)
+  Responsable: Tester
+  Estado: 🔄
+  Observaciones: Pruebas manuales y casos de prueba (montos negativos,
+  orden de categorías). Sin tests automatizados.
+
+Documentación técnica
+  Responsable: Equipo
+  Estado: 🔄
+  Observaciones: docs/*.md y carpeta documentacion/. Falta regenerar
+  trackify.sql y actualizar RESUMEN_EJECUTIVO.md.
+
+
+---------------------------------------------------------------------
+VERSIÓN PARA PEGAR EN UNA TABLA (separada por tabulaciones)
+---------------------------------------------------------------------
+Módulo / Funcionalidad	Responsable	Estado	Observaciones
+Login / Autenticación	Suarez / Cecch	✅	Email+contraseña (bcrypt) y Google OAuth. Claves en .env fuera del repo.
+CRUD Movimientos (Ingresos/Gastos)	Cecch / Suarez / Combetta	✅	Conectado a la tabla unificada movimientos. Filtros y validación en servidor.
+Módulo de IA (Chat y Recomendaciones)	Cecch	✅ / 🔄	Chat con Groq funcional. Recomendaciones del dashboard por reglas, no IA.
+Registro y verificación de email	Suarez / Cecch	✅	Código de 6 dígitos, 15 min, 5 intentos.
+Cambio / creación de contraseña	Suarez	✅	Incluye cuentas de Google con código por email.
+Categorías	Cecch / Suarez	✅	27 del sistema + propias con ícono y color.
+Objetivos de ahorro	Cecch	✅	Aportes como gasto, reintegro como ingreso.
+Dashboard y gráficos	Cecch	✅	KPIs y gráficos Chart.js.
+Bimoneda ARS / USD	Cecch	✅	Cotización online; BD siempre en ARS.
+Perfil de usuario	Cecch	✅	Nombre y @usuario.
+Zona de peligro	Cecch	✅	Exportar CSV, borrar historial, eliminar cuenta.
+Modo oscuro	Cecch	✅	Sin parpadeo al cargar.
+Diseño responsive	Cecch	✅	Corte en 900 px, menú hamburguesa.
+Seguridad transversal	Cecch / Suarez	✅	Prepared statements, CSRF, XSS, UUID.
+Migraciones automáticas	Cecch	✅	Solo aditivas.
+Gasto hormiga	(a definir)	⏳	Columna creada, sin interfaz.
+Historial de consejos IA	Cecch	⏳	Tabla creada, sin uso.
+Docker	(a definir)	🔄	No versionado en el repo.
+Hosting	Equipo	⏳	Solo local.
+Testing (QA/QC)	Tester	🔄	Pruebas manuales.
+Documentación técnica	Equipo	🔄	Falta regenerar trackify.sql.

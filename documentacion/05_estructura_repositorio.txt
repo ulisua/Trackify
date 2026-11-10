@@ -1,0 +1,105 @@
+=====================================================================
+  TRACKIFY — ESTRUCTURA DEL REPOSITORIO
+  Rama devagus, commit 190451c (06/11/2026) — 140 archivos versionados
+=====================================================================
+
+trackify/
+│
+├── index.php                  Dashboard: KPIs, gráficos (Chart.js), recomendaciones, chat flotante
+├── movimientos.php            Listado de todos los movimientos con filtros (rango, tipo, categoría)
+├── ingresos.php               Ingresos del período  ┐ ambos usan
+├── gastos.php                 Gastos del período    ┘ includes/vista_movimientos_tipo.php
+├── categorias.php             Vista y CRUD de categorías propias
+├── objetivos.php              Metas de ahorro: alta, aportes, edición, baja con reintegro
+├── perfil.php                 Datos personales, seguridad, modo oscuro, zona de peligro
+├── ia.php                     GET: página del asistente  |  POST: API que consulta a Groq
+├── export_movimientos.php     Devuelve los movimientos del usuario en JSON (para el CSV)
+│
+├── login.php                  Inicio de sesión (email/contraseña + Google)
+├── registro.php               Alta de usuario + envío del código de verificación
+├── verificar_email.php        Ingreso del código OTP de 6 dígitos
+├── reenviar_codigo.php        Reenvío del código (máx. 1 por minuto)
+├── logout.php                 Cierre de sesión
+│
+├── conexion.php               Conexión mysqli + carga de .env y seguridad + migraciones automáticas + categorías iniciales
+├── env.php                    Lector del archivo .env -> función env()
+├── trackify.sql               Volcado de referencia de la base (importar en phpMyAdmin)
+├── styles.css                 Hoja de estilos raíz: importa todos los módulos de /css
+├── .env.example               Plantilla de configuración (copiar como .env, que NO se sube)
+├── .gitignore                 Ignora .env, .DS_Store, Thumbs.db
+├── favicon.ico, logo.png      Identidad visual
+├── RESUMEN_EJECUTIVO.md       Informe de optimizaciones mobile (desactualizado)
+│
+├── api/                       Endpoints que responden JSON (llamados con fetch)
+│   ├── cambiar_moneda.php       Guarda la moneda preferida (ARS/USD)
+│   └── cambiar_password.php     Cambiar contraseña / crearla con código por email
+│
+├── auth/
+│   └── google/
+│       └── callback.php         Retorno de Google OAuth 2.0: login, vinculación o alta
+│
+├── includes/                  Piezas PHP reutilizadas por las páginas
+│   ├── header.php               <head>, control de sesión, navbar, selectores moneda/período, sidebar
+│   ├── footer.php               Modales compartidos, librerías CDN, js/main.js, mensajes flash
+│   ├── auth_layout.php          Estructura común de las pantallas de login/registro/verificación
+│   ├── tema_inicial.php         Aplica modo claro/oscuro antes de pintar (evita parpadeo)
+│   ├── seguridad.php            CSRF, sesión, uuid, validación de montos/fechas, @usuario, flash()
+│   ├── periodo.php              Calcula fechas de semana/quincena/mes y la moneda de sesión
+│   ├── categorias_meta.php      Íconos/colores por categoría y consultas de categorías visibles
+│   ├── movimientos_handler.php  Controlador POST: alta/edición/baja de movimientos, borrar historial, eliminar cuenta
+│   ├── vista_movimientos_tipo.php  Vista compartida de ingresos.php y gastos.php
+│   └── mailer.php               Envío de códigos por email con PHPMailer
+│
+├── js/
+│   ├── main.js                  Global: CSRF, alertas de marca, menú, calendarios, modales, selects
+│   ├── moneda.js                Cotización del dólar y conversión ARS/USD
+│   ├── ia.js                    Chat del asistente
+│   ├── perfil.js                Perfil, contraseña, modo oscuro, zona de peligro
+│   ├── categorias.js            Pestañas y orden de tarjetas de categorías
+│   ├── filtros_movimientos.js   Filtros de ingresos.php / gastos.php
+│   └── utils/
+│       └── exportCSV.js         Convierte JSON a CSV (UTF-8 con BOM) y lo descarga
+│
+├── css/
+│   ├── variables.css            Paleta de colores y tipografías
+│   ├── themes.css               Tokens de modo claro / oscuro
+│   ├── base.css                 Reset y estilos base, animaciones
+│   ├── layout.css               Grillas, contenedores, tablas
+│   ├── responsive.css           Media queries (se carga al final; corte en 900 px)
+│   ├── components/              buttons, cards, charts, chat, forms, moneda, navbar, sidebar
+│   └── pages/                   auth, categorias, dashboard, ia, movimientos, objetivos, perfil
+│
+├── iconos/                    Íconos PNG (49)
+│   ├── gasto/                   17 íconos de categorías de gasto
+│   ├── ingreso/                 11 íconos de categorías de ingreso
+│   └── generales/               21 íconos de interfaz (lápiz, tacho, robot, candado, etc.)
+│
+├── phpmailer/                 Librería PHPMailer (Exception.php, PHPMailer.php, SMTP.php)
+│
+├── docs/                      Documentación técnica en Markdown
+│   ├── ARCHITECTURE.md          Arquitectura general (documento maestro)
+│   ├── CSS_ARCHITECTURE.md      Organización del CSS
+│   ├── JAVASCRIPT_ARCHITECTURE.md  Organización del JS
+│   └── prompt_trackify_actualizado.txt  Contexto del proyecto para usar con IA
+│
+├── Errores a corregir Trackify/  Informe de errores de UI con capturas (HTML + 20 imágenes)
+│
+└── documentacion/             (esta carpeta) Documentos de entrega en .txt
+
+
+ARCHIVOS QUE NO ESTÁN EN EL REPOSITORIO (pero hacen falta)
+  .env    -> cada integrante lo crea a partir de .env.example
+
+RAMAS REMOTAS
+  main, develop, devagus, devulises, fix, fusion-trackify
+
+
+CÓMO SE RELACIONAN LAS CARPETAS
+  Página .php de la raíz
+     ├─ require conexion.php ──> env.php, includes/seguridad.php,
+     │                            includes/categorias_meta.php
+     ├─ require includes/header.php ──> includes/periodo.php,
+     │                                  includes/tema_inicial.php,
+     │                                  styles.css (-> css/**)
+     ├─ (opcional) includes/movimientos_handler.php
+     └─ require includes/footer.php ──> js/main.js, js/moneda.js, CDN

@@ -1,0 +1,291 @@
+=====================================================================
+  TRACKIFY — PROBLEMÁTICAS ENCONTRADAS A LO LARGO DE LOS COMMITS
+  Período: 25/03/2026 (primer commit) al 06/11/2026 (último commit)
+  57 commits en todas las ramas — autores: aguscecchsagrado (44),
+  ulisua (12), Agustina Cecch (1)
+=====================================================================
+
+Cada problema indica: qué pasó, en qué commit(s) se ve, cómo se
+resolvió y si quedó algo pendiente.
+
+
+---------------------------------------------------------------------
+A. BASE DE DATOS
+---------------------------------------------------------------------
+
+A1. Esquema inicial con tablas separadas y tipos inadecuados
+    Commit: 8b89da1 (31/03, ulisua)
+    - Ingresos y gastos en dos tablas distintas, con columnas
+      diferentes (ingresos sin categoría, gastos sin descripción).
+    - Montos en FLOAT (pierde precisión con dinero); en gastos.sql,
+      id_gasto era FLOAT e id_categoria VARCHAR(200), lo que impedía
+      la clave foránea.
+    - Charset latin1 (problemas con tildes y ñ).
+    Solución: 87f38ef (23/04) unifica todo en "movimientos" con columna
+    tipo, DECIMAL(12,2), utf8mb4 y FKs correctas.
+
+A2. Varios archivos .sql contradictorios en el repositorio
+    Commits: 8b89da1, 87f38ef, 89175aa
+    Convivían trackify.sql, gastos.sql, ingresos.sql y "usuarios (1).sql"
+    con estructuras distintas; no quedaba claro cuál era la fuente
+    de verdad.
+    Solución: 07a19e1 (02/10) elimina gastos.sql e ingresos.sql.
+    Pendiente: trackify.sql no tiene las columnas nuevas (ver A4).
+
+A3. Restricciones de claves foráneas (Bitácora Sem 10)
+    Errores al insertar o borrar por FKs fallidas.
+    Solución: sprint de BD; al eliminar una cuenta, el código borra en
+    orden y en una transacción (d2c3101, 09/06). No se usa ON DELETE
+    CASCADE.
+
+A4. Cambios de esquema sin un script de migración compartido
+    Cada integrante tenía su base local con columnas distintas, y al
+    hacer pull aparecían errores "Unknown column".
+    Solución: migraciones automáticas en conexion.php (desde d71851e,
+    08/05). Problema derivado: corrían ~15 ALTER TABLE en CADA request
+    (lento). Se optimizó en 19c0521 (03/11) con una sola consulta a
+    information_schema.
+    Pendiente: las migraciones solo agregan; apellido/telefono/pais
+    (agregadas en 7b26b6a y abandonadas en 190451c) quedan huérfanas en
+    las bases que ya las crearon.
+
+A5. Metas de ahorro sin centavos
+    metas_ahorro.monto_* era DECIMAL(10,0) mientras movimientos usaba
+    DECIMAL(12,2): al aportar con centavos se redondeaba.
+    Solución: 65bf283 (27/10) amplía a DECIMAL(12,2) una sola vez.
+
+A6. Datos personales reales en el volcado de prueba
+    Commit: b5db28d (28/04)
+    trackify.sql incluye emails institucionales reales de integrantes y
+    sus hashes de contraseña. Recomendación: reemplazarlos por datos
+    ficticios antes de la entrega pública.
+
+A7. Exposición de IDs correlativos (Bitácora Sem 11)
+    Los ids 1, 2, 3... en las peticiones permiten adivinar recursos de
+    otros usuarios.
+    Solución: columna uuid en usuarios (13731a5) y, sobre todo, filtrar
+    toda consulta por el id_usuario de la sesión.
+    Pendiente: movimientos no tiene uuid (la bitácora dice que sí) y
+    usuarios.uuid no tiene índice UNIQUE.
+
+A8. Intento de migrar a PostgreSQL (Bitácora Sem 5 y 6)
+    Se instaló pgAdmin pero costó crear la base desde cero.
+    Decisión: seguir con MySQL. Guía para hacerlo bien:
+    10_migracion_mysql_a_postgresql.txt.
+
+
+---------------------------------------------------------------------
+B. CONTROL DE VERSIONES (GIT) E INTEGRACIÓN
+---------------------------------------------------------------------
+
+B1. Carpeta "fusion" duplicada dentro del repo
+    Commit: 89175aa (24/04) sube una copia completa del proyecto en
+    /fusion (31 archivos). Se borra en c699766 (28/04).
+    Causa: se copió una carpeta en lugar de hacer merge de ramas.
+
+B2. Fusión de ramas larga y conflictiva
+    Commits: 13731a5 "fusion inicial sin terminar" (13/08),
+    7df966c "Integro fusion" (10/09), c37607d y c3eb289 (merges a
+    develop), 7b26b6a "Integro devulises" (06/11).
+    Las ramas devagus y devulises divergieron por meses y resolvían lo
+    mismo de formas distintas (validación de montos, login con
+    verificación, callback de Google, lectura del .env). La fusión tardó
+    casi un mes y hubo que decidir caso por caso qué versión quedaba.
+    Aprendizaje: integrar seguido (al menos una vez por semana).
+
+B3. "ARREGLAR! se rompió todo"
+    Commit: 415a7c1 (25/06) — 32 archivos, +3450/−3530 líneas.
+    Una reorganización grande del CSS rompió estilos en casi todas las
+    páginas. Dejó además archivos basura en el repo (un archivo llamado
+    "css/{" y carpetas "walkthrough"/planes de la IA).
+    Solución: 1f5d236 y 204b69e (30/06 y 01/07) y limpieza en 07a19e1.
+    Aprendizaje: commits chicos; no mezclar refactor con features.
+
+B4. Commits técnicos y mensajes poco descriptivos
+    "checkout: temporary commit for worktree checkout" (97793e8),
+    "REVISAR UI que está horrible!", "Ver botones (hacer otras clases)",
+    "Toco responsive V.01 ... V.05". Dificultan saber qué cambió.
+
+B5. Documentación generada por IA acumulada en la raíz
+    Commit 07a19e1 (02/10) borra ~15 .md (implementation_plan2.md,
+    walkthrough1.md, nuevocss.md, etc.). Hoy RESUMEN_EJECUTIVO.md sigue
+    describiendo archivos que no existen (js/header-dropdown.js).
+
+B6. Integrante con dos identidades de Git
+    "Agustina Cecch" y "aguscecchsagrado" son la misma persona con
+    distinta configuración de git (user.name), lo que divide las
+    estadísticas de autoría.
+
+
+---------------------------------------------------------------------
+C. AUTENTICACIÓN Y SEGURIDAD
+---------------------------------------------------------------------
+
+C1. Manejo de contraseñas (Bitácora Sem 5)
+    Dudas sobre cómo guardar la clave e incompatibilidades con MySQL.
+    Solución: password_hash (bcrypt) en VARCHAR(255).
+
+C2. Envío del email de verificación
+    Commits: 16ad837 (06/10, ulisua) "Arreglo de error en envío de
+    mail"; 19c0521 (03/11) "Arreglo verificación x email".
+    El código no llegaba o fallaba sin aviso; la configuración SMTP
+    estaba repartida en varios archivos.
+    Solución: includes/mailer.php centraliza el envío, credenciales en
+    .env, vencimiento de 15 min, 5 intentos, reenvío cada 60 s.
+
+C3. Inicio de sesión con Google
+    Commits: 1fcf8bc y 79b2c15 (09/10, ulisua).
+    Errores en el callback OAuth y en la lectura de las variables del
+    .env. Solución: callback reescrito con validación de "state" y
+    variables leídas con env().
+
+C4. Cuentas de Google sin contraseña
+    Una cuenta creada con Google no tenía contraseña y no podía
+    "cambiarla".
+    Commits: 89ba488, d7bae57 (no terminados), efa57b3 (22/10,
+    terminado). Integrado en 7b26b6a: se crea contraseña validando un
+    código enviado por email.
+
+C5. Montos negativos (caso de prueba)
+    Detectado en "Errores a corregir Trackify": el navegador avisaba
+    que el monto no era válido, pero el valor negativo se guardaba igual
+    y se mostraba "+$-xxx".
+    Solución: 3f2473c (30/10, ulisua) valida en el servidor
+    (montoValido) además del cliente.
+
+C6. Error de login
+    f177401 (16/06): error visual en la pantalla de login, corregido con
+    un cambio de una línea en css/auth.css. Luego a7d3419 (18/06)
+    arregla los "orbes" del fondo de login y registro.
+
+C7. Faltaba protección CSRF y redirecciones seguras
+    Detectado al integrar ramas. Solución en 19c0521 / 7b26b6a: token
+    CSRF global y urlRetornoSegura().
+
+C8. Claves de API en el repositorio (Bitácora Sem 2)
+    Conflictos con las políticas de GitHub al subir API keys.
+    Solución: .env fuera del repo (+ .env.example). Verificado: en el
+    historial no hay claves reales commiteadas.
+
+
+---------------------------------------------------------------------
+D. INTELIGENCIA ARTIFICIAL
+---------------------------------------------------------------------
+
+D1. APIs de IA pagas o con límites (Bitácora Sem 2)
+    Solución: Groq, gratuita con límites de uso.
+
+D2. Chat de IA roto
+    bf6f6fa (09/06) "Arreglar chat IA". Durante un tiempo el handler
+    que llama a Groq no estaba commiteado (solo la vista), así que el
+    chat no funcionaba en las compus del resto del equipo.
+    Solución: el handler está hoy en ia.php, con mensajes de error
+    claros (key inválida, modelo inexistente, límite de uso).
+
+D3. Modelo de IA local descartado (Bitácora Sem 3)
+    Se investigó correr la IA localmente; se descartó por recursos.
+
+D4. Funciones de IA planificadas sin implementar
+    La tabla consejos_ia nunca se usó; las "recomendaciones" del
+    dashboard son reglas fijas en PHP, no IA.
+
+
+---------------------------------------------------------------------
+E. INTERFAZ, RESPONSIVE Y MODO OSCURO
+---------------------------------------------------------------------
+
+E1. UI inconsistente
+    d71851e "REVISAR UI que está horrible!" (08/05). Títulos a distinta
+    altura en cada página, selectores sin la estética de la marca,
+    botones pegados a las tarjetas (documento "Errores a corregir").
+
+E2. Emojis reemplazados por íconos
+    7cdb1ee, 73e22c0, da07404, f0fc89f (mayo). Tamaños desiguales entre
+    íconos (Bitácora Sem 12). Solución: tamaño único para todos y
+    favicon nuevo.
+
+E3. Modo oscuro
+    e9e2a1f (19/06), 1f5d236 (30/06), 204b69e (01/07).
+    Textos e íconos invisibles sobre fondo oscuro, parpadeo blanco al
+    cargar. Solución: tokens en themes.css y tema_inicial.php
+    (aplica el tema antes de pintar).
+
+E4. Responsive
+    Siete iteraciones: 34c602b ("primitivo"), 9c8bd53 (V.01), f3d50c4,
+    e073dae (V.02), 1f5892b (V.03), 65bf283 (V.04, 72 archivos),
+    4b1a9d3 / d521086 (V.05).
+    Problemas: selectores de moneda/período tapaban el logo, tarjetas
+    del dashboard comprimidas, botones apilados fáciles de tocar por
+    error, gráficos deformados, scroll horizontal en el perfil.
+    Solución: corte en 900 px, selectores dentro del menú hamburguesa,
+    grillas reacomodadas.
+
+E5. Ajustes visuales repetidos
+    68be265 y a98f3e1 (27/10) "Ajustar glow tarjetas" / "Ajusto glow
+    otra vez": cambios de 2–3 líneas en commits separados.
+
+E6. Orden de las categorías
+    990bcae (30/10, ulisua): las categorías aparecían desordenadas.
+    Solución: orden fijo y orden personalizado recordado en el navegador.
+
+
+---------------------------------------------------------------------
+F. FUNCIONALIDADES Y PLANIFICACIÓN
+---------------------------------------------------------------------
+
+F1. Multimoneda
+    Bitácora Sem 5 y 17. Se planearon euro y libra y cambio de idioma
+    según moneda; se descartaron por bugs y falta de planificación.
+    Quedó solo ARS/USD, con la BD siempre en ARS.
+
+F2. Zona de peligro
+    f0fc89f (26/05, "terminar") -> 6a46ac8 (28/05) -> d2c3101 (09/06,
+    arreglo eliminar cuenta). Eliminar cuenta fallaba por las FKs.
+    Nota: la bitácora (Sem 16) dice "exportar en PDF", pero lo
+    implementado exporta a CSV.
+
+F3. Objetivos de ahorro y saldo
+    Los aportes a una meta no afectaban el balance. Solución: cada
+    aporte genera un gasto "Ahorro para meta" y al borrar la meta
+    vuelve un ingreso "Reintegro de meta" (7b26b6a).
+
+F4. Datos personales que cambiaron dos veces
+    7b26b6a agrega apellido, teléfono y país; 190451c los quita y
+    agrega @usuario el mismo día. Faltó definir el requisito antes.
+
+F5. Hosting
+    Bitácora Sem 11 y 13: InfinityFree bloquea puertos salientes (no
+    conecta con APIs externas ni BD remotas). Se evaluó un hosting
+    pago compartido con otro grupo. Hoy sigue en local.
+
+F6. Docker
+    Bitácora Sem 31 registra el trabajo con Docker, pero no hay
+    Dockerfile ni docker-compose en el repositorio.
+
+
+---------------------------------------------------------------------
+G. EQUIPO Y COMUNICACIÓN
+---------------------------------------------------------------------
+
+G1. Críticas por la creación del foro anónimo (Bitácora Sem 9).
+G2. Problemas de comunicación que trababan front y back en simultáneo
+    (Bitácora Sem 14). Se resolvió con una reunión de necesidades.
+G3. Funciones nuevas poco planificadas (Bitácora Sem 17).
+G4. Concentración de commits: 44 de 57 commits son de una misma
+    integrante; el trabajo de otros integrantes (documentación,
+    diagramas, presentación) no queda registrado en Git.
+G5. Pausa de desarrollo: entre el 01/07 y el 13/08 no hubo commits, y
+    entre el 13/08 y el 10/09 solo uno.
+
+
+---------------------------------------------------------------------
+RESUMEN
+---------------------------------------------------------------------
+Los problemas que más tiempo costaron fueron:
+  1. La fusión de ramas que divergieron por meses (B2).
+  2. El responsive (7 iteraciones) y el modo oscuro (3 commits) (E3, E4).
+  3. Los cambios de esquema sin migraciones compartidas (A4).
+  4. La configuración de servicios externos: SMTP, Google, Groq (C2,
+     C3, D2).
+Lo que mejor funcionó como solución: migraciones automáticas, un único
+.env por integrante y la validación siempre del lado del servidor.

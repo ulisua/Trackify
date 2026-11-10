@@ -1,0 +1,159 @@
+=====================================================================
+  TRACKIFY — ARQUITECTURA GENERAL
+=====================================================================
+
+Trackify combina dos estilos de arquitectura: CLIENTE-SERVIDOR, para
+la comunicación entre el navegador, el servidor y los servicios
+externos (entre ellos la IA), y EN CAPAS, para organizar el sistema
+por dentro. No usamos MVC estricto: cada página PHP cumple a la vez el
+rol de controlador y de vista (patrón "Page Controller"), aunque la
+lógica común está separada en includes/.
+
+
+---------------------------------------------------------------------
+1. ARQUITECTURA CLIENTE-SERVIDOR (sistema completo — IA)
+---------------------------------------------------------------------
+Para la comunicación entre el sistema completo y la IA utilizamos la
+arquitectura cliente-servidor. Trackify actúa como cliente, enviando
+la consulta del usuario al servicio de la IA y recibiendo su
+respuesta, que se muestra en el asistente de la página. El servicio de
+IA (Groq) actúa como servidor, procesando la consulta y devolviendo el
+resultado.
+
+Esta relación se da en dos niveles:
+
+  a) Navegador -> Servidor Trackify
+     El navegador del usuario (cliente) le pide páginas al servidor
+     Apache/PHP y le envía formularios o peticiones fetch. El servidor
+     responde con HTML o con JSON.
+
+  b) Servidor Trackify -> Servicios externos
+     Para ciertas tareas, el servidor de Trackify pasa a ser cliente de
+     otros servidores:
+       - Groq (IA): PHP envía por HTTPS la pregunta del usuario junto
+         con un resumen de sus finanzas y recibe la respuesta.
+       - Google OAuth 2.0: canje del código de autorización por los
+         datos de la cuenta de Google.
+       - Servidor SMTP: envío del código de verificación por email.
+     Además, el navegador consulta directamente la cotización del dólar
+     (ExchangeRate-API, con Frankfurter como respaldo).
+
+Flujo del asistente de IA:
+  1. El usuario escribe una pregunta en el chat (js/ia.js).
+  2. El navegador la envía por POST a ia.php, con el token CSRF.
+  3. ia.php verifica la sesión, arma el contexto con los datos del
+     usuario (consulta a MySQL) y llama a la API de Groq.
+  4. Groq devuelve la respuesta; ia.php la reenvía como JSON.
+  5. js/ia.js la muestra en el chat.
+
+
+---------------------------------------------------------------------
+2. ARQUITECTURA EN CAPAS (sistema completo)
+---------------------------------------------------------------------
+Para el sistema completo utilizamos una arquitectura en capas debido
+a que mejora la organización y facilita el desarrollo del sistema, al
+estar construido con lenguajes de desarrollo web. Se divide en tres
+capas:
+
+CAPA DE PRESENTACIÓN — lo que se muestra en pantalla y recibe las
+acciones del usuario.
+  - HTML generado por las páginas PHP (index.php, gastos.php,
+    objetivos.php, perfil.php, etc.) y por includes/header.php,
+    footer.php y vista_movimientos_tipo.php.
+  - CSS modular (css/variables, themes, components, pages,
+    responsive), con modo claro y oscuro.
+  - JavaScript del navegador (js/main.js, ia.js, perfil.js...):
+    modales, alertas, gráficos con Chart.js y validaciones de
+    comodidad. También convierte los montos a dólares para mostrarlos
+    (js/moneda.js).
+
+CAPA DE PROCESAMIENTO (lógica de negocio) — procesa las acciones y
+aplica las reglas del sistema.
+  - includes/movimientos_handler.php: alta, edición y baja de
+    movimientos, borrar historial, eliminar cuenta.
+  - categorias.php y objetivos.php (bloques POST): reglas de
+    categorías propias, aportes y reintegros de metas.
+  - api/cambiar_password.php, api/cambiar_moneda.php, ia.php (POST).
+  - includes/seguridad.php: validar datos (montos, fechas, @usuario),
+    tokens CSRF, sesión.
+  - registro.php, verificar_email.php, includes/mailer.php: verificar
+    el email.
+  - includes/periodo.php: calcular el período (semana/quincena/mes).
+  Nota: la conversión de moneda la hace el navegador; el servidor
+  siempre recibe y guarda el monto en pesos y vuelve a validarlo.
+
+CAPA DE DATOS — guarda y recupera la información de la base MySQL.
+  - conexion.php: conexión mysqli, migraciones automáticas y carga de
+    categorías iniciales.
+  - Base de datos MySQL/MariaDB "trackify" con 5 tablas: usuarios,
+    movimientos, categorias, metas_ahorro, consejos_ia.
+  - Todas las consultas usan prepared statements y filtran por el
+    usuario de la sesión.
+
+Regla entre capas: cada capa solo se comunica con la de al lado. La
+presentación nunca accede a la base directamente; lo hace siempre a
+través de la capa de procesamiento.
+
+
+---------------------------------------------------------------------
+3. DIAGRAMA GENERAL
+---------------------------------------------------------------------
+
+  ┌───────────────────────── CLIENTE ─────────────────────────┐
+  │  Navegador del usuario (PC / celular)                     │
+  │  ┌─────────────────────────────────────────────────────┐  │
+  │  │ CAPA DE PRESENTACIÓN                                │  │
+  │  │ HTML + CSS + JS (Chart.js, SweetAlert2, Flatpickr)  │  │
+  │  └─────────────────────────────────────────────────────┘  │
+  └───────────────┬──────────────────────────────┬────────────┘
+                  │ HTTP (GET/POST, fetch JSON)  │ HTTPS
+                  ▼                              ▼
+  ┌──────────── SERVIDOR (Apache + PHP) ─────┐  ┌──────────────────┐
+  │ ┌──────────────────────────────────────┐ │  │ API de cotización│
+  │ │ CAPA DE PROCESAMIENTO                │ │  │ ExchangeRate /   │
+  │ │ handlers, api/, ia.php, seguridad,   │ │  │ Frankfurter      │
+  │ │ mailer, periodo                      │ │  └──────────────────┘
+  │ └──────────────┬───────────────────────┘ │
+  │ ┌──────────────▼───────────────────────┐ │   HTTPS   ┌──────────┐
+  │ │ CAPA DE DATOS  conexion.php (mysqli) │ │ ────────► │ Groq (IA)│
+  │ └──────────────┬───────────────────────┘ │ ────────► │ Google   │
+  └────────────────┼─────────────────────────┘   SMTP    │ OAuth    │
+                   ▼                           ────────► │ Mailtrap │
+          ┌─────────────────┐                            └──────────┘
+          │ MySQL / MariaDB │
+          │ base "trackify" │
+          └─────────────────┘
+
+
+---------------------------------------------------------------------
+4. FLUJO DE UNA PETICIÓN TÍPICA (cargar un gasto)
+---------------------------------------------------------------------
+  Usuario completa el modal "+ Gasto"
+     │  (Presentación) js/moneda.js convierte a ARS si estaba en USD
+     ▼
+  POST con csrf_token ──► gastos.php
+     │  (Procesamiento) seguridad.php verifica CSRF
+     │  movimientos_handler.php valida monto > 0, fecha y categoría
+     ▼
+  (Datos) INSERT INTO movimientos ... (prepared statement)
+     │
+     ▼
+  Redirect 302 a gastos.php (patrón Post/Redirect/Get)
+     │
+     ▼
+  GET gastos.php ──► SELECT de los movimientos del período ──► HTML
+
+
+---------------------------------------------------------------------
+5. DECISIONES Y JUSTIFICACIÓN
+---------------------------------------------------------------------
+- PHP sin framework: corre en XAMPP sin instalaciones extra y el
+  equipo entiende cada parte del código.
+- Renderizado en el servidor (multipágina): más simple que una SPA y
+  suficiente para el tamaño del proyecto.
+- Montos siempre en ARS en la base: evita mezclar monedas y que el
+  historial cambie con la cotización.
+- IA como servicio externo (Groq): ejecutar un modelo local exigía
+  recursos que no teníamos; Groq ofrece uso gratuito.
+- Secretos en .env: se pueden compartir el código y el repositorio sin
+  exponer claves.

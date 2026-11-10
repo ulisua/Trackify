@@ -1,0 +1,205 @@
+=====================================================================
+  TRACKIFY — DICCIONARIO DE DATOS ACTUALIZADO
+  Base de datos: trackify (MySQL / MariaDB 10.4, charset utf8mb4)
+  Estado al commit 190451c (06/11/2026, rama devagus)
+=====================================================================
+
+Fuentes: trackify.sql (volcado de referencia) + migraciones automáticas
+de conexion.php (columnas que la app agrega sola al iniciar).
+
+Referencias de la columna "Cambio":
+  [=]  Igual que en la tabla anterior.
+  [C]  Corregido: la tabla anterior tenía un dato que no coincide con
+       la base real (tipo, PK/FK o descripción).
+  [N]  Nuevo: no figuraba en la tabla anterior.
+
+Formato de cada fila:
+  Atributo | Tipo de dato | ¿PK/FK? | Descripción | Cambio
+
+
+---------------------------------------------------------------------
+TABLA: usuarios
+---------------------------------------------------------------------
+id_usuario          | INT(11)                    | PK - AUTO_INCREMENT | Identificador único del usuario. | [=]
+nombre              | VARCHAR(50)                | -                   | Nombre del usuario (se muestra en el saludo y en el perfil). | [C] era VARCHAR(100); la base real es VARCHAR(50)
+nombre_usuario      | VARCHAR(30)                | UNIQUE              | Nombre de usuario público (@usuario). 3 a 30 caracteres [a-z 0-9 . _]. Se genera desde el email al registrarse y se edita en el perfil. | [N]
+email               | VARCHAR(100)               | UNIQUE              | Correo electrónico del usuario. No se puede repetir. | [C] no es FK, es clave única (UNIQUE)
+clave               | VARCHAR(255)               | -                   | Hash bcrypt de la contraseña (password_hash). Vacío ('') en cuentas creadas con Google hasta que el usuario crea una contraseña. | [C] se aclara que guarda un hash, no la clave
+fecha_registro      | DATETIME                   | -                   | Fecha y hora de creación de la cuenta. | [=]
+uuid                | VARCHAR(255)               | -                   | Identificador secundario alfanumérico (UUID v4 de 36 caracteres) para no exponer el id correlativo. | [C] no es FK ni CHAR(36): es VARCHAR(255) sin índice
+Foto_perfil         | VARCHAR(255)               | -                   | URL de la foto de perfil (se completa con la foto de Google). | [=] (se precisa el largo)
+google_id           | VARCHAR(255)               | -                   | Id de la cuenta de Google vinculada (inicio de sesión con Google). NULL si no se vinculó. | [=]
+email_verificado    | TINYINT(1)                 | -                   | 0 = email sin verificar, 1 = verificado. Sin verificar no se puede iniciar sesión. | [C] la descripción anterior ("correo de seguridad") no era correcta
+codigo_verificacion | VARCHAR(10)                | -                   | Código OTP de 6 dígitos enviado por email (verificación y creación de contraseña). Se borra al usarse. | [=]
+codigo_expiracion   | DATETIME                   | -                   | Fecha y hora en que vence el código (15 minutos después de enviarse). | [C] es la fecha de vencimiento, no un código
+moneda_principal    | ENUM('ARS','USD')          | -                   | Moneda preferida para mostrar los montos. Por defecto 'ARS'. | [N]
+
+
+---------------------------------------------------------------------
+TABLA: movimientos
+---------------------------------------------------------------------
+id_movimiento       | INT(11)                    | PK - AUTO_INCREMENT | Identificador único del movimiento. | [C] faltaba AUTO_INCREMENT; el nombre real es id_movimiento (singular)
+id_usuario          | INT(11)                    | FK -> usuarios      | Usuario dueño del movimiento. | [=]
+id_categoria        | INT(11)                    | FK -> categorias    | Categoría del movimiento. | [=]
+monto               | DECIMAL(12,2)              | -                   | Importe del movimiento, SIEMPRE en pesos argentinos (ARS). Debe ser mayor a 0 (validado en el servidor). | [C] se precisa precisión y moneda
+tipo                | ENUM('ingreso','gasto')    | -                   | Indica si el movimiento es un ingreso o un gasto. | [C] se aclaran los valores posibles
+fecha               | DATE                       | -                   | Fecha en que se realizó el movimiento (no puede ser futura). | [=]
+descripcion         | VARCHAR(255)               | -                   | Descripción opcional del movimiento. | [=]
+es_hormiga          | TINYINT(1)                 | -                   | Marca de gasto hormiga (0/1). Existe en la base pero la interfaz todavía no la usa. | [C] en MySQL BOOLEAN = TINYINT(1)
+
+
+---------------------------------------------------------------------
+TABLA: categorias
+---------------------------------------------------------------------
+id_categoria        | INT(11)                    | PK - AUTO_INCREMENT | Identificador único de la categoría. | [=]
+id_usuario          | INT(11)                    | INDEX (sin FK)      | NULL = categoría predeterminada del sistema (compartida, solo lectura). Con un id = categoría propia de ese usuario. | [N]
+nombre              | VARCHAR(50)                | -                   | Nombre de la categoría. | [=] (se precisa el largo)
+tipo                | ENUM('ingreso','gasto')    | -                   | Si la categoría es de ingresos o de gastos. | [C] el tipo figuraba como "—"
+icono               | VARCHAR(255)               | -                   | Ruta del ícono PNG (por ejemplo iconos/gasto/comida.png). | [C] es una ruta a un ícono, no una foto
+color               | VARCHAR(7)                 | -                   | Color hexadecimal de la tarjeta (#RRGGBB). | [N]
+
+
+---------------------------------------------------------------------
+TABLA: metas_ahorro
+---------------------------------------------------------------------
+id_meta             | INT(11)                    | PK - AUTO_INCREMENT | Identificador único de cada meta. | [C] faltaba AUTO_INCREMENT
+id_usuario          | INT(11)                    | FK -> usuarios      | Usuario dueño de la meta. | [=]
+nombre_meta         | VARCHAR(100)               | -                   | Nombre asignado a la meta. | [=]
+descripcion         | VARCHAR(255)               | -                   | Descripción opcional de la meta. | [N]
+monto_objetivo      | DECIMAL(12,2)              | -                   | Total a ahorrar, en ARS. | [C] antes DECIMAL(10,0) (sin centavos)
+monto_actual        | DECIMAL(12,2)              | -                   | Cantidad ahorrada hasta el momento, en ARS. Por defecto 0. | [C] antes DECIMAL(10,0)
+fecha_limite        | DATE                       | -                   | Fecha hasta la que se espera alcanzar el objetivo (presente o futura). | [=]
+estado              | ENUM('activo','inactivo','logrado') | -          | Estado de la meta. Por defecto 'activo'. | [N]
+
+
+---------------------------------------------------------------------
+TABLA: consejos_ia
+---------------------------------------------------------------------
+id_consejos         | INT(11)                    | PK                  | Identificador único del consejo. | [=]
+id_usuario          | INT(11)                    | FK -> usuarios      | Usuario que recibió el consejo. | [=]
+mensaje             | TEXT                       | -                   | Texto del consejo generado por la IA. | [C] es TEXT, no VARCHAR
+fecha               | TIMESTAMP                  | -                   | Fecha y hora del consejo (se completa automáticamente). | [C] es TIMESTAMP, no DATE
+
+Nota: la tabla existe, pero hoy el chat no guarda historial en ella
+(solo se borra su contenido al eliminar una cuenta). Queda reservada.
+
+
+---------------------------------------------------------------------
+RELACIONES (claves foráneas reales)
+---------------------------------------------------------------------
+movimientos.id_usuario  -> usuarios.id_usuario     (movimientos_ibfk_1)
+movimientos.id_categoria -> categorias.id_categoria (movimientos_ibfk_2)
+metas_ahorro.id_usuario -> usuarios.id_usuario     (metas_ahorro_ibfk_1)
+consejos_ia.id_usuario  -> usuarios.id_usuario     (consejos_ia_ibfk_1)
+
+Ninguna FK tiene ON DELETE CASCADE: al eliminar una cuenta, el código
+borra en una transacción movimientos -> metas -> consejos -> categorías
+propias -> usuario, en ese orden.
+categorias.id_usuario tiene índice pero NO tiene FK (porque NULL
+significa "categoría del sistema").
+
+
+=====================================================================
+  HISTORIAL DE CAMBIOS DE LA BASE DE DATOS (por commit)
+=====================================================================
+
+[1] 31/03/2026 — commit 8b89da1 (ulisua, rama main) — PRIMER COMMIT CON BD
+    Se suben trackify.sql, gastos.sql, ingresos.sql y usuarios (1).sql.
+    Esquema inicial:
+      - usuarios(id_usuario, Nombre VARCHAR(30), email VARCHAR(200), clave)
+      - categorias(id_categoria, nombre VARCHAR(30))   <- sin tipo
+      - gastos(id_gasto, id_usuario, id_categoria, monto FLOAT, fecha)
+      - ingresos(id_ingreso, id_usuario, monto FLOAT, fecha, especificacion)
+    Charset latin1. Ingresos y gastos en tablas SEPARADAS.
+    Problemas: montos en FLOAT (pierde precisión con dinero), en
+    gastos.sql id_gasto era FLOAT e id_categoria VARCHAR(200).
+
+---- A partir de acá, todos los cambios son de aguscecchsagrado (vos) ----
+
+[2] 23/04/2026 — commit 87f38ef "Integración front+back+db 23/4"
+    Rediseño completo del esquema (trackify.sql):
+      - Se UNIFICAN gastos e ingresos en una sola tabla "movimientos"
+        con columna tipo ENUM('ingreso','gasto').
+      - monto pasa de FLOAT a DECIMAL(12,2).
+      - movimientos suma descripcion y es_hormiga.
+      - categorias suma tipo ENUM('ingreso','gasto'); nombre a VARCHAR(50).
+      - usuarios: nombre VARCHAR(50), email VARCHAR(100), suma
+        fecha_registro DATETIME.
+      - Tablas nuevas: metas_ahorro y consejos_ia.
+      - FKs: movimientos -> usuarios y categorias, metas_ahorro ->
+        usuarios, consejos_ia -> usuarios.
+      - Charset utf8mb4.
+
+[3] 28/04/2026 — commit b5db28d "DB con usuarios de prueba"
+    trackify.sql con datos de prueba (2 usuarios, 2 categorías,
+    4 movimientos). Sin cambios de estructura. (El volcado se exportó
+    desde una base local llamada "usuarios": el encabezado lo dice así.)
+
+[4] 08/05/2026 — commit d71851e
+    Primera migración automática en conexion.php:
+      - metas_ahorro + descripcion VARCHAR(255)
+      - metas_ahorro + estado ENUM('activo','inactivo','logrado')
+
+[5] 26/05/2026 — commit f0fc89f "Íconos categorías + zona segura"
+    - categorias + icono VARCHAR(255)
+    - categorias + color VARCHAR(7)
+    (migración automática y también en trackify.sql)
+
+[6] 13/08/2026 — commit 13731a5 "fusion inicial sin terminar"
+    Al fusionar ramas se agregan a usuarios (migración automática):
+      - uuid VARCHAR(255)
+      - email_verificado TINYINT(1) NOT NULL DEFAULT 0
+      - codigo_verificacion VARCHAR(10)
+      - codigo_expiracion DATETIME
+      - google_id VARCHAR(255)
+      - Foto_perfil VARCHAR(255)
+      - moneda_principal ENUM('ARS','USD') NOT NULL DEFAULT 'ARS'
+
+[7] 27/10/2026 — commit 65bf283 "Toco responsive V.04 (!!)"
+    - categorias + id_usuario INT(11) + índice idx_categorias_usuario
+      (categorías propias por usuario; NULL = del sistema).
+    - metas_ahorro.monto_objetivo y monto_actual: DECIMAL(10,0) ->
+      DECIMAL(12,2) (ahora admiten centavos). Se ejecuta una sola vez.
+
+[8] 03/11/2026 — commit 19c0521 "Arreglo verificación x email"
+    Sin columnas nuevas. Se optimizan las migraciones: antes corrían
+    ~15 ALTER TABLE en CADA request; ahora una sola consulta a
+    information_schema verifica si falta algo y solo entonces migra.
+
+[9] 06/11/2026 — commit 7b26b6a "Integro devulises + mejoras..."
+    - usuarios + apellido VARCHAR(50), telefono VARCHAR(30),
+      pais VARCHAR(50).
+
+[10] 06/11/2026 — commit 190451c "Perfil: datos personales..."
+    - Se quitan de la migración apellido, telefono y pais (dejan de
+      usarse). OJO: no hay DROP COLUMN, así que en las bases donde ya se
+      habían creado siguen existiendo, vacías. Si se quieren eliminar:
+        ALTER TABLE usuarios DROP COLUMN apellido,
+                             DROP COLUMN telefono,
+                             DROP COLUMN pais;
+    - usuarios + nombre_usuario VARCHAR(30) + índice UNIQUE
+      uq_usuarios_nombre_usuario. A los usuarios existentes se les
+      genera automáticamente desde el email.
+
+
+RESUMEN DE LO QUE CAMBIASTE VOS (aguscecchsagrado)
+  - Unificaste ingresos/gastos en movimientos y pasaste el dinero a
+    DECIMAL.
+  - Creaste metas_ahorro y consejos_ia.
+  - Agregaste: metas_ahorro.descripcion, metas_ahorro.estado,
+    categorias.icono, categorias.color, categorias.id_usuario,
+    usuarios.moneda_principal, usuarios.nombre_usuario, y (vía la
+    fusión) uuid, google_id, Foto_perfil, email_verificado,
+    codigo_verificacion, codigo_expiracion.
+  - Ampliaste las metas a DECIMAL(12,2).
+  - Agregaste y después retiraste apellido, telefono y pais.
+  - Optimizaste el sistema de migraciones automáticas.
+
+PENDIENTES / INCONSISTENCIAS DETECTADAS
+  - La bitácora (Sem 11) menciona UUID en "usuarios y movimientos",
+    pero en el código solo existe usuarios.uuid. movimientos no tiene uuid.
+  - usuarios.uuid no tiene índice UNIQUE.
+  - trackify.sql está desactualizado: no incluye las columnas que se
+    agregan por migración. Conviene regenerar el volcado desde
+    phpMyAdmin (Exportar) para la entrega.
+  - consejos_ia y movimientos.es_hormiga existen pero no se usan.

@@ -1,0 +1,267 @@
+=====================================================================
+  TRACKIFY — MANUAL DE USUARIO
+  Tu plata, en orden.
+=====================================================================
+
+ÍNDICE
+  1. ¿Qué es Trackify?
+  2. Crear una cuenta
+  3. Iniciar y cerrar sesión
+  4. Recorrido por la pantalla
+  5. Período y moneda
+  6. Panel principal (Dashboard)
+  7. Cargar, editar y borrar movimientos
+  8. Ingresos y Gastos
+  9. Categorías
+ 10. Objetivos de ahorro
+ 11. Asistente IA
+ 12. Perfil
+ 13. Zona de peligro
+ 14. Preguntas frecuentes
+
+
+---------------------------------------------------------------------
+1. ¿QUÉ ES TRACKIFY?
+---------------------------------------------------------------------
+Trackify es una página web para anotar lo que ganás y lo que gastás,
+ver en qué se te va la plata y ahorrar para lo que quieras. Funciona
+desde la computadora o el celular, en pesos o en dólares.
+
+Algunas palabras que vas a ver:
+  Movimiento ... cualquier ingreso (plata que entra) o gasto (plata
+                 que sale).
+  Categoría .... el "rubro" de un movimiento: Alimentos, Sueldo,
+                 Transporte...
+  Balance ...... ingresos menos gastos.
+  Objetivo ..... una meta de ahorro (por ejemplo: "Vacaciones").
+
+
+---------------------------------------------------------------------
+2. CREAR UNA CUENTA
+---------------------------------------------------------------------
+Opción A — Con tu email
+  1. En la pantalla de inicio, tocá "Registrarse".
+  2. Completá nombre, email y contraseña.
+     La contraseña debe tener al menos 8 caracteres y no puede
+     contener tu nombre ni tu email.
+  3. Te llega un código de 6 números a tu correo.
+  4. Escribilo en la pantalla de verificación. ¡Listo!
+
+  - El código vence a los 15 minutos.
+  - Tenés 5 intentos. Si te equivocás o no llegó, tocá "Reenviar
+    código" (se puede pedir uno nuevo cada 1 minuto).
+  - Revisá la carpeta de spam.
+
+Opción B — Con Google
+  Tocá "Continuar con Google" y elegí tu cuenta. No necesitás
+  contraseña ni código. Si después querés entrar también con
+  contraseña, podés crearla desde el Perfil.
+
+
+---------------------------------------------------------------------
+3. INICIAR Y CERRAR SESIÓN
+---------------------------------------------------------------------
+- Iniciar: escribí tu email y contraseña, o usá "Continuar con
+  Google".
+- Si te registraste con email y nunca lo verificaste, te va a pedir
+  el código antes de entrar.
+- Cerrar: tocá "Cerrar sesión" en el menú lateral. Hacelo siempre si
+  usás una computadora compartida.
+
+
+---------------------------------------------------------------------
+4. RECORRIDO POR LA PANTALLA
+---------------------------------------------------------------------
+  ┌─────────────────────────────────────────────────────────────┐
+  │ [Logo]                       [Moneda ▼] [Período ▼] Hola,…  │  <- Barra superior
+  ├──────────┬──────────────────────────────────────────────────┤
+  │ Inicio   │                                                  │
+  │ Movimien.│          Contenido de la sección                 │
+  │ Ingresos │                                                  │
+  │ Gastos   │                                                  │
+  │ Categor. │                                                  │
+  │ Objetivos│                                         [Chat]   │  <- Botón del asistente
+  │ IA       │                                                  │
+  │ Perfil   │                                                  │
+  └──────────┴──────────────────────────────────────────────────┘
+       ^ Menú lateral
+
+En el celular, el menú y los selectores se abren con el botón ☰.
+
+
+---------------------------------------------------------------------
+5. PERÍODO Y MONEDA
+---------------------------------------------------------------------
+Período: elegí Semana, Quincena o Mes. Todos los totales y listas se
+calculan sobre ese período.
+
+Moneda: elegí Pesos (ARS) o Dólares (USD). Todos los montos se
+muestran convertidos con la cotización del día. Tu elección queda
+guardada para la próxima vez.
+
+Importante: aunque veas los montos en dólares, Trackify guarda todo
+en pesos. Si cargás un gasto en dólares, se convierte a pesos al
+momento de guardarlo.
+
+
+---------------------------------------------------------------------
+6. PANEL PRINCIPAL (DASHBOARD)
+---------------------------------------------------------------------
+Es lo primero que ves al entrar:
+  - Ingresos, Gastos y Balance del período.
+  - % de gasto: qué parte de tus ingresos gastaste.
+  - Mayor categoría: en qué gastaste más.
+  - Gasto mensual: gráfico de los últimos meses.
+  - Gastos por categoría: gráfico de torta. Tocá una porción para ver
+    el monto.
+  - Ingresos vs. Gastos: comparación en barras.
+  - Recomendaciones: consejos rápidos según tus números.
+  - Últimos movimientos.
+
+
+---------------------------------------------------------------------
+7. CARGAR, EDITAR Y BORRAR MOVIMIENTOS
+---------------------------------------------------------------------
+Cargar
+  1. Tocá "+ Ingreso" o "+ Gasto" en el Dashboard (también está el
+     botón de nuevo movimiento en las secciones Ingresos y Gastos).
+  2. Escribí el monto y elegí si está en ARS o USD (abajo vas a ver
+     la conversión).
+  3. Elegí la categoría.
+  4. Elegí la fecha (hoy o un día anterior; no se permiten fechas
+     futuras).
+  5. Si querés, agregá una descripción ("Supermercado", "Sueldo
+     octubre"...).
+  6. Guardá. Aparece un aviso de confirmación.
+
+  El monto tiene que ser mayor a cero.
+
+Editar: en la lista, tocá el lápiz del movimiento, cambiá lo que
+necesites y guardá.
+
+Borrar: tocá el tacho y confirmá. No se puede deshacer.
+
+Ver todos: en "Movimientos" están todos, con filtros por fechas, tipo
+(ingreso/gasto) y categoría.
+
+
+---------------------------------------------------------------------
+8. INGRESOS Y GASTOS
+---------------------------------------------------------------------
+Son las mismas listas, pero separadas. Arriba ves el total, la
+cantidad de movimientos y el promedio del período. Podés filtrar por
+fecha y por categoría.
+
+
+---------------------------------------------------------------------
+9. CATEGORÍAS
+---------------------------------------------------------------------
+Trackify trae categorías listas para usar (11 de ingresos y 16 de
+gastos). Esas no se pueden modificar.
+
+Crear una propia: en "Categorías" tocá agregar, poné un nombre,
+elegí si es de ingreso o gasto, un ícono y un color.
+
+Editar o borrar una propia: usá el lápiz o el tacho de su tarjeta.
+Si borrás una categoría, sus movimientos NO se pierden: pasan a
+"Otros gastos" u "Otros ingresos".
+
+Podés reordenar las tarjetas; el orden se recuerda en tu navegador.
+
+
+---------------------------------------------------------------------
+10. OBJETIVOS DE AHORRO
+---------------------------------------------------------------------
+Crear: tocá "+ Objetivo", poné un nombre (por ejemplo "Notebook"),
+cuánto querés juntar, para qué fecha y, si querés, una descripción.
+
+Aportar: en la tarjeta del objetivo, tocá aportar y escribí cuánto.
+La barra de progreso avanza.
+  -> Cada aporte se anota como un GASTO ("Ahorro para meta"), porque
+     esa plata ya no está disponible para gastar.
+
+Editar: cambiá nombre, monto, fecha o estado.
+
+Eliminar: si borrás un objetivo, lo que tenías ahorrado vuelve a tu
+saldo como un INGRESO ("Reintegro de meta").
+
+
+---------------------------------------------------------------------
+11. ASISTENTE IA
+---------------------------------------------------------------------
+Abrilo desde el botón flotante del dashboard o desde "IA" en el menú.
+Escribí tu pregunta en lenguaje normal. Ejemplos:
+  - "¿En qué estoy gastando de más?"
+  - "¿Cómo voy con mis objetivos?"
+  - "Dame un plan para ahorrar 50 mil pesos por mes."
+
+El asistente responde mirando TUS movimientos y objetivos. Recordá
+que es una guía: no reemplaza a un asesor financiero y no recomienda
+inversiones puntuales.
+
+Si el botón flotante te molesta, tocá la cruz y queda minimizado en
+el borde.
+
+
+---------------------------------------------------------------------
+12. PERFIL
+---------------------------------------------------------------------
+Datos personales: cambiá tu nombre y tu nombre de usuario (@usuario).
+El @usuario lleva entre 3 y 30 caracteres: letras minúsculas,
+números, punto o guion bajo, y no puede estar usado por otra persona.
+
+Seguridad: cambiá tu contraseña. Un medidor te indica si es segura.
+Si entraste con Google y nunca tuviste contraseña, podés crear una:
+te llega un código al email para confirmar.
+
+Preferencias: activá o desactivá el modo oscuro.
+
+
+---------------------------------------------------------------------
+13. ZONA DE PELIGRO
+---------------------------------------------------------------------
+Está al final del Perfil.
+
+Exportar mis datos: descarga todos tus movimientos en un archivo CSV
+que se abre con Excel o Google Sheets.
+
+Borrar todo el historial: elimina TODOS tus movimientos, pero tu
+cuenta, categorías y objetivos siguen. Para confirmar, escribí:
+    SI, ESTOY SEGURO
+
+Eliminar cuenta: borra tu cuenta y todo lo que tenga (movimientos,
+objetivos, categorías propias). Para confirmar, escribí:
+    ELIMINAR MI CUENTA
+
+Ninguna de estas dos acciones se puede deshacer. Antes, exportá tus
+datos.
+
+
+---------------------------------------------------------------------
+14. PREGUNTAS FRECUENTES
+---------------------------------------------------------------------
+No me llega el código de verificación.
+  Revisá spam, esperá un minuto y tocá "Reenviar código".
+
+Dice que el monto no es válido.
+  Tiene que ser un número mayor a cero.
+
+No me deja cargar en dólares.
+  Trackify no pudo obtener la cotización (puede ser falta de internet).
+  Probá de nuevo en un rato o cargalo en pesos.
+
+¿Por qué el total en dólares cambia de un día al otro?
+  Porque se recalcula con la cotización del día. En pesos no cambia.
+
+No puedo editar una categoría.
+  Las categorías que vienen con Trackify no se editan. Creá una propia.
+
+El asistente dice que esperes.
+  Hay que dejar un par de segundos entre pregunta y pregunta.
+
+Me aparece "sesión vencida" o un error al guardar.
+  Recargá la página y volvé a iniciar sesión si hace falta.
+
+¿Alguien más puede ver mis datos?
+  No. Cada usuario ve solo su información, y tu contraseña se guarda
+  cifrada.

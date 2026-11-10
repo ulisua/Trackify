@@ -1,0 +1,613 @@
+=====================================================================
+  BITÁCORA SEMANAL DE AVANCES DEL PROYECTO — TRACKIFY
+=====================================================================
+
+Registro Obligatorio — Completar cada semana antes del próximo
+encuentro presencial.
+La bitácora es una evidencia del proceso de trabajo del equipo. Debe
+actualizarse semana a semana, registrando los avances técnicos
+concretos, los riesgos detectados en esa iteración del Modelo en
+Espiral y las acciones correctivas planificadas. El docente la
+revisará al inicio de cada clase.
+
+CÓMO COMPLETARLA: Cada integrante puede aportar a la descripción de
+avances técnicos. El Team Lead es responsable de asegurarse de que
+esté completo antes del próximo encuentro. Usar lenguaje técnico
+preciso.
+
+Nota de esta versión: el texto que ya estaba se mantuvo; se agregaron
+los cambios de cada commit del repositorio (todas las ramas). Cada
+commit se asignó a la clase más cercana (del sábado anterior al
+viernes posterior). Las semanas sin commits se indican como tales.
+
+
+---------------------------------------------------------------------
+Sem 1 — 12/03/26
+---------------------------------------------------------------------
+Avances Técnicos:
+  Uso de la IA para organizar ideas del proyecto, definir objetivos y
+  estructura. Estructura principal de la base de datos y creación del
+  diagrama de interacciones. Empezamos el maquetado web en papel
+  (Mockups) de la página y definimos las funciones principales del
+  programa. También, creación del repositorio de Git. Investigación de
+  las estandarizaciones requeridas. Documentación de las
+  recomendaciones de diversas fuentes (IA, profesor, debate del
+  equipo, consejos de compañeros.)
+Riesgos Identificados:
+  Primero presentamos dificultades con la temática del proyecto ya que
+  este no nos presentaba un desafío real en su realización.
+  Presentamos una dificultad con la base de datos al momento de
+  establecer las "primary key" en sus respectivas categorías.
+Acciones Correctivas:
+  Modificamos el enfoque de la página y le añadimos más variedad de
+  funciones. Investigamos con ayuda de la IA para saber por dónde
+  empezar. Asistidos por la IA, logramos consolidar el orden,
+  estructura y frontend del proyecto. Investigamos un nuevo comando
+  para vincular una misma primary key.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 2 — 19/03/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Debate sobre el maquetado web y optimización. Investigación de
+  diversos métodos para implementar la API. Boceto del logo, buscamos
+  tipografías acorde y definimos la estética visual. Desarrollo del
+  modelo de interacciones. Investigación del formato de la
+  documentación.
+Riesgos Identificados:
+  Dificultades con la implementación de las APIs, usos limitados o de
+  paga y conflictos con la compatibilidad con las políticas del
+  repositorio de Git.
+Acciones Correctivas:
+  Encontramos una API Key con usos ilimitados y compatible con el
+  repositorio aunque con ciertas restricciones.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 3 — 26/03/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Desarrollamos los bocetos del logo, seleccionamos paleta de color.
+  Subimos archivos borradores y fotos al Drive.
+  Primer commit del frontend (25/03): maquetado del dashboard en
+  index.html y styles.css, y carga de las tipografías Nexa y Creato
+  Display al repositorio.
+Riesgos Identificados:
+  Tendríamos que investigar cómo ejecutar un script para instalar y
+  usar la IA de forma local.
+Acciones Correctivas:
+  Debemos optimizar la IA del proyecto.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 4 — 02/04/26
+---------------------------------------------------------------------
+Avances Técnicos:
+  Feriado, no avanzamos mucho. Continuamos las actividades anteriores,
+  revisamos el borrador y documentación.
+  En el repositorio: se pasan las vistas a PHP (dashboard, ingresos,
+  gastos, categorías, objetivos, perfil, IA, login y registro) y se
+  crea .env.example (30/03). Backend sube los primeros scripts SQL
+  (usuarios, ingresos, gastos, categorías) y conexion.php (31/03).
+Riesgos Identificados:
+  -
+  Ingresos y gastos quedan en tablas separadas y con montos en FLOAT,
+  lo que genera pérdida de precisión y duplica la lógica.
+Acciones Correctivas:
+  Optimizamos la IA.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 5 — 09/04/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Debate grupal donde analizamos detalladamente cada área y su
+  desarrollo hasta el momento, planeamos cómo evitar futuros errores y
+  descartamos funciones que dificulten el desarrollo del software.
+  Base de datos: En grupo, discutimos la forma más óptima de
+  implementarla, descartamos ciertos rubros y diseñamos algunos que
+  faltaban.
+  Investigamos a nivel general, en qué estado se encuentra el proyecto
+  y la documentación, completamos la sección de definiciones de clase.
+  Con ayuda de la IA corregimos la estructura de las tablas de base de
+  datos.
+  Vinculación del repositorio de Git con el repositorio local del
+  software y simplificación del código frontend.
+  Empezamos el código backend y completamos el "LOGIN" y registro.
+  Commit "Registro y login terminado" (09/04): conexion.php,
+  login.php, registro.php y logout.php funcionales contra MySQL.
+Riesgos Identificados:
+  Como riesgos identificados encontramos problemas para utilizar la
+  página si el usuario es extranjero, incompatibilidad de monedas.
+  Probable error en la base de datos sobre la tabla "categoría de
+  gastos" y "moneda". Revisamos que la base de datos y el frontend
+  presente una concordancia en cuanto a citado de datos.
+  Consulta de la IA sobre detalles de cómo manejar la clave de usuario
+  en la base de datos.
+  Problema para administrar las claves de cada usuario. Encontramos
+  incompatibilidades con MYSQL.
+Acciones Correctivas:
+  Consultamos con la IA como podemos integrar en la base de datos la
+  moneda de un par de países (dólar y peso), bocetos de distintas
+  formas de distribuir las opciones de forma óptima para que el
+  usuario seleccione la moneda de preferencia.
+  Corregimos, simplificamos y optimizamos el estado de la DB y
+  funciones del frontend.
+  Probamos distintas alternativas y tutoriales sobre la clave.
+  Instalamos otro programa de base de datos, PGAdmin.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 6 — 16/04/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Avanzamos con la ficha técnica, investigamos los diagramas de UML,
+  presentamos la exposición y creamos los dos diagramas
+  correspondientes según el escenario del trabajo práctico. Charlamos
+  sobre la mejor forma de optimizar la base de datos.
+  Tester: Desarrollo la plantilla para la presentación y sus
+  contenidos.
+  Líder y BackEnd: Completaron y corrigieron el formato.
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+  Dificultades para crear desde cero la base de datos en PGAdmin.
+  Faltaba ajustar el tamaño del logo.
+Acciones Correctivas:
+  Descartamos cambiar la base de datos, la optimizamos y mantenemos el
+  resto del formato en Mysql. No PGAdmin. Dividimos tareas para
+  terminar los diagramas de tiempo y estructura en simultáneo con la
+  bitácora/ documentación del proyecto. Terminamos y subimos el logo a
+  la página.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 7 — 23/04/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Filtramos las partes más importantes del documento ficha técnica y
+  borrador para organizar y terminar la presentación del proyecto.
+  Revisión grupal del Canva, distribución de contenido.
+  Bloqueo y verificación final del diseño en Canva para asegurar la
+  concordancia con la identidad visual informal y amigable del
+  proyecto.
+  Integración front + back + DB (23/04): se unifican ingresos y gastos
+  en la tabla "movimientos" (DECIMAL, tipo ingreso/gasto), se crean
+  metas_ahorro y consejos_ia y se agregan header y footer comunes.
+  Nuevo login y formularios de ingresos y gastos (24/04).
+Riesgos Identificados:
+  Se subió por error una copia completa del proyecto dentro de una
+  carpeta "fusion", duplicando 31 archivos.
+Acciones Correctivas:
+  Se planifica eliminar la carpeta duplicada e integrar con ramas en
+  lugar de copiar carpetas.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 8 — 30/04/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Escuchamos el desarrollo de los proyectos de nuestros compañeros y
+  tomamos como sugerencias sus ideas. Presentamos nuestro software
+  Trackify y lo explicamos.
+  Repositorio (28/04): base de datos con usuarios y movimientos de
+  prueba, eliminación de la carpeta "fusion" duplicada, logo nuevo y
+  formularios actualizados.
+Riesgos Identificados:
+  El volcado SQL de prueba contiene emails reales de integrantes.
+Acciones Correctivas:
+  Usar datos ficticios en los scripts de prueba que se suben al
+  repositorio.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 9 — 7/05/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Concluimos las presentaciones grupales.
+  Todos nos reunimos a hablar sobre los avances, dificultades y por
+  donde seguir con el proyecto. Organización del Drive en carpetas.
+  Creación de un Foro anónimo. Inspección general del proyecto con la
+  líder. Avances en simultáneo en áreas de documentación (Ficha Tec.),
+  BackEnd y FrontEnd. Revisión de cosas en que se necesite de una
+  ayuda grupal.
+  Pestaña Objetivos funcional (08/05) y primeras migraciones
+  automáticas en conexion.php (descripción y estado de las metas).
+Riesgos Identificados:
+  Problemas o críticas entre miembros del grupo por la creación del
+  Foro.
+  La interfaz quedó inconsistente entre páginas (commit "REVISAR UI").
+Acciones Correctivas:
+  Revisión completa de la UI planificada para la semana siguiente.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 10 — 14/05/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Reemplazo de antiguos emojis por íconos y assets visuales
+  estilizados generados con soporte de IA. Ajustes de maquetación y
+  CSS para el correcto encuadre de los nuevos elementos en la UI.
+  Depuración (bug fixing) general en el código cliente.
+  Database: Sprint técnico de base de datos y actualización de la
+  estructura local/servidor.
+  Frontend se enfocó en arreglar el responsive, gráficos y
+  estadísticas, tarjetas y detalles del UI dentro de la web. Además de
+  subir archivos formato MD y actualizar la carpeta de iconos.
+  Commits: gráficos y tarjetas del dashboard (12/05), carpeta de 57
+  íconos (14/05) y documentación en Markdown (15/05).
+Riesgos Identificados:
+  Posibles desajustes estéticos o rotura del layout visual al migrar y
+  redimensionar los nuevos componentes gráficos. Errores latentes de
+  vinculación e inconsistencias en la base de datos debido a fallas en
+  las restricciones de claves foráneas (Foreign Keys).
+Acciones Correctivas:
+  Bloque de trabajo intensivo (Sprint) enfocado exclusivamente en
+  reestructurar y corregir las relaciones y dependencias fallidas en
+  el motor de la DB.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 11 — 21/05/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Investigación de seguridad en BD junto a la Líder de equipo.
+  Implementación de campos UUID en las tablas usuarios y movimientos
+  para generar un identificador secundario alfanumérico seguro.
+  Actualización del Diagrama de Flujo de Datos (DFD) de la DB.
+  Investigación grupal de servidores de hosting gratuitos.
+  Frontend modificó diversos aspectos como botones, colores e iconos.
+  Por otro lado sumó bibliotecas de recursos al repositorio.
+  Commits: íconos nuevos (19/05), arreglo de botones (21/05), paleta
+  de colores y bibliotecas (22/05).
+Riesgos Identificados:
+  Vulnerabilidad por exposición de IDs correlativos en las solicitudes
+  del frontend.
+  Restricciones críticas en hostings gratuitos testeados: bloqueo de
+  puertos salientes en InfinityFree para conectar BD externas.
+Acciones Correctivas:
+  Integración de la capa UUID en la estructura de la DB para mitigar
+  riesgos de seguridad. Delegación y organización de diagramas
+  técnicos faltantes. Decisión de mantener abierta la investigación de
+  infraestructura hacia modelos locales o híbridos.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 12 — 28/05/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Correcciones del tamaño y calidad de los iconos, creación del
+  favicon. Detalles en los iconos, mejoras en en las categorías y zona
+  de peligro dentro del perfil.
+  Columnas icono y color en la tabla categorias (26/05). Zona de
+  peligro completada (28/05).
+Riesgos Identificados:
+  Tamaños desiguales entre cada icono y logo presente en la página
+  web.
+Acciones Correctivas:
+  Probamos diferentes tamaños de una sola imagen en busca del más
+  cómodo para luego pasar el resto de iconos en un tamaño idéntico.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 13 — 04/06/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Reunión y revisión de avances.
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+  Problemas con el servidor.
+Acciones Correctivas:
+  Buscamos alternativas de pago (compartido con otro grupo).
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 14 — 11/06/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Reunión y debate sobre distintos temas del equipo, fijamos próximas
+  tareas. Avances en el chat IA y se agrega la función de eliminar
+  cuenta. Mejora UI.
+  Eliminar cuenta borra en una transacción movimientos, metas y
+  consejos antes del usuario (09/06). Arreglo del chat IA (09/06).
+Riesgos Identificados:
+  Problemas de comunicación dentro del mismo equipo, dificultando la
+  simultaneidad de tareas y desarrollo de frontend y backend.
+  Eliminar cuenta fallaba por las claves foráneas.
+Acciones Correctivas:
+  Reunión donde aclaramos dudas, y necesidades de cada integrante para
+  evitar estancarse en la tarea actualmente desempeñada. Propuestas de
+  solución y mejora.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 15 — 18/06/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Actualización de la bitácora, pulido de la ficha técnica y revisión
+  de pendientes. Investigación sobre la IA involucrada en Trackify.
+  Punteo sobre los temas requeridos para implementar el testing (QA y
+  QC) con fundamentos y documentación correspondiente. Corregimos
+  errores de login y margin.
+  Commits: arreglo de login (16/06), fondo animado de login y registro
+  (18/06) y primera versión del modo oscuro (19/06).
+Riesgos Identificados:
+  En modo oscuro hay textos e íconos que no se ven.
+Acciones Correctivas:
+  Definir colores propios para cada tema en lugar de invertir los del
+  modo claro.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 16 — 25/06/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Desarrollo de la "zona de peligro" dentro del proyecto en la sección
+  del perfil. Funcionalidades como eliminar cuenta, eliminar
+  datos/vaciar cuenta, exportar datos en formato pdf y activar el modo
+  oscuro.
+  Reorganización del CSS en archivos por componente y por página
+  (25/06, 32 archivos).
+Riesgos Identificados:
+  La reorganización del CSS rompió los estilos de casi todas las
+  páginas (commit "ARREGLAR! se rompió todo").
+Acciones Correctivas:
+  Revisión página por página de los estilos y commits más chicos para
+  no volver a romper todo el sitio.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 17 — 02/07/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Ajuste de otras funcionalidades dentro de la zona de peligro tales
+  como modo oscuro y vaciar cuenta sin desahibitarla. Descarte de
+  funcionalidades extras como cambio de idioma al cambiar moneda
+  (dolar/ ingles), descarte de varias monedas por falta de
+  planificación y comunicación grupal. (solo relación peso arg y
+  dolar) borrado de funciones con euro y libra.
+  Modo oscuro terminado y refinamiento de la UI (30/06 y 01/07).
+Riesgos Identificados:
+  Funciones nuevas no suficientemente premeditadas para su correcta
+  implementación o no presentan una concordancia lógica para el
+  público objetivo de la aplicación.
+Acciones Correctivas:
+  Restricciones y limitaciones dentro de las funciones futuras
+  planeadas a desarrollar y descarte de algunas por la presencia de
+  muchos bugs.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 18 — 09/07/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 19 — 16/07/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 20 — 06/08/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 21 — 13/08/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Fusión inicial de las ramas de trabajo: login con Google (OAuth 2.0),
+  verificación de email con código (PHPMailer), reenvío de código,
+  lector de .env, selector de moneda y nuevas columnas en usuarios
+  (uuid, google_id, foto, email_verificado, moneda_principal).
+Riesgos Identificados:
+  Las ramas divergieron durante meses y resuelven lo mismo de formas
+  distintas; la fusión quedó sin terminar.
+Acciones Correctivas:
+  Revisar archivo por archivo qué versión se conserva y probar el
+  login y el registro completos antes de seguir.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 22 — 20/08/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 23 — 27/08/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 24 — 03/09/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 25 — 10/09/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Se termina de integrar la fusión: conversor bimoneda ARS/USD
+  (moneda.js), cálculo centralizado de períodos (periodo.php),
+  selectores en el encabezado y ajustes de navbar y formularios.
+Riesgos Identificados:
+  Dependencia de APIs externas de cotización: si no responden no se
+  pueden cargar montos en dólares.
+Acciones Correctivas:
+  Cotización con API de respaldo y caché de 30 minutos; la base guarda
+  siempre los montos en pesos.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 26 — 17/09/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 27 — 24/09/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Actualización Memoria Técnica
+  (Sin commits en el repositorio esta semana.)
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 28 — 01/10/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Corrección de los diagramas markdown (actualizados), carga en el
+  drive del grupo y correcciones en el responsive del dashboard.
+  Limpieza del repositorio: se eliminan ~15 archivos .md
+  desactualizados y los SQL viejos de ingresos y gastos. Primera
+  reestructuración del responsive (V.01).
+Riesgos Identificados:
+  Documentación duplicada y desactualizada en la raíz del proyecto.
+Acciones Correctivas:
+  Concentrar la documentación técnica en la carpeta docs/.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 29 — 08/10/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Avances de seguridad contraseñas. Simplificación de los diagramas de
+  markdown
+  Backend corrige el envío del email (06/10) y el inicio de sesión con
+  Google (09/10), y empieza el cambio de contraseña. Merge de
+  devulises en develop (08/10). Responsive V.02.
+Riesgos Identificados:
+  Fallas en el envío de emails y en el callback de Google por
+  configuración del .env.
+Acciones Correctivas:
+  Centralizar credenciales en .env y probar cada integración por
+  separado.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 30 — 15/10/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Cambio de contraseña: se reescribe el endpoint y se conecta con el
+  perfil (sin terminar, 13/10).
+Riesgos Identificados:
+  Las cuentas creadas con Google no tienen contraseña para cambiar.
+Acciones Correctivas:
+  Permitir crear la contraseña validando un código enviado por email.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 31 — 22/10/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Realización del trabajo de Docker
+  Cambio de contraseña terminado (22/10). Responsive V.03 (20
+  archivos de CSS y vistas).
+Riesgos Identificados:
+  Los archivos de Docker no quedaron subidos al repositorio.
+Acciones Correctivas:
+  Versionar Dockerfile y docker-compose junto con el proyecto.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 32 — 29/10/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Responsive V.04 y V.05 y rediseño de la UI. Categorías propias por
+  usuario y montos de metas con centavos. Informe de errores de UI con
+  capturas. Se resuelven los casos de prueba de montos negativos y del
+  orden de las categorías (30/10).
+Riesgos Identificados:
+  Un monto negativo se guardaba igual aunque el navegador lo marcaba
+  como inválido ("+$-xxx").
+Acciones Correctivas:
+  Validación de montos también en el servidor.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 33 — 05/11/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Verificación por email corregida, protección CSRF global y
+  migraciones automáticas optimizadas. Integración de devulises en
+  devagus y develop: chat IA con botón flotante, reintegro al eliminar
+  un objetivo y perfil con nombre de usuario (@usuario).
+Riesgos Identificados:
+  Ramas con soluciones distintas para lo mismo; datos personales del
+  perfil cambiaron dos veces en el mismo día.
+Acciones Correctivas:
+  Integrar las ramas con más frecuencia y definir los requisitos antes
+  de programar.
+Firma Docente:
+
+
+---------------------------------------------------------------------
+Sem 34 — 12/11/2026
+---------------------------------------------------------------------
+Avances Técnicos:
+  Entrega final del proyecto, con la documentación correspondiente y
+  devolución.
+Riesgos Identificados:
+Acciones Correctivas:
+Firma Docente:

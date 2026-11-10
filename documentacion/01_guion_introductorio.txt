@@ -1,0 +1,201 @@
+=====================================================================
+  TRACKIFY — GUION INTRODUCTORIO
+  Para presentar el proyecto a estudiantes de técnico informático
+  (conocen front, back y base de datos, pero nunca vieron Trackify)
+  Duración estimada: 8 a 10 minutos
+=====================================================================
+
+Notas para quien presenta:
+- Lo que está entre [corchetes] es una indicación (qué mostrar o hacer),
+  no se lee en voz alta.
+- Si hay proyector, conviene tener la app abierta en el navegador
+  (http://localhost/trackify) con un usuario de prueba que ya tenga
+  algunos movimientos cargados.
+
+
+---------------------------------------------------------------------
+PARTE 1 — EL PROBLEMA (1 minuto)
+---------------------------------------------------------------------
+
+Levanten la mano los que alguna vez llegaron a fin de mes y no
+supieron en qué se les fue la plata.
+
+[Pausa]
+
+Bueno, ese es el problema que ataca Trackify. La mayoría de la gente
+no anota lo que gasta, y cuando lo intenta, lo hace en un papel o en
+una planilla que abandona a la semana. Además, acá en Argentina
+tenemos un problema extra: pensamos en pesos pero muchas veces
+ahorramos o comparamos precios en dólares.
+
+Trackify es una aplicación web de finanzas personales. Sirve para
+registrar ingresos y gastos, ver en qué se va el dinero, ponerse metas
+de ahorro y recibir consejos de una inteligencia artificial que mira
+TUS números, no consejos genéricos.
+
+
+---------------------------------------------------------------------
+PARTE 2 — QUÉ HACE, VISTO DESDE EL USUARIO (3 minutos)
+---------------------------------------------------------------------
+
+[Mostrar la pantalla de login]
+
+Uno entra a la página y se registra con nombre, email y contraseña,
+o directamente con su cuenta de Google. Si se registra con email, le
+llega un código de 6 dígitos al correo para verificar que el email es
+real. Sin verificar, no puede entrar.
+
+[Iniciar sesión y mostrar el dashboard]
+
+Esto es el "dashboard", el panel principal. Arriba ven tres números:
+cuánto entró, cuánto salió y el balance. Abajo, el porcentaje de
+los ingresos que se fue en gastos, la categoría donde más gasté y un
+gráfico con los últimos meses. También hay un gráfico de torta por
+categoría.
+
+Arriba a la derecha hay dos selectores:
+- El PERÍODO: semana, quincena o mes. Todos los números se recalculan
+  según lo que elijas.
+- La MONEDA: pesos o dólares. Si cambio a dólares... [cambiar]... todos
+  los montos de la página se convierten con la cotización del día.
+
+[Ir a "Movimientos"]
+
+Un "movimiento" es cualquier ingreso o gasto. Cargarlo es rápido:
+monto, categoría, fecha y una descripción opcional. Se pueden filtrar
+por fecha, tipo y categoría, editar y borrar.
+
+[Ir a "Categorías"]
+
+Las categorías vienen predefinidas (Alimentos, Transporte, Sueldo,
+etc.), pero cada usuario puede crear las suyas con el ícono y el
+color que quiera.
+
+[Ir a "Objetivos"]
+
+Acá están las metas de ahorro. Por ejemplo: "Bicicleta, 300.000
+pesos, para diciembre". Cada vez que aporto plata a la meta, se
+registra como un gasto, porque esa plata ya no está disponible. Y si
+borro la meta, lo que había ahorrado vuelve como ingreso.
+
+[Abrir el chat de IA]
+
+Y esto es lo más interesante: el asistente. Le puedo preguntar
+"¿en qué estoy gastando de más?" y responde mirando mis movimientos
+reales de los últimos meses.
+
+[Ir a "Perfil"]
+
+Por último, el perfil: datos personales, cambio de contraseña, modo
+oscuro, exportar los datos a un archivo y una "zona de peligro" para
+borrar el historial o eliminar la cuenta.
+
+
+---------------------------------------------------------------------
+PARTE 3 — CÓMO ESTÁ HECHO POR DENTRO (3 minutos)
+---------------------------------------------------------------------
+
+Ahora la parte que más les interesa a ustedes.
+
+FRONT: HTML, CSS y JavaScript "vanilla", o sea, sin React ni ningún
+framework. Los gráficos son con una librería llamada Chart.js, y los
+carteles de confirmación con SweetAlert2. El CSS está dividido en
+archivos por componente y por página, y tiene modo claro y oscuro.
+
+BACK: PHP, también sin framework. Cada página (index.php, gastos.php,
+objetivos.php...) hace tres cosas en orden: revisa que haya una
+sesión iniciada, consulta la base de datos y arma el HTML que le
+llega al navegador. Cuando el usuario manda un formulario, PHP lo
+procesa y redirige otra vez a la página; eso se llama patrón
+Post/Redirect/Get y evita que al apretar F5 se cargue dos veces el
+mismo gasto.
+
+BASE DE DATOS: MySQL (en XAMPP es MariaDB). Tiene 5 tablas:
+- usuarios
+- movimientos       (ingresos y gastos juntos, con una columna "tipo")
+- categorias
+- metas_ahorro
+- consejos_ia
+
+Un detalle de diseño importante: la base guarda TODOS los montos en
+pesos. La conversión a dólares se hace solamente para mostrar, en el
+navegador. Así nunca se mezclan monedas en la base.
+
+Otro detalle: no hay que correr scripts para actualizar la base. Cuando
+la app arranca, revisa si le faltan columnas nuevas y las agrega sola.
+A eso lo llamamos "migraciones automáticas".
+
+SERVICIOS EXTERNOS: la app se conecta con cuatro servicios de afuera:
+1. Google, para iniciar sesión con la cuenta de Google (OAuth 2.0).
+2. Un servidor de correo (SMTP), para mandar el código de verificación.
+3. Una API de cotizaciones, para saber cuánto vale el dólar.
+4. Groq, que es el servicio de inteligencia artificial del chat. PHP le
+   manda la pregunta del usuario junto con un resumen de sus números,
+   y Groq devuelve la respuesta.
+
+Las claves de esos servicios NO están en el código: van en un archivo
+.env que cada uno tiene en su compu y que no se sube a GitHub.
+
+SEGURIDAD, en una frase cada cosa:
+- Las contraseñas se guardan hasheadas con bcrypt, nunca en texto.
+- Todas las consultas usan "prepared statements", así no hay
+  inyección SQL.
+- Cada consulta filtra por el id del usuario logueado, así nadie ve
+  los datos de otro.
+- Los formularios llevan un token CSRF para que otra página no pueda
+  mandar formularios en nombre del usuario.
+
+
+---------------------------------------------------------------------
+PARTE 4 — CÓMO TRABAJAMOS (1 minuto)
+---------------------------------------------------------------------
+
+Trabajamos con Git y GitHub, con una rama por integrante (devagus,
+devulises) y una rama "develop" donde juntamos todo. El proyecto se
+organizó con el Modelo en Espiral: cada semana planificamos, vemos
+los riesgos, desarrollamos y evaluamos, y eso queda registrado en una
+bitácora.
+
+Hubo de todo: un commit que se llama literalmente "ARREGLAR! se rompió
+todo", varias versiones del responsive, y semanas peleándonos con el
+modo oscuro. Les recomendamos lo que más nos sirvió: commits chicos y
+frecuentes, y no subir nunca las contraseñas al repositorio.
+
+
+---------------------------------------------------------------------
+CIERRE (30 segundos)
+---------------------------------------------------------------------
+
+En resumen: Trackify es una app web en PHP y MySQL para controlar
+ingresos y gastos, en pesos o dólares, con metas de ahorro y un
+asistente de IA que te aconseja con tus propios datos.
+
+¿Preguntas?
+
+
+---------------------------------------------------------------------
+PREGUNTAS QUE PROBABLEMENTE HAGAN (y cómo responderlas)
+---------------------------------------------------------------------
+
+P: ¿Por qué no usaron Laravel o React?
+R: Porque queríamos entender cómo funciona todo por debajo y no
+   depender de un framework que no habíamos visto en la cursada. Además
+   corre en XAMPP sin instalar nada más.
+
+P: ¿Qué pasa si la API del dólar no responde?
+R: La app prueba con una segunda API. Si ninguna responde, no deja
+   cargar montos en dólares: nunca inventa una cotización.
+
+P: ¿La IA puede ver los datos de otros usuarios?
+R: No. PHP arma el resumen solo con los movimientos del usuario
+   logueado y eso es lo único que le manda a Groq.
+
+P: ¿Está online?
+R: Por ahora corre en local. Probamos hostings gratuitos pero bloquean
+   las conexiones que necesitamos (por ejemplo, InfinityFree bloquea
+   puertos salientes).
+
+P: ¿Qué es un "gasto hormiga"?
+R: Los gastos chiquitos y repetidos (un café, un alfajor) que sumados
+   pesan mucho. La base ya tiene una columna para marcarlos, pero la
+   función todavía no está terminada en la interfaz.
