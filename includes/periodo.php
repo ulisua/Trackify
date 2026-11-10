@@ -6,16 +6,9 @@ require_once __DIR__ . '/../conexion.php';
 
 // Inicializar moneda del usuario desde BD si está en sesión
 if (isset($_SESSION['usuario_id']) && !isset($_SESSION['moneda'])) {
-    if (isset($conn) && $conn instanceof mysqli) {
-        $stmt_m = $conn->prepare("SELECT moneda_principal FROM usuarios WHERE id_usuario = ?");
-        if ($stmt_m) {
-            $stmt_m->bind_param("i", $_SESSION['usuario_id']);
-            $stmt_m->execute();
-            $res_m = $stmt_m->get_result();
-            if ($row_m = $res_m->fetch_assoc()) {
-                $_SESSION['moneda'] = $row_m['moneda_principal'] ?? 'ARS';
-            }
-        }
+    $moneda_bd = $conn->valor("SELECT moneda_principal FROM usuarios WHERE id_usuario = ?", [$_SESSION['usuario_id']]);
+    if ($moneda_bd !== null) {
+        $_SESSION['moneda'] = $moneda_bd ?: 'ARS';
     }
 }
 $moneda_actual = $_SESSION['moneda'] ?? 'ARS';

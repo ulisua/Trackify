@@ -117,6 +117,14 @@ Migraciones automáticas de BD
   Observaciones: conexion.php agrega columnas faltantes y carga las
   categorías iniciales. Solo aditivas.
 
+Soporte MySQL / PostgreSQL
+  Responsable: Cecch / Suarez
+  Estado: ✅
+  Observaciones: Capa de acceso a datos propia (includes/db.php, PDO).
+  El motor se elige con DB_DRIVER en .env. Esquema unificado en
+  trackify.sql y trackify_postgres.sql; las bases viejas de los dos
+  integrantes se actualizan solas. Probado de punta a punta en ambos.
+
 Gasto hormiga
   Responsable: (a definir)
   Estado: ⏳
@@ -172,6 +180,7 @@ Modo oscuro	Cecch	✅	Sin parpadeo al cargar.
 Diseño responsive	Cecch	✅	Corte en 900 px, menú hamburguesa.
 Seguridad transversal	Cecch / Suarez	✅	Prepared statements, CSRF, XSS, UUID.
 Migraciones automáticas	Cecch	✅	Solo aditivas.
+Soporte MySQL / PostgreSQL	Cecch / Suarez	✅	Capa PDO propia; motor elegido con DB_DRIVER. Probado en ambos.
 Gasto hormiga	(a definir)	⏳	Columna creada, sin interfaz.
 Historial de consejos IA	Cecch	⏳	Tabla creada, sin uso.
 Docker	(a definir)	🔄	No versionado en el repo.

@@ -39,15 +39,11 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
         }
 
         if ($form_type === 'nueva_categoria') {
-            $stmt_ins_cat = $conn->prepare("INSERT INTO categorias (nombre, tipo, icono, color, id_usuario) VALUES (?, ?, ?, ?, ?)");
-            $stmt_ins_cat->bind_param("ssssi", $nombre_cat, $tipo_cat, $icono_cat, $color_cat, $user_id);
-            $stmt_ins_cat->execute();
+            $conn->ejecutar("INSERT INTO categorias (nombre, tipo, icono, color, id_usuario) VALUES (?, ?, ?, ?, ?)",
+                [$nombre_cat, $tipo_cat, $icono_cat, $color_cat, $user_id]);
             flash('Categoría creada.', 'success');
         } else {
-            $stmt_actual = $conn->prepare("SELECT tipo FROM categorias WHERE id_categoria = ? AND id_usuario = ?");
-            $stmt_actual->bind_param("ii", $id_categoria, $user_id);
-            $stmt_actual->execute();
-            $actual = $stmt_actual->get_result()->fetch_assoc();
+            $actual = $conn->fila("SELECT tipo FROM categorias WHERE id_categoria = ? AND id_usuario = ?", [$id_categoria, $user_id]);
 
             if (!$actual) {
                 flash('Solo podés editar tus propias categorías. Las predeterminadas no se modifican.');
@@ -57,19 +53,15 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
 
             // Cambiar el tipo dejaría movimientos con un tipo distinto al de su categoría
             if ($actual['tipo'] !== $tipo_cat) {
-                $stmt_uso = $conn->prepare("SELECT COUNT(*) AS c FROM movimientos WHERE id_categoria = ? AND id_usuario = ?");
-                $stmt_uso->bind_param("ii", $id_categoria, $user_id);
-                $stmt_uso->execute();
-                if ((int)$stmt_uso->get_result()->fetch_assoc()['c'] > 0) {
+                if ((int)$conn->valor("SELECT COUNT(*) FROM movimientos WHERE id_categoria = ? AND id_usuario = ?", [$id_categoria, $user_id]) > 0) {
                     flash('No se puede cambiar el tipo de una categoría que ya tiene movimientos.');
                     header("Location: categorias.php");
                     exit();
                 }
             }
 
-            $stmt_upd = $conn->prepare("UPDATE categorias SET nombre = ?, tipo = ?, icono = ?, color = ? WHERE id_categoria = ? AND id_usuario = ?");
-            $stmt_upd->bind_param("ssssii", $nombre_cat, $tipo_cat, $icono_cat, $color_cat, $id_categoria, $user_id);
-            $stmt_upd->execute();
+            $conn->ejecutar("UPDATE categorias SET nombre = ?, tipo = ?, icono = ?, color = ? WHERE id_categoria = ? AND id_usuario = ?",
+                [$nombre_cat, $tipo_cat, $icono_cat, $color_cat, $id_categoria, $user_id]);
             flash('Categoría actualizada.', 'success');
         }
 
@@ -78,10 +70,7 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
     } elseif($form_type === 'eliminar_categoria') {
         $id_categoria = intval($_POST['id_categoria'] ?? 0);
 
-        $stmt_cat = $conn->prepare("SELECT tipo FROM categorias WHERE id_categoria = ? AND id_usuario = ?");
-        $stmt_cat->bind_param("ii", $id_categoria, $user_id);
-        $stmt_cat->execute();
-        $categoria = $stmt_cat->get_result()->fetch_assoc();
+        $categoria = $conn->fila("SELECT tipo FROM categorias WHERE id_categoria = ? AND id_usuario = ?", [$id_categoria, $user_id]);
 
         if (!$categoria) {
             flash('Solo podés eliminar tus propias categorías.');
@@ -93,19 +82,13 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
         $nombre_destino = $categoria['tipo'] === 'ingreso' ? 'Otros ingresos' : 'Otros gastos';
         $id_destino = obtenerCategoriaSistema($conn, $nombre_destino, $categoria['tipo']);
 
-        $conn->begin_transaction();
         try {
-            $stmt_mov = $conn->prepare("UPDATE movimientos SET id_categoria = ? WHERE id_categoria = ? AND id_usuario = ?");
-            $stmt_mov->bind_param("iii", $id_destino, $id_categoria, $user_id);
-            $stmt_mov->execute();
-
-            $stmt_del_cat = $conn->prepare("DELETE FROM categorias WHERE id_categoria = ? AND id_usuario = ?");
-            $stmt_del_cat->bind_param("ii", $id_categoria, $user_id);
-            $stmt_del_cat->execute();
-            $conn->commit();
+            $conn->transaccion(function () use ($conn, $id_destino, $id_categoria, $user_id) {
+                $conn->ejecutar("UPDATE movimientos SET id_categoria = ? WHERE id_categoria = ? AND id_usuario = ?", [$id_destino, $id_categoria, $user_id]);
+                $conn->ejecutar("DELETE FROM categorias WHERE id_categoria = ? AND id_usuario = ?", [$id_categoria, $user_id]);
+            });
             flash('Categoría eliminada. Sus movimientos pasaron a "' . $nombre_destino . '".', 'success');
-        } catch (mysqli_sql_exception $e) {
-            $conn->rollback();
+        } catch (PDOException $e) {
             error_log('Trackify: error al eliminar categoría: ' . $e->getMessage());
             flash('No se pudo eliminar la categoría.');
         }
@@ -123,7 +106,7 @@ $user_id = (int)$_SESSION['usuario_id'];
 $color_classes = ['card-mint', 'card-lime', 'card-pink', 'card-lavender', 'card-grey', 'card-violet', 'card-teal'];
 
 // Categorías visibles (predeterminadas + propias) con los movimientos del período activo
-$stmt = $conn->prepare("
+$filas_categorias = $conn->filas("
     SELECT c.id_categoria, c.nombre, c.tipo, c.icono, c.color, c.id_usuario,
            COUNT(m.id_movimiento) as cantidad,
            SUM(m.monto) as total_monto
@@ -131,16 +114,15 @@ $stmt = $conn->prepare("
     LEFT JOIN movimientos m ON c.id_categoria = m.id_categoria AND m.id_usuario = ? AND m.fecha BETWEEN ? AND ?
     WHERE c.id_usuario IS NULL OR c.id_usuario = ?
     GROUP BY c.id_categoria, c.nombre, c.tipo, c.icono, c.color, c.id_usuario
-    ORDER BY IFNULL(SUM(m.monto), 0) DESC, c.nombre ASC
-");
-$stmt->bind_param("issi", $user_id, $fecha_desde, $fecha_hasta, $user_id);
-$stmt->execute();
-$res = $stmt->get_result();
+", [$user_id, $fecha_desde, $fecha_hasta, $user_id]);
+// Mayor monto primero; a igual monto, por nombre (sin distinguir mayúsculas ni tildes, igual en los dos motores)
+usort($filas_categorias, fn($a, $b) => ((float)$b['total_monto'] <=> (float)$a['total_monto'])
+    ?: strcmp(normalizarNombreCategoria($a['nombre']), normalizarNombreCategoria($b['nombre'])));
 
 $categorias_por_tipo = ['gasto' => [], 'ingreso' => []];
 $totales_por_tipo = ['gasto' => 0, 'ingreso' => 0];
 
-while ($row = $res->fetch_assoc()) {
+foreach ($filas_categorias as $row) {
     actualizarCategoriaMetaSiFalta($conn, $row);
     $tipo = $row['tipo'] === 'ingreso' ? 'ingreso' : 'gasto';
     $row['color_class'] = $color_classes[count($categorias_por_tipo[$tipo]) % count($color_classes)];

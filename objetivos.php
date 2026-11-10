@@ -23,9 +23,8 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
             flash('La fecha límite debe ser hoy o una fecha futura.');
         } elseif ($form_type === 'objetivo') {
             $monto_actual = 0;
-            $stmt_obj = $conn->prepare("INSERT INTO metas_ahorro (id_usuario, nombre_meta, descripcion, monto_objetivo, monto_actual, fecha_limite) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt_obj->bind_param("issdds", $user_id, $nombre, $desc, $monto, $monto_actual, $fecha);
-            $stmt_obj->execute();
+            $conn->ejecutar("INSERT INTO metas_ahorro (id_usuario, nombre_meta, descripcion, monto_objetivo, monto_actual, fecha_limite) VALUES (?, ?, ?, ?, ?, ?)",
+                [$user_id, $nombre, $desc, $monto, $monto_actual, $fecha]);
             flash('Objetivo creado.', 'success');
         } else {
             $id_meta = intval($_POST['id_meta'] ?? 0);
@@ -33,9 +32,8 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
             if (!in_array($estado, ['activo', 'inactivo', 'logrado'], true)) {
                 $estado = 'activo';
             }
-            $stmt_upd = $conn->prepare("UPDATE metas_ahorro SET nombre_meta=?, descripcion=?, monto_objetivo=?, fecha_limite=?, estado=? WHERE id_meta=? AND id_usuario=?");
-            $stmt_upd->bind_param("ssdssii", $nombre, $desc, $monto, $fecha, $estado, $id_meta, $user_id);
-            $stmt_upd->execute();
+            $conn->ejecutar("UPDATE metas_ahorro SET nombre_meta=?, descripcion=?, monto_objetivo=?, fecha_limite=?, estado=? WHERE id_meta=? AND id_usuario=?",
+                [$nombre, $desc, $monto, $fecha, $estado, $id_meta, $user_id]);
             flash('Objetivo actualizado.', 'success');
         }
 
@@ -45,10 +43,7 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
         $id_meta = intval($_POST['id_meta'] ?? 0);
         $monto_sumar = montoValido($_POST['monto_ahorro'] ?? '');
 
-        $stmt_meta = $conn->prepare("SELECT nombre_meta FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?");
-        $stmt_meta->bind_param("ii", $id_meta, $user_id);
-        $stmt_meta->execute();
-        $meta = $stmt_meta->get_result()->fetch_assoc();
+        $meta = $conn->fila("SELECT nombre_meta FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?", [$id_meta, $user_id]);
 
         if (!$meta) {
             flash('El objetivo no existe.');
@@ -58,19 +53,14 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
             // El aporte suma a la meta y queda registrado como gasto, en una sola transacción
             $id_categoria = obtenerCategoriaSistema($conn, 'Ahorro para meta', 'gasto');
             $desc = "Aporte a: " . $meta['nombre_meta'];
-            $conn->begin_transaction();
             try {
-                $stmt_upd = $conn->prepare("UPDATE metas_ahorro SET monto_actual = monto_actual + ? WHERE id_meta = ? AND id_usuario = ?");
-                $stmt_upd->bind_param("dii", $monto_sumar, $id_meta, $user_id);
-                $stmt_upd->execute();
-
-                $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, 'gasto', ?, ?)");
-                $stmt_mov->bind_param("iidss", $user_id, $id_categoria, $monto_sumar, $desc, $hoy);
-                $stmt_mov->execute();
-                $conn->commit();
+                $conn->transaccion(function () use ($conn, $monto_sumar, $id_meta, $user_id, $id_categoria, $desc, $hoy) {
+                    $conn->ejecutar("UPDATE metas_ahorro SET monto_actual = monto_actual + ? WHERE id_meta = ? AND id_usuario = ?", [$monto_sumar, $id_meta, $user_id]);
+                    $conn->ejecutar("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, 'gasto', ?, ?)",
+                        [$user_id, $id_categoria, $monto_sumar, $desc, $hoy]);
+                });
                 flash('Aporte registrado.', 'success');
-            } catch (mysqli_sql_exception $e) {
-                $conn->rollback();
+            } catch (PDOException $e) {
                 error_log('Trackify: error al registrar aporte: ' . $e->getMessage());
                 flash('No se pudo registrar el aporte.');
             }
@@ -83,35 +73,26 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && is
         // lo ahorrado vuelve al saldo como un ingreso ("Reintegro de meta"), en la misma transacción.
         $id_meta = intval($_POST['id_meta'] ?? 0);
 
-        $stmt_meta = $conn->prepare("SELECT nombre_meta, monto_actual FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?");
-        $stmt_meta->bind_param("ii", $id_meta, $user_id);
-        $stmt_meta->execute();
-        $meta = $stmt_meta->get_result()->fetch_assoc();
+        $meta = $conn->fila("SELECT nombre_meta, monto_actual FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?", [$id_meta, $user_id]);
 
         if (!$meta) {
             flash('El objetivo no existe.');
         } else {
             $reintegro = (float)$meta['monto_actual'];
-            $conn->begin_transaction();
             try {
-                if ($reintegro > 0) {
-                    $id_categoria = obtenerCategoriaSistema($conn, 'Reintegro de meta', 'ingreso');
-                    $desc = 'Reintegro de: ' . $meta['nombre_meta'];
-                    $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, 'ingreso', ?, ?)");
-                    $stmt_mov->bind_param("iidss", $user_id, $id_categoria, $reintegro, $desc, $hoy);
-                    $stmt_mov->execute();
-                }
-
-                $stmt_del = $conn->prepare("DELETE FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?");
-                $stmt_del->bind_param("ii", $id_meta, $user_id);
-                $stmt_del->execute();
-                $conn->commit();
+                $conn->transaccion(function () use ($conn, $reintegro, $meta, $user_id, $hoy, $id_meta) {
+                    if ($reintegro > 0) {
+                        $id_categoria = obtenerCategoriaSistema($conn, 'Reintegro de meta', 'ingreso');
+                        $conn->ejecutar("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, 'ingreso', ?, ?)",
+                            [$user_id, $id_categoria, $reintegro, 'Reintegro de: ' . $meta['nombre_meta'], $hoy]);
+                    }
+                    $conn->ejecutar("DELETE FROM metas_ahorro WHERE id_meta = ? AND id_usuario = ?", [$id_meta, $user_id]);
+                });
 
                 flash($reintegro > 0
                     ? 'Objetivo eliminado. Lo ahorrado ($' . number_format($reintegro, 2, ',', '.') . ') volvió como ingreso.'
                     : 'Objetivo eliminado.', 'success');
-            } catch (mysqli_sql_exception $e) {
-                $conn->rollback();
+            } catch (PDOException $e) {
                 error_log('Trackify: error al eliminar objetivo: ' . $e->getMessage());
                 flash('No se pudo eliminar el objetivo.');
             }
@@ -132,17 +113,14 @@ $html_metas = '';
 
 if(isset($_SESSION['usuario_id'])) {
     $user_id = (int)$_SESSION['usuario_id'];
-    $stmt = $conn->prepare("SELECT * FROM metas_ahorro WHERE id_usuario = ? ORDER BY fecha_limite ASC");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $metas_usuario = $conn->filas("SELECT * FROM metas_ahorro WHERE id_usuario = ? ORDER BY fecha_limite ASC", [$user_id]);
 
     $color_classes = ['fill-mint', 'fill-lime', 'fill-pink', 'fill-lavender', 'fill-teal', 'fill-violet'];
     $color_idx = 0;
 
     $hoy = date('Y-m-d');
 
-    while($row = $result->fetch_assoc()) {
+    foreach ($metas_usuario as $row) {
         $total_metas++;
         $pct = ($row['monto_objetivo'] > 0) ? ($row['monto_actual'] / $row['monto_objetivo']) * 100 : 0;
         if($pct > 100) $pct = 100;

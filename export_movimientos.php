@@ -12,19 +12,17 @@ if (!isset($_SESSION['usuario_id'])) {
 $user_id = intval($_SESSION['usuario_id']);
 
 // Obtener todos los movimientos del usuario
-$stmt = $conn->prepare(
+$filas = $conn->filas(
     "SELECT m.id_movimiento, m.tipo, m.monto, m.descripcion, m.fecha, c.nombre as categoria_nombre
      FROM movimientos m
      LEFT JOIN categorias c ON m.id_categoria = c.id_categoria
      WHERE m.id_usuario = ?
-     ORDER BY m.fecha DESC, m.id_movimiento DESC"
+     ORDER BY m.fecha DESC, m.id_movimiento DESC",
+    [$user_id]
 );
-$stmt->bind_param('i', $user_id);
-$stmt->execute();
-$res = $stmt->get_result();
 
 $movs = [];
-while ($r = $res->fetch_assoc()) {
+foreach ($filas as $r) {
     $movs[] = [
         'id' => (int)$r['id_movimiento'],
         'tipo' => $r['tipo'] === 'ingreso' ? 'Ingreso' : 'Gasto',

@@ -18,9 +18,7 @@ if (isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && (
     } elseif (!nombreUsuarioDisponible($conn, $nombre_usuario, $user_id)) {
         flash('Ese nombre de usuario ya está en uso. Probá con otro.');
     } else {
-        $stmt = $conn->prepare("UPDATE usuarios SET nombre = ?, nombre_usuario = ? WHERE id_usuario = ?");
-        $stmt->bind_param("ssi", $nuevo_nombre, $nombre_usuario, $user_id);
-        $stmt->execute();
+        $conn->ejecutar("UPDATE usuarios SET nombre = ?, nombre_usuario = ? WHERE id_usuario = ?", [$nuevo_nombre, $nombre_usuario, $user_id]);
         $_SESSION['usuario_nombre'] = $nuevo_nombre;
         flash('Datos actualizados.', 'success');
     }
@@ -32,10 +30,7 @@ if (isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST' && (
 require_once 'includes/header.php';
 
 $user_id = (int)$_SESSION['usuario_id'];
-$query = $conn->prepare("SELECT nombre, nombre_usuario, email, fecha_registro, clave, moneda_principal FROM usuarios WHERE id_usuario=?");
-$query->bind_param("i", $user_id);
-$query->execute();
-$user_data = $query->get_result()->fetch_assoc() ?: [];
+$user_data = $conn->fila("SELECT nombre, nombre_usuario, email, fecha_registro, clave, moneda_principal FROM usuarios WHERE id_usuario = ?", [$user_id]) ?? [];
 
 $nombre         = $user_data['nombre'] ?? 'Usuario';
 $email          = $user_data['email'] ?? '';
@@ -46,9 +41,7 @@ $moneda_usuario = $user_data['moneda_principal'] ?? 'ARS';
 // Por si la cuenta se creó sin nombre de usuario (por ejemplo, desde otro código): se le asigna uno
 if ($nombre_usuario === '' && $email !== '') {
     $nombre_usuario = generarNombreUsuario($conn, $email);
-    $stmt_nu = $conn->prepare("UPDATE usuarios SET nombre_usuario = ? WHERE id_usuario = ?");
-    $stmt_nu->bind_param("si", $nombre_usuario, $user_id);
-    $stmt_nu->execute();
+    $conn->ejecutar("UPDATE usuarios SET nombre_usuario = ? WHERE id_usuario = ?", [$nombre_usuario, $user_id]);
 }
 
 $meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -57,12 +50,10 @@ $fecha_registro = isset($user_data['fecha_registro'])
     : '-';
 
 // Estadísticas de la tarjeta lateral (una sola consulta)
-$query_stats = $conn->prepare("SELECT
+$stats = $conn->fila("SELECT
     (SELECT COUNT(*) FROM movimientos WHERE id_usuario = ?) AS total_mov,
-    (SELECT COUNT(*) FROM metas_ahorro WHERE id_usuario = ? AND estado = 'activo' AND fecha_limite >= CURDATE()) AS total_obj");
-$query_stats->bind_param("ii", $user_id, $user_id);
-$query_stats->execute();
-$stats = $query_stats->get_result()->fetch_assoc();
+    (SELECT COUNT(*) FROM metas_ahorro WHERE id_usuario = ? AND estado = 'activo' AND fecha_limite >= ?) AS total_obj",
+    [$user_id, $user_id, date('Y-m-d')]);
 
 $inicial = mb_strtoupper(mb_substr(trim($nombre) ?: 'U', 0, 1));
 

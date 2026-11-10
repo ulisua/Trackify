@@ -2,7 +2,51 @@
   TRACKIFY — CÓMO MIGRAR LA BASE DE DATOS DE MYSQL A POSTGRESQL
 =====================================================================
 
-Resumen: el cambio tiene tres partes.
+ESTADO ACTUAL (10/11/2026): LA MIGRACIÓN ESTÁ HECHA.
+Trackify funciona con MySQL y con PostgreSQL sin cambiar el código; el
+motor se elige en .env. Lo que se hizo, y cómo quedó:
+
+  Paso A  -> trackify_postgres.sql (mismo esquema que trackify.sql).
+  Paso C  -> includes/db.php: clase BaseDatos sobre PDO. Todos los
+             archivos PHP dejaron de usar mysqli y consultan con
+             $conn->fila() / filas() / valor() / ejecutar() /
+             insertar() / transaccion().
+             Las consultas propias de MySQL se reemplazaron:
+               DATE_FORMAT(fecha,'%Y-%m')  -> $conn->sqlMes('fecha')
+               CURDATE() - INTERVAL n MONTH -> inicioDeMes(n) en PHP
+               CURDATE()                   -> date('Y-m-d') como parámetro
+               IFNULL / ORDER BY en SQL    -> COALESCE / orden en PHP
+               INSERT IGNORE               -> se verifica antes de insertar
+               LEAST(?,?) / GREATEST(?,?)  -> min() / max() en PHP
+               insert_id                   -> RETURNING en PostgreSQL
+               email = ?                   -> LOWER(email) = ? (PG distingue
+                                              mayúsculas)
+               ORDER BY col = ? DESC       -> ORDER BY CASE ... (en PG los
+                                              NULL van primero)
+             Las migraciones automáticas (includes/migraciones.php)
+             tienen versión MySQL y versión PostgreSQL.
+  Paso B  -> sigue siendo manual si se quieren PASAR DATOS de una base
+             MySQL existente a PostgreSQL (ver más abajo).
+
+Para usar PostgreSQL:
+  1. Crear la base e importar trackify_postgres.sql.
+  2. En .env: DB_DRIVER=pgsql, DB_HOST, DB_PORT=5432, DB_NAME,
+     DB_USER, DB_PASS.
+  3. En C:\xampp\php\php.ini quitar el ";" de ";extension=pdo_pgsql" y
+     reiniciar Apache.
+  4. Abrir la app. Si la base es vieja (por ejemplo la primera versión
+     de trackify_postgres.sql, con "Icono_tipo"), se actualiza sola.
+
+Probado de punta a punta (registro, verificación, movimientos,
+categorías, objetivos, perfil, moneda, contraseña, zona de peligro)
+con: MySQL nuevo, MySQL de cada integrante, PostgreSQL nuevo y la
+primera base PostgreSQL de devulises.
+
+El resto de este documento queda como referencia de cómo se planificó.
+El esquema de ejemplo del Paso A.1 es solo ilustrativo: usar
+trackify_postgres.sql.
+
+Resumen original del plan: el cambio tiene tres partes.
   A. Crear el esquema en PostgreSQL (los tipos no son iguales).
   B. Pasar los datos.
   C. Adaptar el código PHP: hoy usa la extensión mysqli, que SOLO

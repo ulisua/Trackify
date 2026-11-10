@@ -100,14 +100,11 @@ function contextoFinancieroIA($conn, $user_id) {
     $lineas = [];
 
     // Totales de los últimos 3 meses
-    $stmt = $conn->prepare("SELECT DATE_FORMAT(fecha, '%Y-%m') AS mes,
+    $meses = $conn->filas("SELECT " . $conn->sqlMes('fecha') . " AS mes,
             SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) AS ingresos,
             SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) AS gastos
-        FROM movimientos WHERE id_usuario = ? AND fecha >= DATE_FORMAT(CURDATE() - INTERVAL 2 MONTH, '%Y-%m-01')
-        GROUP BY mes ORDER BY mes DESC");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $meses = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        FROM movimientos WHERE id_usuario = ? AND fecha >= ?
+        GROUP BY mes ORDER BY mes DESC", [$user_id, inicioDeMes(2)]);
     if (!$meses) {
         $lineas[] = "- No registró movimientos en los últimos 3 meses.";
     }
@@ -116,22 +113,16 @@ function contextoFinancieroIA($conn, $user_id) {
     }
 
     // Gastos por categoría del mes actual
-    $stmt = $conn->prepare("SELECT c.nombre, SUM(m.monto) AS total FROM movimientos m
+    $categorias = $conn->filas("SELECT c.nombre, SUM(m.monto) AS total FROM movimientos m
         JOIN categorias c ON c.id_categoria = m.id_categoria
-        WHERE m.id_usuario = ? AND m.tipo = 'gasto' AND m.fecha >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-        GROUP BY c.id_categoria, c.nombre ORDER BY total DESC LIMIT 8");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $categorias = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        WHERE m.id_usuario = ? AND m.tipo = 'gasto' AND m.fecha >= ?
+        GROUP BY c.id_categoria, c.nombre ORDER BY total DESC LIMIT 8", [$user_id, inicioDeMes(0)]);
     if ($categorias) {
         $lineas[] = "Gastos de este mes por categoría: " . implode('; ', array_map(fn($c) => $c['nombre'] . ' ' . $fmt($c['total']), $categorias));
     }
 
     // Objetivos de ahorro
-    $stmt = $conn->prepare("SELECT nombre_meta, monto_objetivo, monto_actual, fecha_limite, estado FROM metas_ahorro WHERE id_usuario = ? ORDER BY fecha_limite LIMIT 10");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $metas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $metas = $conn->filas("SELECT nombre_meta, monto_objetivo, monto_actual, fecha_limite, estado FROM metas_ahorro WHERE id_usuario = ? ORDER BY fecha_limite LIMIT 10", [$user_id]);
     $lineas[] = $metas ? "Objetivos de ahorro:" : "No tiene objetivos de ahorro.";
     foreach ($metas as $m) {
         $pct = $m['monto_objetivo'] > 0 ? round($m['monto_actual'] / $m['monto_objetivo'] * 100) : 0;

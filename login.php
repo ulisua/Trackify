@@ -28,13 +28,11 @@ $mensaje = $mensajes_error[$_GET['error'] ?? ''] ?? '';
 $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = trim($_POST['email'] ?? '');
+    $email = mb_strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
 
-    $query = $conn->prepare("SELECT id_usuario, nombre, email, clave, email_verificado FROM usuarios WHERE email=?");
-    $query->bind_param("s", $email);
-    $query->execute();
-    $user = $query->get_result()->fetch_assoc();
+    // LOWER(): PostgreSQL distingue mayúsculas en las comparaciones (MySQL no)
+    $user = $conn->fila("SELECT id_usuario, nombre, email, clave, email_verificado FROM usuarios WHERE LOWER(email) = ?", [$email]);
 
     // Mismo mensaje para email inexistente o contraseña incorrecta (no revela qué cuentas existen)
     if (!$user || empty($user['clave']) || !password_verify($password, $user['clave'])) {

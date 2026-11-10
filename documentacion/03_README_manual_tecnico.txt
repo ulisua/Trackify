@@ -1,6 +1,6 @@
 =====================================================================
   TRACKIFY — README / MANUAL TÉCNICO
-  Aplicación web de finanzas personales (PHP + MySQL)
+  Aplicación web de finanzas personales (PHP + MySQL o PostgreSQL)
   Versión documentada: commit 190451c (06/11/2026), rama devagus
 =====================================================================
 
@@ -36,8 +36,9 @@ un asistente de IA que responde con los datos reales del usuario.
 ---------------------------------------------------------------------
 2. STACK TECNOLÓGICO
 ---------------------------------------------------------------------
-Backend ........ PHP 8.x (sin framework), extensión mysqli
-Base de datos .. MySQL / MariaDB 10.4 (incluida en XAMPP)
+Backend ........ PHP 8.x (sin framework), PDO (includes/db.php)
+Base de datos .. MySQL / MariaDB 10.4 (incluida en XAMPP) o
+                 PostgreSQL 13+ (se elige con DB_DRIVER en .env)
 Servidor web ... Apache (XAMPP)
 Frontend ....... HTML5, CSS3 modular, JavaScript vanilla (sin build)
 Librerías JS ... Chart.js 4.6.1 (gráficos), SweetAlert2 11.26.25
@@ -52,8 +53,10 @@ Servicios ...... Google OAuth 2.0, SMTP (Mailtrap en desarrollo),
 3. REQUISITOS
 ---------------------------------------------------------------------
 - XAMPP con PHP 8.0 o superior (el código usa str_contains y match).
-- Extensiones PHP habilitadas: mysqli, curl, openssl, mbstring.
-- MariaDB 10.0.2+ / MySQL 8.0.29+ (por "ADD COLUMN IF NOT EXISTS").
+- Extensiones PHP habilitadas: pdo_mysql (o pdo_pgsql para
+  PostgreSQL), curl, openssl, mbstring.
+- MariaDB 10.0.2+ / MySQL 8.0.29+ (por "ADD COLUMN IF NOT EXISTS"),
+  o PostgreSQL 13+.
 - Conexión a internet para: CDN de librerías, cotización, IA, Google
   y envío de emails.
 - Opcional: cuentas en Google Cloud (OAuth), Mailtrap (SMTP) y
@@ -70,11 +73,16 @@ Servicios ...... Google OAuth 2.0, SMTP (Mailtrap en desarrollo),
 3) Entrar a http://localhost/phpmyadmin y crear una base llamada
    "trackify" (cotejamiento utf8mb4_general_ci).
 4) Importar trackify.sql en esa base (pestaña Importar).
-   Nota: el volcado trae 2 usuarios de prueba; podés borrarlos.
+   Trae el esquema completo y las categorías predeterminadas, sin
+   usuarios.
+   Con PostgreSQL: importar trackify_postgres.sql (psql o pgAdmin),
+   poner DB_DRIVER=pgsql en .env, quitar el ";" de
+   ";extension=pdo_pgsql" en C:
+mpp\php\php.ini y reiniciar Apache.
 5) Copiar .env.example como .env (en la raíz del proyecto) y
    completar los valores (ver sección 5).
 6) Abrir http://localhost/trackify
-   En la primera carga, conexion.php agrega las columnas que falten y
+   En la primera carga, includes/migraciones.php agrega lo que falte y
    crea las categorías predeterminadas (ver sección 6).
 7) Registrarse. Si el SMTP no está configurado, el email no llega:
    ver "Problemas frecuentes".
@@ -88,8 +96,10 @@ línea por línea y la función env('CLAVE', 'por_defecto') devuelve el
 valor.
 
   APP_URL              URL base, sin barra final (se usa en los emails)
-  DB_HOST / DB_USER /  Conexión a MySQL. Por defecto: localhost / root /
-  DB_PASS / DB_NAME    (vacío) / trackify
+  DB_DRIVER            mysql (por defecto) o pgsql
+  DB_HOST / DB_PORT /  Conexión. Por defecto: localhost / (puerto del
+  DB_USER / DB_PASS /  motor) / root / (vacío) / trackify
+  DB_NAME
   GOOGLE_CLIENT_ID     Credenciales OAuth de Google Cloud Console.
   GOOGLE_CLIENT_SECRET La redirect URI debe estar registrada allá.
   GOOGLE_REDIRECT_URI  Ej.: http://localhost/trackify/auth/google/callback.php
@@ -112,13 +122,26 @@ Diccionario completo: ver 02_tabla_base_de_datos.txt. Diagrama: ver
 Regla de oro: movimientos.monto y los montos de metas_ahorro se
 guardan SIEMPRE en pesos (ARS).
 
-Migraciones automáticas (conexion.php):
+Acceso a datos (includes/db.php):
+- Clase BaseDatos sobre PDO, igual para los dos motores. conexion.php
+  la crea como $conn. Métodos: fila(), filas(), valor(), ejecutar(),
+  insertar() (RETURNING en PostgreSQL), transaccion(), sqlMes().
+- Reglas para que una consulta funcione en los dos motores: ver
+  docs/ARCHITECTURE.md sección 3.
+
+Migraciones automáticas (includes/migraciones.php, llamado por conexion.php):
 - En cada request se hace UNA consulta a information_schema que cuenta
   si están todas las columnas esperadas ($columnas_esperadas).
 - Si falta alguna, se ejecutan los "ALTER TABLE ... ADD COLUMN IF NOT
   EXISTS". Son solo ADITIVAS (nunca borran).
 - Si metas_ahorro.monto_objetivo no tiene decimales, se amplía a
   DECIMAL(12,2) una sola vez.
+- Unificación con la base de devulises (se corrige una sola vez):
+  categorias.Icono_tipo -> icono, color admite NULL, usuarios.uuid
+  completo y CHAR(36) NOT NULL UNIQUE, consejos_ia con AUTO_INCREMENT,
+  movimientos.moneda. Por eso cualquier base vieja de cualquiera de los
+  dos integrantes funciona sin reimportar.
+- Con la base al día, la consulta inicial no dispara ningún ALTER.
 - Si la tabla categorias tiene 5 filas o menos, se insertan las 27
   categorías predeterminadas (11 de ingreso, 16 de gasto) con su ícono
   y color (includes/categorias_meta.php).
@@ -145,7 +168,7 @@ Esqueleto de toda página:
   ... consultas y HTML de la página ...
   require_once 'includes/footer.php';     // modales, librerías, main.js
 
-GET  -> valida sesión -> consulta MySQL -> arma HTML -> navegador.
+GET  -> valida sesión -> consulta la BD -> arma HTML -> navegador.
 POST -> verifica CSRF -> valida datos -> INSERT/UPDATE/DELETE ->
         mensaje flash -> redirect (patrón Post/Redirect/Get).
 
@@ -186,7 +209,7 @@ IA
   js/ia.js ................. Chat (página completa y botón flotante)
 
 Comunes
-  conexion.php, env.php
+  conexion.php, env.php, includes/db.php, includes/migraciones.php
   includes/header.php, footer.php, periodo.php, seguridad.php,
   categorias_meta.php, tema_inicial.php, auth_layout.php
 
@@ -304,7 +327,10 @@ la página (evita el "parpadeo" blanco).
 6. Un fetch POST nuevo debe mandar la cabecera X-CSRF-Token.
 7. Fechas: movimientos solo hasta hoy (maxDate), objetivos desde hoy
    (minDate).
-8. Columna nueva en la BD -> migración en conexion.php (sección 6).
+8. Columna nueva en la BD -> migración en includes/migraciones.php
+   para los dos motores (sección 6) y en los dos .sql.
+9. Consultas siempre con $conn->fila()/filas()/... y parámetros "?";
+   probarlas con MySQL y con PostgreSQL.
 
 
 ---------------------------------------------------------------------
@@ -323,7 +349,9 @@ entregas.
 16. PROBLEMAS FRECUENTES
 ---------------------------------------------------------------------
 "No se pudo conectar con la base de datos"
-   -> MySQL no está iniciado en XAMPP o DB_NAME no coincide.
+   -> MySQL (o PostgreSQL) no está iniciado, o DB_* no coincide.
+"could not find driver" en el log de PHP con DB_DRIVER=pgsql
+   -> Falta habilitar extension=pdo_pgsql en php.ini y reiniciar Apache.
 No llega el email de verificación
    -> Revisar SMTP_* en .env. Con Mailtrap los correos aparecen en la
       bandeja de Mailtrap, no en el correo real.
@@ -346,7 +374,6 @@ Error 403 al enviar un formulario
 ---------------------------------------------------------------------
 - Sin hosting: la app corre solo en local.
 - consejos_ia y movimientos.es_hormiga no se usan todavía.
-- trackify.sql no incluye las columnas agregadas por migración.
 - Sin tests automatizados; las pruebas son manuales.
 - El Docker mencionado en la bitácora (Sem 31) no está versionado en
   el repositorio.

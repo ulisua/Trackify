@@ -19,74 +19,66 @@ if(isset($_SESSION['usuario_id'])) {
     // Totales del período actual + gasto del mes calendario, en una sola consulta
     $mes_desde = date('Y-m-01');
     $mes_hasta = date('Y-m-t');
-    $stmt_tot = $conn->prepare(
+    $tot = $conn->fila(
         "SELECT
             COALESCE(SUM(CASE WHEN tipo = 'ingreso' AND fecha BETWEEN ? AND ? THEN monto END), 0) AS ingresos,
             COALESCE(SUM(CASE WHEN tipo = 'gasto'   AND fecha BETWEEN ? AND ? THEN monto END), 0) AS gastos,
             COALESCE(SUM(CASE WHEN tipo = 'gasto'   AND fecha BETWEEN ? AND ? THEN monto END), 0) AS gasto_mes
          FROM movimientos
-         WHERE id_usuario = ? AND fecha BETWEEN LEAST(?, ?) AND GREATEST(?, ?)"
+         WHERE id_usuario = ? AND fecha BETWEEN ? AND ?",
+        [$fecha_desde, $fecha_hasta, $fecha_desde, $fecha_hasta, $mes_desde, $mes_hasta,
+         $user_id, min($fecha_desde, $mes_desde), max($fecha_hasta, $mes_hasta)]
     );
-    $stmt_tot->bind_param("ssssssissss", $fecha_desde, $fecha_hasta, $fecha_desde, $fecha_hasta, $mes_desde, $mes_hasta,
-        $user_id, $fecha_desde, $mes_desde, $fecha_hasta, $mes_hasta);
-    $stmt_tot->execute();
-    $tot = $stmt_tot->get_result()->fetch_assoc();
     $total_ingresos = (float)$tot['ingresos'];
     $total_gastos   = (float)$tot['gastos'];
     $gasto_mensual  = (float)$tot['gasto_mes'];
 
     // ── Gráfico de torta: gastos por categoría en el período ──────────────────────────────
-    $stmt_torta = $conn->prepare(
+    $filas_torta = $conn->filas(
         "SELECT c.nombre, SUM(m.monto) as total
          FROM movimientos m
          JOIN categorias c ON m.id_categoria = c.id_categoria
          WHERE m.id_usuario = ? AND m.tipo = 'gasto' AND m.fecha BETWEEN ? AND ?
          GROUP BY c.id_categoria, c.nombre
          ORDER BY total DESC
-         LIMIT 8"
+         LIMIT 8",
+        [$user_id, $fecha_desde, $fecha_hasta]
     );
-    $stmt_torta->bind_param("iss", $user_id, $fecha_desde, $fecha_hasta);
-    $stmt_torta->execute();
-    $res_torta = $stmt_torta->get_result();
-    while ($row = $res_torta->fetch_assoc()) {
+    foreach ($filas_torta as $row) {
         $torta_labels[] = $row['nombre'];
         $torta_data[]   = (float)$row['total'];
     }
 
     // ── Gráfico de barras: ingresos vs gastos por mes (últimos 6 meses) ─────
-    $stmt_barras = $conn->prepare(
+    $filas_barras = $conn->filas(
         "SELECT
-            DATE_FORMAT(fecha, '%Y-%m') as mes,
+            " . $conn->sqlMes('fecha') . " as mes,
             SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos,
             SUM(CASE WHEN tipo = 'gasto'   THEN monto ELSE 0 END) as total_gastos
          FROM movimientos
          WHERE id_usuario = ?
-           AND fecha >= DATE_FORMAT(CURDATE() - INTERVAL 5 MONTH, '%Y-%m-01')
+           AND fecha >= ?
          GROUP BY mes
-         ORDER BY mes ASC"
+         ORDER BY mes ASC",
+        [$user_id, inicioDeMes(5)]
     );
-    $stmt_barras->bind_param("i", $user_id);
-    $stmt_barras->execute();
-    $res_barras = $stmt_barras->get_result();
-    while ($row = $res_barras->fetch_assoc()) {
-        // Etiqueta en español (DATE_FORMAT %b depende del idioma del servidor MySQL)
+    foreach ($filas_barras as $row) {
+        // Etiqueta en español (no depende del idioma del servidor de base de datos)
         $barras_labels[]   = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][(int)substr($row['mes'], 5, 2) - 1] . ' ' . substr($row['mes'], 0, 4);
         $barras_ingresos[] = (float)$row['total_ingresos'];
         $barras_gastos[]   = (float)$row['total_gastos'];
     }
 
     // ── Últimos 8 movimientos para la lista del dashboard ───────────────────
-    $stmt_ultimos = $conn->prepare(
+    $ultimos_movimientos = $conn->filas(
         "SELECT m.descripcion, m.monto, m.tipo, m.fecha, c.nombre as categoria
          FROM movimientos m
          JOIN categorias c ON m.id_categoria = c.id_categoria
          WHERE m.id_usuario = ?
          ORDER BY m.fecha DESC, m.id_movimiento DESC
-         LIMIT 8"
+         LIMIT 8",
+        [$user_id]
     );
-    $stmt_ultimos->bind_param("i", $user_id);
-    $stmt_ultimos->execute();
-    $ultimos_movimientos = $stmt_ultimos->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 $balance = $total_ingresos - $total_gastos;
 

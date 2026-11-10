@@ -10,19 +10,15 @@ $config_vista = $es_ingreso
     : ['titulo' => 'Gastos', 'singular' => 'gasto', 'icono' => 'iconos/gasto/otrosgastos.png', 'card' => 'gasto-card', 'tabla' => 'tabla-gastos', 'btn' => 'gasto', 'signo' => '-', 'clase_monto' => 'negativo'];
 
 // Totales del período actual
-$stmt_totales = $conn->prepare("SELECT COALESCE(SUM(monto), 0) as total, COUNT(id_movimiento) as cantidad FROM movimientos WHERE id_usuario = ? AND tipo = ? AND fecha BETWEEN ? AND ?");
-$stmt_totales->bind_param("isss", $user_id, $tipo_vista, $fecha_desde, $fecha_hasta);
-$stmt_totales->execute();
-$fila_totales = $stmt_totales->get_result()->fetch_assoc();
+$fila_totales = $conn->fila("SELECT COALESCE(SUM(monto), 0) as total, COUNT(id_movimiento) as cantidad FROM movimientos WHERE id_usuario = ? AND tipo = ? AND fecha BETWEEN ? AND ?",
+    [$user_id, $tipo_vista, $fecha_desde, $fecha_hasta]);
 $total_periodo = (float)$fila_totales['total'];
 $cantidad = (int)$fila_totales['cantidad'];
 $promedio = $cantidad > 0 ? $total_periodo / $cantidad : 0;
 
 // Movimientos del período actual
-$stmt_lista = $conn->prepare("SELECT m.id_movimiento, m.fecha, m.descripcion, m.monto, c.nombre as categoria_nombre FROM movimientos m JOIN categorias c ON m.id_categoria = c.id_categoria WHERE m.id_usuario = ? AND m.tipo = ? AND m.fecha BETWEEN ? AND ? ORDER BY m.fecha DESC, m.id_movimiento DESC");
-$stmt_lista->bind_param("isss", $user_id, $tipo_vista, $fecha_desde, $fecha_hasta);
-$stmt_lista->execute();
-$movimientos_vista = $stmt_lista->get_result()->fetch_all(MYSQLI_ASSOC);
+$movimientos_vista = $conn->filas("SELECT m.id_movimiento, m.fecha, m.descripcion, m.monto, c.nombre as categoria_nombre FROM movimientos m JOIN categorias c ON m.id_categoria = c.id_categoria WHERE m.id_usuario = ? AND m.tipo = ? AND m.fecha BETWEEN ? AND ? ORDER BY m.fecha DESC, m.id_movimiento DESC",
+    [$user_id, $tipo_vista, $fecha_desde, $fecha_hasta]);
 
 $categorias_filtro = obtenerCategoriasVisibles($conn, $user_id)[$tipo_vista];
 

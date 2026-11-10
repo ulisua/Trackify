@@ -27,13 +27,10 @@ if ($filtro_desde > $filtro_hasta) {
 $hay_filtros = $filtro_tipo || $filtro_categoria || $filtro_desde !== $fecha_desde || $filtro_hasta !== $fecha_hasta;
 
 // ── TOTALES DEL RANGO ─────────────────────────────────────────────────────────
-$stmt_tot = $conn->prepare("SELECT
+$totales = $conn->fila("SELECT
     COALESCE(SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END), 0) as total_ingresos,
     COALESCE(SUM(CASE WHEN tipo='gasto'   THEN monto ELSE 0 END), 0) as total_gastos
-    FROM movimientos WHERE id_usuario=? AND fecha BETWEEN ? AND ?");
-$stmt_tot->bind_param("iss", $user_id, $filtro_desde, $filtro_hasta);
-$stmt_tot->execute();
-$totales = $stmt_tot->get_result()->fetch_assoc();
+    FROM movimientos WHERE id_usuario=? AND fecha BETWEEN ? AND ?", [$user_id, $filtro_desde, $filtro_hasta]);
 $total_ingresos = (float)$totales['total_ingresos'];
 $total_gastos   = (float)$totales['total_gastos'];
 $balance        = $total_ingresos - $total_gastos;
@@ -44,29 +41,23 @@ $categorias_filtro = obtenerCategoriasVisibles($conn, $user_id);
 // ── QUERY PRINCIPAL CON FILTROS ───────────────────────────────────────────────
 $where  = "m.id_usuario=? AND m.fecha BETWEEN ? AND ?";
 $params = [$user_id, $filtro_desde, $filtro_hasta];
-$types  = "iss";
 
 if ($filtro_tipo) {
     $where   .= " AND m.tipo=?";
     $params[] = $filtro_tipo;
-    $types   .= "s";
 }
 if ($filtro_categoria > 0) {
     $where   .= " AND m.id_categoria=?";
     $params[] = $filtro_categoria;
-    $types   .= "i";
 }
 
-$stmt = $conn->prepare("
+$movimientos = $conn->filas("
     SELECT m.id_movimiento, m.fecha, m.descripcion, m.monto, m.tipo, c.nombre as categoria_nombre
     FROM movimientos m
     JOIN categorias c ON m.id_categoria = c.id_categoria
     WHERE $where
     ORDER BY m.fecha DESC, m.id_movimiento DESC
-");
-$stmt->bind_param($types, ...$params);
-$stmt->execute();
-$movimientos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+", $params);
 
 $etiquetas_periodo = ['semana' => 'Esta semana', 'quincena' => 'Esta quincena', 'mes' => 'Este mes'];
 $subtitulo = ($hay_filtros ? 'Rango elegido' : ($etiquetas_periodo[$periodo_actual] ?? 'Período'))

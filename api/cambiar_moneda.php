@@ -30,10 +30,10 @@ if (!in_array($moneda, ['ARS', 'USD'], true)) {
 }
 
 $user_id = (int)$_SESSION['usuario_id'];
-$stmt = $conn->prepare("UPDATE usuarios SET moneda_principal = ? WHERE id_usuario = ?");
-$stmt->bind_param("si", $moneda, $user_id);
-
-if (!$stmt->execute()) {
+try {
+    $conn->ejecutar("UPDATE usuarios SET moneda_principal = ? WHERE id_usuario = ?", [$moneda, $user_id]);
+} catch (PDOException $e) {
+    error_log('Trackify: error al guardar la moneda: ' . $e->getMessage());
     responderMoneda(500, ['ok' => false, 'error' => 'Error al guardar.']);
 }
 $_SESSION['moneda'] = $moneda;

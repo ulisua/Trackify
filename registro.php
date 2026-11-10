@@ -13,7 +13,7 @@ $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre = trim($_POST['nombre'] ?? '');
-    $email = trim($_POST['email'] ?? '');
+    $email = mb_strtolower(trim($_POST['email'] ?? ''));
     $clave = $_POST['password'] ?? '';
 
     if ($nombre === '' || mb_strlen($nombre) > 50) {
@@ -23,24 +23,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (mb_strlen($clave) < 8) {
         $mensaje = "La contraseña debe tener al menos 8 caracteres.";
     } else {
-        $check = $conn->prepare("SELECT id_usuario FROM usuarios WHERE email=?");
-        $check->bind_param("s", $email);
-        $check->execute();
-
-        if ($check->get_result()->num_rows > 0) {
+        if ($conn->valor("SELECT id_usuario FROM usuarios WHERE LOWER(email) = ?", [$email]) !== null) {
             $mensaje = "El email ya está registrado.";
         } else {
             $password = password_hash($clave, PASSWORD_DEFAULT);
             $uuid = generarUuid();
             $nombre_usuario = generarNombreUsuario($conn, $email); // editable después desde el perfil
 
-            $query = $conn->prepare("INSERT INTO usuarios (nombre, nombre_usuario, email, clave, fecha_registro, uuid, email_verificado, Foto_perfil) VALUES (?, ?, ?, ?, NOW(), ?, 0, '')");
-            $query->bind_param("sssss", $nombre, $nombre_usuario, $email, $password, $uuid);
-
-            if ($query->execute()) {
+            try {
+                $id_nuevo = $conn->insertar("INSERT INTO usuarios (nombre, nombre_usuario, email, clave, fecha_registro, uuid, email_verificado, Foto_perfil) VALUES (?, ?, ?, ?, NOW(), ?, 0, '')",
+                    [$nombre, $nombre_usuario, $email, $password, $uuid], 'id_usuario');
                 // La pantalla de verificación genera y envía el código al abrirse
-                iniciarVerificacionEmail($conn->insert_id, $email, $nombre);
+                iniciarVerificacionEmail($id_nuevo, $email, $nombre);
                 redirigir('verificar_email.php');
+            } catch (PDOException $e) {
+                error_log('Trackify: error al registrar usuario: ' . $e->getMessage());
             }
             $mensaje = "Error al registrar. Intentá de nuevo.";
         }

@@ -155,15 +155,12 @@ function normalizarNombreUsuario($texto) {
     return mb_strtolower(ltrim(trim((string)$texto), '@'));
 }
 
-function nombreUsuarioDisponible(mysqli $conn, string $nombre_usuario, int $excluir_id = 0): bool {
-    $stmt = $conn->prepare('SELECT 1 FROM usuarios WHERE nombre_usuario = ? AND id_usuario <> ? LIMIT 1');
-    $stmt->bind_param('si', $nombre_usuario, $excluir_id);
-    $stmt->execute();
-    return $stmt->get_result()->num_rows === 0;
+function nombreUsuarioDisponible(BaseDatos $conn, string $nombre_usuario, int $excluir_id = 0): bool {
+    return $conn->valor('SELECT 1 FROM usuarios WHERE nombre_usuario = ? AND id_usuario <> ? LIMIT 1', [$nombre_usuario, $excluir_id]) === null;
 }
 
 // Genera un nombre de usuario libre a partir del email (ej.: juan.perez@x.com -> juan.perez, juan.perez2...)
-function generarNombreUsuario(mysqli $conn, string $email): string {
+function generarNombreUsuario(BaseDatos $conn, string $email): string {
     $base = preg_replace('/[^a-z0-9._]/', '', mb_strtolower(explode('@', $email)[0]));
     $base = substr($base, 0, 24);
     if (strlen($base) < 3) {

@@ -99,6 +99,7 @@ classDiagram
         +date fecha
         +string descripcion
         +bool es_hormiga
+        +string moneda
         +crear()
         +editar()
         +eliminar()
@@ -362,7 +363,7 @@ erDiagram
         varchar email UK
         varchar clave
         datetime fecha_registro
-        varchar uuid
+        char uuid UK
         varchar Foto_perfil
         varchar google_id
         tinyint email_verificado
@@ -379,6 +380,7 @@ erDiagram
         varchar descripcion
         date fecha
         tinyint es_hormiga
+        varchar moneda
     }
     CATEGORIAS {
         int id_categoria PK

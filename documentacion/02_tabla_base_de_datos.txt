@@ -1,11 +1,13 @@
 =====================================================================
   TRACKIFY — DICCIONARIO DE DATOS ACTUALIZADO
   Base de datos: trackify (MySQL / MariaDB 10.4, charset utf8mb4)
-  Estado al commit 190451c (06/11/2026, rama devagus)
+  Estado: esquema unificado (fusión de las bases de devagus y
+  devulises, 10/11/2026)
 =====================================================================
 
-Fuentes: trackify.sql (volcado de referencia) + migraciones automáticas
-de conexion.php (columnas que la app agrega sola al iniciar).
+Fuentes: trackify.sql (MySQL) y trackify_postgres.sql (PostgreSQL),
+que tienen las mismas tablas y columnas, + migraciones automáticas de
+conexion.php (llevan cualquier base vieja a este esquema).
 
 Referencias de la columna "Cambio":
   [=]  Igual que en la tabla anterior.
@@ -26,11 +28,11 @@ nombre_usuario      | VARCHAR(30)                | UNIQUE              | Nombre 
 email               | VARCHAR(100)               | UNIQUE              | Correo electrónico del usuario. No se puede repetir. | [C] no es FK, es clave única (UNIQUE)
 clave               | VARCHAR(255)               | -                   | Hash bcrypt de la contraseña (password_hash). Vacío ('') en cuentas creadas con Google hasta que el usuario crea una contraseña. | [C] se aclara que guarda un hash, no la clave
 fecha_registro      | DATETIME                   | -                   | Fecha y hora de creación de la cuenta. | [=]
-uuid                | VARCHAR(255)               | -                   | Identificador secundario alfanumérico (UUID v4 de 36 caracteres) para no exponer el id correlativo. | [C] no es FK ni CHAR(36): es VARCHAR(255) sin índice
+uuid                | CHAR(36) NOT NULL          | UNIQUE              | Identificador secundario alfanumérico (UUID v4) para no exponer el id correlativo. | [C] no es FK, es clave única (UNIQUE)
 Foto_perfil         | VARCHAR(255)               | -                   | URL de la foto de perfil (se completa con la foto de Google). | [=] (se precisa el largo)
 google_id           | VARCHAR(255)               | -                   | Id de la cuenta de Google vinculada (inicio de sesión con Google). NULL si no se vinculó. | [=]
 email_verificado    | TINYINT(1)                 | -                   | 0 = email sin verificar, 1 = verificado. Sin verificar no se puede iniciar sesión. | [C] la descripción anterior ("correo de seguridad") no era correcta
-codigo_verificacion | VARCHAR(10)                | -                   | Código OTP de 6 dígitos enviado por email (verificación y creación de contraseña). Se borra al usarse. | [=]
+codigo_verificacion | VARCHAR(6)                 | -                | Código OTP de 6 dígitos enviado por email (verificación y creación de contraseña). Se borra al usarse. | [=]
 codigo_expiracion   | DATETIME                   | -                   | Fecha y hora en que vence el código (15 minutos después de enviarse). | [C] es la fecha de vencimiento, no un código
 moneda_principal    | ENUM('ARS','USD')          | -                   | Moneda preferida para mostrar los montos. Por defecto 'ARS'. | [N]
 
@@ -46,6 +48,7 @@ tipo                | ENUM('ingreso','gasto')    | -                   | Indica 
 fecha               | DATE                       | -                   | Fecha en que se realizó el movimiento (no puede ser futura). | [=]
 descripcion         | VARCHAR(255)               | -                   | Descripción opcional del movimiento. | [=]
 es_hormiga          | TINYINT(1)                 | -                   | Marca de gasto hormiga (0/1). Existe en la base pero la interfaz todavía no la usa. | [C] en MySQL BOOLEAN = TINYINT(1)
+moneda              | VARCHAR(3)                 | -                   | Moneda en la que está guardado el monto. Por defecto 'ARS' (la app siempre convierte a pesos antes de guardar). | [N] aporte de devulises
 
 
 ---------------------------------------------------------------------
@@ -75,7 +78,7 @@ estado              | ENUM('activo','inactivo','logrado') | -          | Estado 
 ---------------------------------------------------------------------
 TABLA: consejos_ia
 ---------------------------------------------------------------------
-id_consejos         | INT(11)                    | PK                  | Identificador único del consejo. | [=]
+id_consejos         | INT(11)                    | PK - AUTO_INCREMENT | Identificador único del consejo. | [C] faltaba AUTO_INCREMENT (agregado en la fusión)
 id_usuario          | INT(11)                    | FK -> usuarios      | Usuario que recibió el consejo. | [=]
 mensaje             | TEXT                       | -                   | Texto del consejo generado por la IA. | [C] es TEXT, no VARCHAR
 fecha               | TIMESTAMP                  | -                   | Fecha y hora del consejo (se completa automáticamente). | [C] es TIMESTAMP, no DATE
@@ -182,6 +185,29 @@ significa "categoría del sistema").
       genera automáticamente desde el email.
 
 
+[11] 10/11/2026 — FUSIÓN DE LAS BASES DE LOS DOS INTEGRANTES
+    devulises unificó su base con la de devagus ("trackify (ultima
+    version).sql" + trackify_postgres.sql). Esa versión aportaba:
+      - movimientos + moneda VARCHAR(3) DEFAULT 'ARS'
+      - usuarios.uuid como CHAR(36) NOT NULL UNIQUE
+      - codigo_verificacion VARCHAR(6)
+    pero tenía diferencias con el código que lo hacían fallar:
+      - categorias.Icono_tipo NOT NULL (el código usa "icono")
+      - faltaban Foto_perfil, nombre_usuario, categorias.id_usuario,
+        metas_ahorro.descripcion y estado; metas en DECIMAL(10,0)
+      - consejos_ia.id_consejos sin AUTO_INCREMENT
+    Integración:
+      - trackify.sql y trackify_postgres.sql reescritos con el esquema
+        unificado (mismas tablas y columnas) + las 27 categorías
+        predeterminadas. Sin datos personales.
+      - conexion.php lleva cualquiera de las dos bases viejas al
+        esquema unificado: renombra Icono_tipo -> icono, color admite
+        NULL, completa los uuid faltantes y los pasa a CHAR(36) NOT NULL
+        UNIQUE, agrega movimientos.moneda y AUTO_INCREMENT a
+        consejos_ia (además de las migraciones que ya existían).
+      - Probado en MySQL modo estricto con la base de cada integrante y
+        con una base nueva, y el .sql de PostgreSQL en PostgreSQL.
+
 RESUMEN DE LO QUE CAMBIASTE VOS (aguscecchsagrado)
   - Unificaste ingresos/gastos en movimientos y pasaste el dinero a
     DECIMAL.
@@ -198,8 +224,10 @@ RESUMEN DE LO QUE CAMBIASTE VOS (aguscecchsagrado)
 PENDIENTES / INCONSISTENCIAS DETECTADAS
   - La bitácora (Sem 11) menciona UUID en "usuarios y movimientos",
     pero en el código solo existe usuarios.uuid. movimientos no tiene uuid.
-  - usuarios.uuid no tiene índice UNIQUE.
-  - trackify.sql está desactualizado: no incluye las columnas que se
-    agregan por migración. Conviene regenerar el volcado desde
-    phpMyAdmin (Exportar) para la entrega.
   - consejos_ia y movimientos.es_hormiga existen pero no se usan.
+  - Diferencias menores que quedan en bases viejas y NO afectan a la
+    app: en la base de devulises clave, email_verificado y moneda
+    admiten NULL y moneda_principal es VARCHAR(3) en vez de ENUM; en
+    la de devagus codigo_verificacion es VARCHAR(10). La app nunca
+    escribe NULL en esas columnas.
+  (Resuelto en la fusión: uuid ya es UNIQUE y trackify.sql está al día.)

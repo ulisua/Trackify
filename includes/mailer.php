@@ -33,9 +33,7 @@ function enviarNuevoCodigo($conn, $asunto, $introduccion) {
     $expiracion = date('Y-m-d H:i:s', time() + CODIGO_MINUTOS_VALIDEZ * 60);
     $id         = (int)$_SESSION['verificar_id'];
 
-    $stmt = $conn->prepare("UPDATE usuarios SET codigo_verificacion=?, codigo_expiracion=? WHERE id_usuario=?");
-    $stmt->bind_param("ssi", $codigo, $expiracion, $id);
-    $stmt->execute();
+    $conn->ejecutar("UPDATE usuarios SET codigo_verificacion = ?, codigo_expiracion = ? WHERE id_usuario = ?", [$codigo, $expiracion, $id]);
 
     // Código nuevo: se reinicia el contador de intentos
     $_SESSION['verificar_intentos'] = 0;

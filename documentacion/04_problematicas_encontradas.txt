@@ -65,12 +65,28 @@ A7. Exposición de IDs correlativos (Bitácora Sem 11)
     otros usuarios.
     Solución: columna uuid en usuarios (13731a5) y, sobre todo, filtrar
     toda consulta por el id_usuario de la sesión.
-    Pendiente: movimientos no tiene uuid (la bitácora dice que sí) y
-    usuarios.uuid no tiene índice UNIQUE.
+    Pendiente: movimientos no tiene uuid (la bitácora dice que sí).
+    (usuarios.uuid pasó a CHAR(36) NOT NULL UNIQUE en la fusión, ver A9.)
+
+A9. Dos bases distintas, una por integrante (10/11)
+    Cada integrante evolucionó su propia base: la de devulises tenía
+    Icono_tipo NOT NULL (el código usa icono), le faltaban columnas
+    que la app necesita y consejos_ia no tenía AUTO_INCREMENT. La de
+    devagus no tenía movimientos.moneda ni uuid único.
+    Solución: esquema unificado en trackify.sql / trackify_postgres.sql
+    y migraciones en conexion.php que llevan cualquiera de las dos
+    bases a ese esquema sin reimportar. Probado con las dos bases.
 
 A8. Intento de migrar a PostgreSQL (Bitácora Sem 5 y 6)
     Se instaló pgAdmin pero costó crear la base desde cero.
-    Decisión: seguir con MySQL. Guía para hacerlo bien:
+    Decisión en ese momento: seguir con MySQL.
+    Resuelto en 11/2026: el código pasó de mysqli (solo MySQL) a una
+    capa propia sobre PDO (includes/db.php) y funciona con los dos
+    motores. Hubo que reemplazar las consultas propias de MySQL
+    (DATE_FORMAT, CURDATE, INTERVAL, IFNULL, INSERT IGNORE, LEAST con
+    parámetros) y contemplar diferencias de PostgreSQL: distingue
+    mayúsculas en los emails, ordena los NULL primero en DESC y no
+    tiene "insert_id" (se usa RETURNING). Ver
     10_migracion_mysql_a_postgresql.txt.
 
 

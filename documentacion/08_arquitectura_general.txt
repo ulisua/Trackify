@@ -42,7 +42,7 @@ Flujo del asistente de IA:
   1. El usuario escribe una pregunta en el chat (js/ia.js).
   2. El navegador la envía por POST a ia.php, con el token CSRF.
   3. ia.php verifica la sesión, arma el contexto con los datos del
-     usuario (consulta a MySQL) y llama a la API de Groq.
+     usuario (consulta a la base) y llama a la API de Groq.
   4. Groq devuelve la respuesta; ia.php la reenvía como JSON.
   5. js/ia.js la muestra en el chat.
 
@@ -82,10 +82,14 @@ aplica las reglas del sistema.
   Nota: la conversión de moneda la hace el navegador; el servidor
   siempre recibe y guarda el monto en pesos y vuelve a validarlo.
 
-CAPA DE DATOS — guarda y recupera la información de la base MySQL.
-  - conexion.php: conexión mysqli, migraciones automáticas y carga de
+CAPA DE DATOS — guarda y recupera la información de la base de datos.
+  - includes/db.php: clase BaseDatos (PDO). Es la única puerta a la
+    base; oculta las diferencias entre MySQL y PostgreSQL, así que el
+    resto del sistema no cambia según el motor (se elige con DB_DRIVER).
+  - conexion.php + includes/migraciones.php: conexión, migraciones
+    automáticas y carga de
     categorías iniciales.
-  - Base de datos MySQL/MariaDB "trackify" con 5 tablas: usuarios,
+  - Base de datos MySQL/MariaDB o PostgreSQL "trackify" con 5 tablas: usuarios,
     movimientos, categorias, metas_ahorro, consejos_ia.
   - Todas las consultas usan prepared statements y filtran por el
     usuario de la sesión.
@@ -115,12 +119,12 @@ través de la capa de procesamiento.
   │ │ mailer, periodo                      │ │  └──────────────────┘
   │ └──────────────┬───────────────────────┘ │
   │ ┌──────────────▼───────────────────────┐ │   HTTPS   ┌──────────┐
-  │ │ CAPA DE DATOS  conexion.php (mysqli) │ │ ────────► │ Groq (IA)│
+  │ │ CAPA DE DATOS  includes/db.php (PDO) │ │ ────────► │ Groq (IA)│
   │ └──────────────┬───────────────────────┘ │ ────────► │ Google   │
   └────────────────┼─────────────────────────┘   SMTP    │ OAuth    │
                    ▼                           ────────► │ Mailtrap │
           ┌─────────────────┐                            └──────────┘
-          │ MySQL / MariaDB │
+          │ MySQL o Postgre │
           │ base "trackify" │
           └─────────────────┘
 

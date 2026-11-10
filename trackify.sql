@@ -1,219 +1,141 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
+-- =====================================================================
+-- Trackify — esquema unificado para MySQL / MariaDB
+-- =====================================================================
+-- Fusión de las dos bases del equipo (11/2026):
+--   * base de devagus (la que usa el código: icono, id_usuario en categorías,
+--     metas con descripción/estado y centavos, nombre_usuario, Foto_perfil)
+--   * base de devulises ("trackify (ultima version).sql": movimientos.moneda,
+--     uuid CHAR(36) NOT NULL UNIQUE)
+-- Equivalente en PostgreSQL: trackify_postgres.sql (mismas tablas y columnas).
 --
--- Servidor: 127.0.0.1
--- Tiempo de generación: 28-04-2026 a las 22:23:29
--- Versión del servidor: 10.4.32-MariaDB
--- Versión de PHP: 8.2.12
+-- Uso: crear la base "trackify" (utf8mb4_general_ci) en phpMyAdmin e importar
+-- este archivo. Sin usuarios de prueba: registrate desde la app.
+-- Si ya tenés una base de una versión anterior NO hace falta reimportar:
+-- conexion.php la actualiza sola al abrir cualquier página.
+-- =====================================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+SET NAMES utf8mb4;
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Base de datos: `usuarios`
---
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `categorias`
---
-
-CREATE TABLE `categorias` (
-  `id_categoria` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
-  `tipo` enum('ingreso','gasto') NOT NULL,
-  `icono` varchar(255) DEFAULT NULL,
-  `color` varchar(7) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `categorias`
---
-
-INSERT INTO `categorias` (`id_categoria`, `nombre`, `tipo`, `icono`, `color`) VALUES
-(1, 'Otros', 'ingreso', 'iconos/ingreso/otrosdinero.png', '#334155'),
-(2, 'Servicios', 'gasto', 'iconos/gasto/servicio.png', '#084734');
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `consejos_ia`
---
-
-CREATE TABLE `consejos_ia` (
-  `id_consejos` int(11) NOT NULL,
-  `id_usuario` int(11) DEFAULT NULL,
-  `mensaje` text NOT NULL,
-  `fecha` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `metas_ahorro`
---
-
-CREATE TABLE `metas_ahorro` (
-  `id_meta` int(11) NOT NULL,
-  `id_usuario` int(11) DEFAULT NULL,
-  `nombre_meta` varchar(100) NOT NULL,
-  `monto_objetivo` decimal(10,0) NOT NULL,
-  `monto_actual` decimal(10,0) NOT NULL,
-  `fecha_limite` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `movimientos`
---
-
-CREATE TABLE `movimientos` (
-  `id_movimiento` int(11) NOT NULL,
-  `id_usuario` int(11) NOT NULL,
-  `id_categoria` int(11) NOT NULL,
-  `monto` decimal(12,2) NOT NULL,
-  `tipo` enum('ingreso','gasto') NOT NULL,
-  `descripcion` varchar(255) DEFAULT NULL,
-  `fecha` date NOT NULL,
-  `es_hormiga` tinyint(1) DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Volcado de datos para la tabla `movimientos`
---
-
-INSERT INTO `movimientos` (`id_movimiento`, `id_usuario`, `id_categoria`, `monto`, `tipo`, `descripcion`, `fecha`, `es_hormiga`) VALUES
-(1, 2, 1, 5000.00, 'ingreso', 'Transferencia', '2026-04-28', 0),
-(2, 2, 2, 7000.00, 'gasto', 'Gas', '2026-04-28', 0),
-(3, 1, 1, 40000.00, 'ingreso', 'Transferencia', '2026-04-28', 0),
-(4, 1, 2, 30000.00, 'gasto', 'Luz', '2026-04-28', 0);
-
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `usuarios`
---
-
+-- ---------------------------------------------------------------------
+-- usuarios
+-- ---------------------------------------------------------------------
 CREATE TABLE `usuarios` (
-  `id_usuario` int(11) NOT NULL,
-  `nombre` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `clave` varchar(255) NOT NULL,
-  `fecha_registro` datetime NOT NULL
+  `id_usuario`          int(11)       NOT NULL AUTO_INCREMENT,
+  `nombre`              varchar(50)   NOT NULL,
+  `nombre_usuario`      varchar(30)   DEFAULT NULL,            -- @usuario (único)
+  `email`               varchar(100)  NOT NULL,
+  `clave`               varchar(255)  NOT NULL,                -- hash bcrypt; '' en cuentas de Google sin contraseña
+  `fecha_registro`      datetime      NOT NULL,
+  `uuid`                char(36)      NOT NULL,                -- identificador público (UUID v4)
+  `Foto_perfil`         varchar(255)  DEFAULT NULL,
+  `google_id`           varchar(255)  DEFAULT NULL,
+  `email_verificado`    tinyint(1)    NOT NULL DEFAULT 0,
+  `codigo_verificacion` varchar(6)    DEFAULT NULL,            -- OTP de 6 dígitos
+  `codigo_expiracion`   datetime      DEFAULT NULL,
+  `moneda_principal`    enum('ARS','USD') NOT NULL DEFAULT 'ARS',
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `uuid` (`uuid`),
+  UNIQUE KEY `uq_usuarios_nombre_usuario` (`nombre_usuario`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Volcado de datos para la tabla `usuarios`
---
+-- ---------------------------------------------------------------------
+-- categorias  (id_usuario NULL = categoría del sistema, solo lectura)
+-- ---------------------------------------------------------------------
+CREATE TABLE `categorias` (
+  `id_categoria` int(11)      NOT NULL AUTO_INCREMENT,
+  `nombre`       varchar(50)  NOT NULL,
+  `tipo`         enum('ingreso','gasto') NOT NULL,
+  `icono`        varchar(255) DEFAULT NULL,
+  `color`        varchar(7)   DEFAULT NULL,
+  `id_usuario`   int(11)      DEFAULT NULL,
+  PRIMARY KEY (`id_categoria`),
+  KEY `idx_categorias_usuario` (`id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `usuarios` (`id_usuario`, `nombre`, `email`, `clave`, `fecha_registro`) VALUES
-(1, 'Agus', 'agustinacecch@sagradocorazon.edu.ar', '$2y$10$qVjzvUsVks3tHAYnpcaDDOzZo.6eTjaPRmbzgYa7Npv2MoA0oKbge', '2026-04-28 17:14:39'),
-(2, 'María', 'mariadevirgiglio@sagradocorazon.edu.ar', '$2y$10$FJiAgwd9.dHL0uuJcaBXtOeHvBmiWaetZ3Sjrw5NQycjC4HME.8Pu', '2026-04-28 17:20:49');
+-- ---------------------------------------------------------------------
+-- movimientos  (monto SIEMPRE en ARS; "moneda" registra eso)
+-- ---------------------------------------------------------------------
+CREATE TABLE `movimientos` (
+  `id_movimiento` int(11)       NOT NULL AUTO_INCREMENT,
+  `id_usuario`    int(11)       NOT NULL,
+  `id_categoria`  int(11)       NOT NULL,
+  `monto`         decimal(12,2) NOT NULL,
+  `tipo`          enum('ingreso','gasto') NOT NULL,
+  `descripcion`   varchar(255)  DEFAULT NULL,
+  `fecha`         date          NOT NULL,
+  `es_hormiga`    tinyint(1)    DEFAULT 0,
+  `moneda`        varchar(3)    NOT NULL DEFAULT 'ARS',
+  PRIMARY KEY (`id_movimiento`),
+  KEY `id_usuario` (`id_usuario`),
+  KEY `id_categoria` (`id_categoria`),
+  CONSTRAINT `movimientos_ibfk_1` FOREIGN KEY (`id_usuario`)   REFERENCES `usuarios` (`id_usuario`),
+  CONSTRAINT `movimientos_ibfk_2` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Índices para tablas volcadas
---
+-- ---------------------------------------------------------------------
+-- metas_ahorro  (montos en ARS)
+-- ---------------------------------------------------------------------
+CREATE TABLE `metas_ahorro` (
+  `id_meta`        int(11)       NOT NULL AUTO_INCREMENT,
+  `id_usuario`     int(11)       DEFAULT NULL,
+  `nombre_meta`    varchar(100)  NOT NULL,
+  `descripcion`    varchar(255)  DEFAULT NULL,
+  `monto_objetivo` decimal(12,2) NOT NULL,
+  `monto_actual`   decimal(12,2) NOT NULL DEFAULT 0.00,
+  `fecha_limite`   date          NOT NULL,
+  `estado`         enum('activo','inactivo','logrado') DEFAULT 'activo',
+  PRIMARY KEY (`id_meta`),
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `metas_ahorro_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Indices de la tabla `categorias`
---
-ALTER TABLE `categorias`
-  ADD PRIMARY KEY (`id_categoria`);
+-- ---------------------------------------------------------------------
+-- consejos_ia  (reservada: hoy la app no guarda historial)
+-- ---------------------------------------------------------------------
+CREATE TABLE `consejos_ia` (
+  `id_consejos` int(11)   NOT NULL AUTO_INCREMENT,
+  `id_usuario`  int(11)   DEFAULT NULL,
+  `mensaje`     text      NOT NULL,
+  `fecha`       timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_consejos`),
+  KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `consejos_ia_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Indices de la tabla `consejos_ia`
---
-ALTER TABLE `consejos_ia`
-  ADD PRIMARY KEY (`id_consejos`),
-  ADD KEY `id_usuario` (`id_usuario`);
+-- ---------------------------------------------------------------------
+-- Categorías predeterminadas del sistema (las mismas que crea conexion.php)
+-- ---------------------------------------------------------------------
+INSERT INTO `categorias` (`nombre`, `tipo`, `icono`, `color`) VALUES
+('Sueldo', 'ingreso', 'iconos/ingreso/sueldo.png', '#084734'),
+('Préstamo recibido', 'ingreso', 'iconos/ingreso/prestamo.png', '#CFF27C'),
+('Reintegro', 'ingreso', 'iconos/ingreso/reembolso.png', '#EA73F5'),
+('Ventas', 'ingreso', 'iconos/ingreso/ventas.png', '#CFF27C'),
+('Inversiones', 'ingreso', 'iconos/ingreso/inversiones1.png', '#084734'),
+('Intereses', 'ingreso', 'iconos/ingreso/intereses1.png', '#700353'),
+('Regalos', 'ingreso', 'iconos/ingreso/regalo.png', '#CFF27C'),
+('Devoluciones', 'ingreso', 'iconos/ingreso/devoluciones.png', '#EA73F5'),
+('Freelance / trabajos extra', 'ingreso', 'iconos/ingreso/freelancetrabajoextra.png', '#700353'),
+('Becas / subsidios', 'ingreso', 'iconos/ingreso/becasubsidioayuda.png', '#084734'),
+('Otros ingresos', 'ingreso', 'iconos/ingreso/otrosdinero.png', '#334155'),
+('Alimentos', 'gasto', 'iconos/generales/pizza.png', '#EA73F5'),
+('Transporte', 'gasto', 'iconos/gasto/transporte.png', '#084734'),
+('Vivienda', 'gasto', 'iconos/gasto/vivienda.png', '#700353'),
+('Salud', 'gasto', 'iconos/gasto/salud.png', '#084734'),
+('Educación', 'gasto', 'iconos/gasto/educacion.png', '#700353'),
+('Entretenimiento', 'gasto', 'iconos/gasto/entretenimiento.png', '#EA73F5'),
+('Compras personales', 'gasto', 'iconos/gasto/compraspersonales.png', '#EA73F5'),
+('Deudas', 'gasto', 'iconos/gasto/deuda.png', '#700353'),
+('Impuestos', 'gasto', 'iconos/gasto/impuesto.png', '#700353'),
+('Mascotas', 'gasto', 'iconos/gasto/mascotahuellagato.png', '#084734'),
+('Suscripciones', 'gasto', 'iconos/gasto/suscripcion.png', '#700353'),
+('Regalos / donaciones', 'gasto', 'iconos/gasto/regalodonacion.png', '#CFF27C'),
+('Ropa', 'gasto', 'iconos/gasto/ropa.png', '#700353'),
+('Tecnología', 'gasto', 'iconos/gasto/tecnologia1.png', '#700353'),
+('Viajes', 'gasto', 'iconos/gasto/viajemaleta.png', '#084734'),
+('Otros gastos', 'gasto', 'iconos/gasto/otrosgastos.png', '#334155');
 
---
--- Indices de la tabla `metas_ahorro`
---
-ALTER TABLE `metas_ahorro`
-  ADD PRIMARY KEY (`id_meta`),
-  ADD KEY `id_usuario` (`id_usuario`);
-
---
--- Indices de la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  ADD PRIMARY KEY (`id_movimiento`),
-  ADD KEY `id_usuario` (`id_usuario`),
-  ADD KEY `id_categoria` (`id_categoria`);
-
---
--- Indices de la tabla `usuarios`
---
-ALTER TABLE `usuarios`
-  ADD PRIMARY KEY (`id_usuario`),
-  ADD UNIQUE KEY `email` (`email`);
-
---
--- AUTO_INCREMENT de las tablas volcadas
---
-
---
--- AUTO_INCREMENT de la tabla `categorias`
---
-ALTER TABLE `categorias`
-  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-ALTER TABLE `categorias`
-  ADD COLUMN IF NOT EXISTS `icono` varchar(255) DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS `color` varchar(7) DEFAULT NULL;
-
---
--- AUTO_INCREMENT de la tabla `metas_ahorro`
---
-ALTER TABLE `metas_ahorro`
-  MODIFY `id_meta` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT de la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT de la tabla `usuarios`
---
-ALTER TABLE `usuarios`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- Restricciones para tablas volcadas
---
-
---
--- Filtros para la tabla `consejos_ia`
---
-ALTER TABLE `consejos_ia`
-  ADD CONSTRAINT `consejos_ia_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
-
---
--- Filtros para la tabla `metas_ahorro`
---
-ALTER TABLE `metas_ahorro`
-  ADD CONSTRAINT `metas_ahorro_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`);
-
---
--- Filtros para la tabla `movimientos`
---
-ALTER TABLE `movimientos`
-  ADD CONSTRAINT `movimientos_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
-  ADD CONSTRAINT `movimientos_ibfk_2` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id_categoria`);
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

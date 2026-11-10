@@ -55,22 +55,19 @@ if (empty($user_info['verified_email'])) {
 }
 
 $google_id = $user_info['id'];
-$email     = $user_info['email'];
+$email     = mb_strtolower($user_info['email']);
 $nombre    = mb_substr($user_info['name'] ?? explode('@', $email)[0], 0, 50);
 $foto      = $user_info['picture'] ?? '';
 
 // Busca primero por google_id y después por email
-$stmt = $conn->prepare("SELECT id_usuario, nombre, google_id FROM usuarios WHERE google_id = ? OR email = ? ORDER BY google_id = ? DESC LIMIT 1");
-$stmt->bind_param("sss", $google_id, $email, $google_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
+// (CASE en lugar de "ORDER BY google_id = ? DESC": en PostgreSQL los NULL quedarían primero)
+$user = $conn->fila("SELECT id_usuario, nombre, google_id FROM usuarios WHERE google_id = ? OR LOWER(email) = ?
+                     ORDER BY CASE WHEN google_id = ? THEN 0 ELSE 1 END LIMIT 1", [$google_id, $email, $google_id]);
 
 if ($user) {
     if ($user['google_id'] !== $google_id) {
         // Cuenta existente con ese email: Google lo verificó, se vincula y se marca como verificada
-        $stmt = $conn->prepare("UPDATE usuarios SET google_id = ?, Foto_perfil = ?, email_verificado = 1 WHERE id_usuario = ?");
-        $stmt->bind_param("ssi", $google_id, $foto, $user['id_usuario']);
-        $stmt->execute();
+        $conn->ejecutar("UPDATE usuarios SET google_id = ?, Foto_perfil = ?, email_verificado = 1 WHERE id_usuario = ?", [$google_id, $foto, $user['id_usuario']]);
     }
     iniciarSesionUsuario($user['id_usuario'], $user['nombre']);
     redirigir('index.php');
@@ -79,9 +76,8 @@ if ($user) {
 // clave es NOT NULL: las cuentas de Google se crean sin contraseña ('')
 $uuid = generarUuid();
 $nombre_usuario = generarNombreUsuario($conn, $email);
-$stmt = $conn->prepare("INSERT INTO usuarios (nombre, nombre_usuario, Foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, ?, '', NOW(), ?, ?, 1)");
-$stmt->bind_param("ssssss", $nombre, $nombre_usuario, $foto, $email, $uuid, $google_id);
-$stmt->execute();
+$id_nuevo = $conn->insertar("INSERT INTO usuarios (nombre, nombre_usuario, Foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, ?, '', NOW(), ?, ?, 1)",
+    [$nombre, $nombre_usuario, $foto, $email, $uuid, $google_id], 'id_usuario');
 
-iniciarSesionUsuario($conn->insert_id, $nombre);
+iniciarSesionUsuario($id_nuevo, $nombre);
 redirigir('index.php');

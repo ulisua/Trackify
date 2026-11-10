@@ -62,11 +62,9 @@ function validar_nueva(string $nueva, string $confirmar, string $nombre, string 
     return null;
 }
 
-function invalidar_codigo(mysqli $conn, int $user_id): void
+function invalidar_codigo(BaseDatos $conn, int $user_id): void
 {
-    $stmt = $conn->prepare('UPDATE usuarios SET codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ?');
-    $stmt->bind_param('i', $user_id);
-    $stmt->execute();
+    $conn->ejecutar('UPDATE usuarios SET codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ?', [$user_id]);
 }
 
 // ── 1. Solo POST y solo con sesión iniciada ──────────────────────────────────
@@ -82,10 +80,7 @@ $user_id = (int)$_SESSION['usuario_id'];
 $accion  = post_texto('accion');
 
 try {
-    $stmt = $conn->prepare('SELECT nombre, email, clave, codigo_verificacion, codigo_expiracion FROM usuarios WHERE id_usuario = ?');
-    $stmt->bind_param('i', $user_id);
-    $stmt->execute();
-    $usuario = $stmt->get_result()->fetch_assoc();
+    $usuario = $conn->fila('SELECT nombre, email, clave, codigo_verificacion, codigo_expiracion FROM usuarios WHERE id_usuario = ?', [$user_id]);
     if (!$usuario) {
         fallo(404, 'No encontramos tu cuenta.');
     }
@@ -112,9 +107,7 @@ try {
         }
 
         $hash = password_hash($nueva, PASSWORD_DEFAULT);
-        $upd  = $conn->prepare('UPDATE usuarios SET clave = ? WHERE id_usuario = ?');
-        $upd->bind_param('si', $hash, $user_id);
-        $upd->execute();
+        $conn->ejecutar('UPDATE usuarios SET clave = ? WHERE id_usuario = ?', [$hash, $user_id]);
 
         // Id de sesión nuevo (se conservan los datos, incluido el token CSRF)
         session_regenerate_id(true);
@@ -133,9 +126,7 @@ try {
 
         $codigo = (string)random_int(100000, 999999);
         $expira = date('Y-m-d H:i:s', time() + CODIGO_MINUTOS_VALIDEZ * 60);
-        $upd = $conn->prepare('UPDATE usuarios SET codigo_verificacion = ?, codigo_expiracion = ? WHERE id_usuario = ?');
-        $upd->bind_param('ssi', $codigo, $expira, $user_id);
-        $upd->execute();
+        $conn->ejecutar('UPDATE usuarios SET codigo_verificacion = ?, codigo_expiracion = ? WHERE id_usuario = ?', [$codigo, $expira, $user_id]);
 
         $enviado = enviarEmailCodigo(
             $usuario['email'],
@@ -200,10 +191,8 @@ try {
 
         // El código demuestra que el email es del usuario, por eso queda verificado.
         $hash = password_hash($nueva, PASSWORD_DEFAULT);
-        $upd  = $conn->prepare("UPDATE usuarios SET clave = ?, email_verificado = 1, codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ? AND (clave IS NULL OR clave = '')");
-        $upd->bind_param('si', $hash, $user_id);
-        $upd->execute();
-        if ($upd->affected_rows !== 1) {
+        $filas = $conn->ejecutar("UPDATE usuarios SET clave = ?, email_verificado = 1, codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ? AND (clave IS NULL OR clave = '')", [$hash, $user_id]);
+        if ($filas !== 1) {
             fallo(409, 'No pudimos crear la contraseña. Recargá la página e intentá de nuevo.');
         }
 

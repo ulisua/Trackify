@@ -42,9 +42,8 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $datos = $validarMovimiento($tipo);
 
         if ($datos) {
-            $stmt_mov = $conn->prepare("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt_mov->bind_param("iidsss", $user_id, $datos['id_categoria'], $datos['monto'], $tipo, $datos['descripcion'], $datos['fecha']);
-            $stmt_mov->execute();
+            $conn->ejecutar("INSERT INTO movimientos (id_usuario, id_categoria, monto, tipo, descripcion, fecha) VALUES (?, ?, ?, ?, ?, ?)",
+                [$user_id, $datos['id_categoria'], $datos['monto'], $tipo, $datos['descripcion'], $datos['fecha']]);
             flash(($tipo === 'ingreso' ? 'Ingreso' : 'Gasto') . ' guardado.', 'success');
         }
 
@@ -57,17 +56,13 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'editar_movimiento') {
         $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
 
-        $stmt_actual = $conn->prepare("SELECT tipo FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?");
-        $stmt_actual->bind_param("ii", $id_movimiento, $user_id);
-        $stmt_actual->execute();
-        $actual = $stmt_actual->get_result()->fetch_assoc();
+        $actual = $conn->fila("SELECT tipo FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?", [$id_movimiento, $user_id]);
 
         if (!$actual) {
             flash('El movimiento no existe.');
         } elseif ($datos = $validarMovimiento($actual['tipo'])) {
-            $stmt_mov = $conn->prepare("UPDATE movimientos SET id_categoria = ?, monto = ?, descripcion = ?, fecha = ? WHERE id_movimiento = ? AND id_usuario = ?");
-            $stmt_mov->bind_param("idssii", $datos['id_categoria'], $datos['monto'], $datos['descripcion'], $datos['fecha'], $id_movimiento, $user_id);
-            $stmt_mov->execute();
+            $conn->ejecutar("UPDATE movimientos SET id_categoria = ?, monto = ?, descripcion = ?, fecha = ? WHERE id_movimiento = ? AND id_usuario = ?",
+                [$datos['id_categoria'], $datos['monto'], $datos['descripcion'], $datos['fecha'], $id_movimiento, $user_id]);
             flash('Movimiento actualizado.', 'success');
         }
 
@@ -79,10 +74,7 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if(isset($_POST['form_type']) && $_POST['form_type'] === 'eliminar_movimiento') {
         $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
 
-        $stmt_del = $conn->prepare("DELETE FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?");
-        $stmt_del->bind_param("ii", $id_movimiento, $user_id);
-        $stmt_del->execute();
-        if ($stmt_del->affected_rows > 0) {
+        if ($conn->ejecutar("DELETE FROM movimientos WHERE id_movimiento = ? AND id_usuario = ?", [$id_movimiento, $user_id]) > 0) {
             flash('Movimiento eliminado.', 'success');
         }
 
@@ -95,9 +87,7 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirmacion = isset($_POST['confirmacion_borrar']) ? trim($_POST['confirmacion_borrar']) : '';
 
         if ($confirmacion === 'SI, ESTOY SEGURO') {
-            $stmt_del = $conn->prepare("DELETE FROM movimientos WHERE id_usuario = ?");
-            $stmt_del->bind_param("i", $user_id);
-            $stmt_del->execute();
+            $conn->ejecutar("DELETE FROM movimientos WHERE id_usuario = ?", [$user_id]);
             flash('Se borró todo tu historial de movimientos.', 'success');
         } else {
             flash('Confirmación incorrecta: no se borró nada.');
@@ -115,22 +105,19 @@ if(isset($_SESSION['usuario_id']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        $conn->begin_transaction();
         try {
-            foreach ([
-                "DELETE FROM movimientos WHERE id_usuario = ?",
-                "DELETE FROM metas_ahorro WHERE id_usuario = ?",
-                "DELETE FROM consejos_ia WHERE id_usuario = ?",
-                "DELETE FROM categorias WHERE id_usuario = ?",
-                "DELETE FROM usuarios WHERE id_usuario = ?",
-            ] as $sql) {
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("i", $user_id);
-                $stmt->execute();
-            }
-            $conn->commit();
-        } catch (mysqli_sql_exception $e) {
-            $conn->rollback();
+            $conn->transaccion(function () use ($conn, $user_id) {
+                foreach ([
+                    "DELETE FROM movimientos WHERE id_usuario = ?",
+                    "DELETE FROM metas_ahorro WHERE id_usuario = ?",
+                    "DELETE FROM consejos_ia WHERE id_usuario = ?",
+                    "DELETE FROM categorias WHERE id_usuario = ?",
+                    "DELETE FROM usuarios WHERE id_usuario = ?",
+                ] as $sql) {
+                    $conn->ejecutar($sql, [$user_id]);
+                }
+            });
+        } catch (PDOException $e) {
             error_log('Trackify: error al eliminar cuenta: ' . $e->getMessage());
             flash('No se pudo eliminar la cuenta. Intentá de nuevo.');
             header("Location: " . urlRetornoSegura($_SERVER['HTTP_REFERER'] ?? '', 'perfil.php'));

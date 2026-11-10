@@ -68,11 +68,8 @@ function actualizarCategoriaMetaSiFalta($conn, &$categoria) {
         $categoria['icono'] = $categoria['icono'] ?: $meta['icono'];
         $categoria['color'] = $categoria['color'] ?: $meta['color'];
 
-        $stmt = $conn->prepare("UPDATE categorias SET icono = ?, color = ? WHERE id_categoria = ?");
-        if ($stmt) {
-            $stmt->bind_param('ssi', $categoria['icono'], $categoria['color'], $categoria['id_categoria']);
-            $stmt->execute();
-        }
+        $conn->ejecutar("UPDATE categorias SET icono = ?, color = ? WHERE id_categoria = ?",
+            [$categoria['icono'], $categoria['color'], $categoria['id_categoria']]);
     }
 }
 
@@ -81,11 +78,10 @@ function actualizarCategoriaMetaSiFalta($conn, &$categoria) {
 
 function obtenerCategoriasVisibles($conn, $user_id) {
     $categorias = ['ingreso' => [], 'gasto' => []];
-    $stmt = $conn->prepare("SELECT id_categoria, nombre, tipo, icono, color, id_usuario FROM categorias WHERE id_usuario IS NULL OR id_usuario = ? ORDER BY nombre ASC");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    while ($row = $res->fetch_assoc()) {
+    // ORDER BY nombre se hace en PHP: así el orden (con tildes) es el mismo en MySQL y PostgreSQL
+    $filas = $conn->filas("SELECT id_categoria, nombre, tipo, icono, color, id_usuario FROM categorias WHERE id_usuario IS NULL OR id_usuario = ?", [$user_id]);
+    usort($filas, fn($a, $b) => strcmp(normalizarNombreCategoria($a['nombre']), normalizarNombreCategoria($b['nombre'])));
+    foreach ($filas as $row) {
         if (isset($categorias[$row['tipo']])) {
             $categorias[$row['tipo']][] = $row;
         }
@@ -94,28 +90,21 @@ function obtenerCategoriasVisibles($conn, $user_id) {
 }
 
 // Devuelve el id de una categoría visible para el usuario, o null si no existe.
+// Si hay una propia y una del sistema con el mismo nombre, gana la del sistema.
 function buscarCategoriaVisible($conn, $user_id, $nombre, $tipo) {
-    $stmt = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? AND (id_usuario IS NULL OR id_usuario = ?) ORDER BY id_usuario IS NULL DESC LIMIT 1");
-    $stmt->bind_param("ssi", $nombre, $tipo, $user_id);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc();
-    return $row ? (int)$row['id_categoria'] : null;
+    $id = $conn->valor("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? AND (id_usuario IS NULL OR id_usuario = ?) ORDER BY CASE WHEN id_usuario IS NULL THEN 0 ELSE 1 END LIMIT 1", [$nombre, $tipo, $user_id]);
+    return $id === null ? null : (int)$id;
 }
 
 // Obtiene (o crea) una categoría predeterminada del sistema. Uso interno de la app.
 function obtenerCategoriaSistema($conn, $nombre, $tipo) {
-    $stmt = $conn->prepare("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? AND id_usuario IS NULL LIMIT 1");
-    $stmt->bind_param("ss", $nombre, $tipo);
-    $stmt->execute();
-    $row = $stmt->get_result()->fetch_assoc();
-    if ($row) {
-        return (int)$row['id_categoria'];
+    $id = $conn->valor("SELECT id_categoria FROM categorias WHERE nombre = ? AND tipo = ? AND id_usuario IS NULL LIMIT 1", [$nombre, $tipo]);
+    if ($id !== null) {
+        return (int)$id;
     }
     $meta = obtenerMetaCategoriaPorNombre($nombre, $tipo);
-    $stmt_ins = $conn->prepare("INSERT INTO categorias (nombre, tipo, icono, color) VALUES (?, ?, ?, ?)");
-    $stmt_ins->bind_param("ssss", $nombre, $tipo, $meta['icono'], $meta['color']);
-    $stmt_ins->execute();
-    return (int)$stmt_ins->insert_id;
+    return $conn->insertar("INSERT INTO categorias (nombre, tipo, icono, color) VALUES (?, ?, ?, ?)",
+        [$nombre, $tipo, $meta['icono'], $meta['color']], 'id_categoria');
 }
 
 function iconoCategoriaValido($ruta) {

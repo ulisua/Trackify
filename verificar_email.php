@@ -19,10 +19,7 @@ $intentos = $_SESSION['verificar_intentos'] ?? 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $codigo_ingresado = trim($_POST['codigo'] ?? '');
 
-    $stmt = $conn->prepare("SELECT codigo_verificacion, codigo_expiracion FROM usuarios WHERE id_usuario = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $user = $stmt->get_result()->fetch_assoc();
+    $user = $conn->fila("SELECT codigo_verificacion, codigo_expiracion FROM usuarios WHERE id_usuario = ?", [$user_id]);
 
     if (!$user) {
         $mensaje = "Usuario no encontrado.";
@@ -37,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? "Código incorrecto. Te quedan {$restantes} intento" . ($restantes === 1 ? '' : 's') . "."
             : "Código incorrecto. Superaste la cantidad de intentos: pedí un código nuevo.";
     } else {
-        $stmt = $conn->prepare("UPDATE usuarios SET email_verificado=1, codigo_verificacion=NULL, codigo_expiracion=NULL WHERE id_usuario=?");
-        $stmt->bind_param("i", $user_id);
-        $stmt->execute();
+        $conn->ejecutar("UPDATE usuarios SET email_verificado = 1, codigo_verificacion = NULL, codigo_expiracion = NULL WHERE id_usuario = ?", [$user_id]);
 
         unset($_SESSION['verificar_id'], $_SESSION['verificar_email'], $_SESSION['verificar_nombre'],
               $_SESSION['verificar_intentos'], $_SESSION['verificar_ultimo_envio'], $_SESSION['verificar_auto_enviado']);
@@ -62,10 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Tiempo real que le queda al código vigente (para el contador)
-$stmt = $conn->prepare("SELECT codigo_expiracion FROM usuarios WHERE id_usuario = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$expiracion = $stmt->get_result()->fetch_assoc()['codigo_expiracion'] ?? null;
+$expiracion = $conn->valor("SELECT codigo_expiracion FROM usuarios WHERE id_usuario = ?", [$user_id]);
 $segundos_restantes = $expiracion ? max(0, strtotime($expiracion) - time()) : 0;
 $espera_reenvio = segundosParaReenviar();
 

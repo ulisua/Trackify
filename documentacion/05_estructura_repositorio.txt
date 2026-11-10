@@ -21,9 +21,10 @@ trackify/
 ├── reenviar_codigo.php        Reenvío del código (máx. 1 por minuto)
 ├── logout.php                 Cierre de sesión
 │
-├── conexion.php               Conexión mysqli + carga de .env y seguridad + migraciones automáticas + categorías iniciales
+├── conexion.php               Crea la conexión ($conn) según DB_DRIVER + carga .env, seguridad y migraciones automáticas + categorías iniciales
 ├── env.php                    Lector del archivo .env -> función env()
-├── trackify.sql               Volcado de referencia de la base (importar en phpMyAdmin)
+├── trackify.sql               Esquema unificado MySQL + categorías predeterminadas (importar en phpMyAdmin)
+├── trackify_postgres.sql      Mismo esquema para PostgreSQL (DB_DRIVER=pgsql)
 ├── styles.css                 Hoja de estilos raíz: importa todos los módulos de /css
 ├── .env.example               Plantilla de configuración (copiar como .env, que NO se sube)
 ├── .gitignore                 Ignora .env, .DS_Store, Thumbs.db
@@ -39,6 +40,8 @@ trackify/
 │       └── callback.php         Retorno de Google OAuth 2.0: login, vinculación o alta
 │
 ├── includes/                  Piezas PHP reutilizadas por las páginas
+│   ├── db.php                   Capa de acceso a datos (clase BaseDatos sobre PDO, MySQL y PostgreSQL)
+│   ├── migraciones.php          Lleva cualquier base vieja al esquema actual (los dos motores)
 │   ├── header.php               <head>, control de sesión, navbar, selectores moneda/período, sidebar
 │   ├── footer.php               Modales compartidos, librerías CDN, js/main.js, mensajes flash
 │   ├── auth_layout.php          Estructura común de las pantallas de login/registro/verificación
@@ -96,7 +99,7 @@ RAMAS REMOTAS
 
 CÓMO SE RELACIONAN LAS CARPETAS
   Página .php de la raíz
-     ├─ require conexion.php ──> env.php, includes/seguridad.php,
+     ├─ require conexion.php ──> env.php, includes/db.php, includes/migraciones.php, includes/seguridad.php,
      │                            includes/categorias_meta.php
      ├─ require includes/header.php ──> includes/periodo.php,
      │                                  includes/tema_inicial.php,
