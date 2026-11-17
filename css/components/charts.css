@@ -62,6 +62,11 @@
     height: calc(250 * var(--u));
 }
 
+/* Sin datos: la caja se ajusta al mensaje en lugar de dejar 250px vacíos */
+.grafico-wrap:has(.grafico-empty:not([hidden])) {
+    height: auto;
+}
+
 .grafico-empty {
     text-align: center;
     color: var(--text-muted);

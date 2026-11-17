@@ -121,6 +121,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: calc(8 * var(--u));
     width: calc(100% - calc(28 * var(--u)));
     margin: calc(10 * var(--u)) calc(14 * var(--u)) calc(20 * var(--u));
     padding: calc(12 * var(--u));
@@ -143,3 +144,36 @@
     box-shadow: 0 0 14px var(--glow-rosa);
 }
 
+
+/* Botón principal de alta en Ingresos, Gastos y Objetivos: más alto que el resto.
+   Dos clases para ganarle a .btn-nuevo / .btn-nuevo-movimiento de cada página. */
+.btn.btn-agregar-grande,
+.btn-nuevo.btn-agregar-grande {
+    min-height: calc(60 * var(--u));
+    padding: calc(16 * var(--u)) calc(32 * var(--u));
+    font-size: 1.05rem;
+    border-radius: calc(12 * var(--u));
+}
+
+/* Botón "+ Nueva categoría" / "+ Nuevo objetivo" en el encabezado de la página.
+   La forma es común; cada página define solo los colores (css/pages/categorias.css y objetivos.css). */
+.btn-nuevo {
+    padding: calc(12 * var(--u)) calc(22 * var(--u));
+    min-height: calc(44 * var(--u));
+    border: none;
+    border-radius: calc(8 * var(--u));
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.btn-nuevo:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}

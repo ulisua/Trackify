@@ -97,7 +97,7 @@ $recomendaciones_fallback = [
     ["icon" => "<img src=\"iconos/generales/dianaconflecha.png\" alt=\"Objetivo\" class=\"icono-inline\">", "titulo" => "Objetivos", "texto" => "Crear objetivos de ahorro te ayuda a mantener el foco. ¡Revisá tus metas en la sección de Objetivos!", "tipo" => "consejo"],
 ];
 
-$extra_css = '<link rel="stylesheet" href="css/pages/dashboard.css">';
+$extra_css = cssLink('css/pages/dashboard.css');
 
 require_once 'includes/header.php';
 
@@ -424,7 +424,7 @@ window.addEventListener('resize', () => {
     esperaResize = setTimeout(() => { if (ultimaMoneda) dibujarGraficos(ultimaMoneda.moneda, ultimaMoneda.tc); }, 250);
 });
 </script>
-<script src="js/ia.js?v=7"></script>
+<?= jsScript('js/ia.js') ?>
 <?php
 $extra_js = ob_get_clean();
 require_once 'includes/footer.php';

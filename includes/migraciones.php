@@ -17,14 +17,28 @@ const COLUMNAS_ESPERADAS = [
     'movimientos'  => ['moneda'],
 ];
 
+// Cada cuánto se vuelve a revisar el esquema dentro de una misma sesión. Las consultas a
+// information_schema son lentas (sobre todo en MySQL) y antes se hacían en CADA request.
+const MIGRACION_REVISAR_CADA = 300; // segundos
+
 function migrarEsquema(BaseDatos $db): void
 {
+    // La marca depende del motor y de la base: cambiar DB_DRIVER/DB_NAME en .env fuerza a revisar
+    $clave = 'esquema_ok_' . md5($db->motor . '|' . env('DB_HOST', '') . '|' . env('DB_NAME', ''));
+    if (session_status() === PHP_SESSION_ACTIVE && ($_SESSION[$clave] ?? 0) > time() - MIGRACION_REVISAR_CADA) {
+        return;
+    }
+
     $estado = estadoEsquema($db);
     if (!esquemaAlDia($estado)) {
         aplicarMigraciones($db);
     }
     if ((int)$estado['categorias'] <= 5) {
         crearCategoriasPredeterminadas($db);
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION[$clave] = time();
     }
 }
 

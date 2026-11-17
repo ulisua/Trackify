@@ -4,6 +4,7 @@
 <?php require_once __DIR__ . '/categorias_meta.php'; ?>
 <?php $return_url_actual = htmlspecialchars($_SERVER['REQUEST_URI'] ?? $_SERVER['PHP_SELF'], ENT_QUOTES); ?>
 
+<?php if (in_array('movimiento', $modales_pagina, true)): ?>
 <!-- MODAL NUEVO MOVIMIENTO -->
 <div id="modal" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="includes/movimientos_handler.php" data-form-moneda>
@@ -38,7 +39,9 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
+<?php if (in_array('objetivo', $modales_pagina, true)): ?>
 <!-- MODAL OBJETIVO -->
 <div id="modalObjetivo" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="objetivos.php" data-form-moneda>
@@ -65,7 +68,9 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
+<?php if (in_array('ahorro', $modales_pagina, true)): ?>
 <!-- MODAL AGREGAR AHORRO -->
 <div id="modalAhorro" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="objetivos.php" data-form-moneda>
@@ -90,7 +95,9 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
+<?php if (in_array('editar_objetivo', $modales_pagina, true)): ?>
 <!-- MODAL EDITAR OBJETIVO (el monto se precarga en ARS para no alterarlo por redondeo) -->
 <div id="modalEditarObjetivo" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="objetivos.php" data-form-moneda>
@@ -122,7 +129,9 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
+<?php if (in_array('categoria', $modales_pagina, true)): ?>
 <!-- MODAL NUEVA CATEGORÍA -->
 <div id="modalCategoria" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="categorias.php">
@@ -150,7 +159,9 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
+<?php if (in_array('editar_categoria', $modales_pagina, true)): ?>
 <!-- MODAL EDITAR CATEGORÍA -->
 <div id="modalEditarCategoria" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="categorias.php">
@@ -179,7 +190,9 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
+<?php if (in_array('editar_movimiento', $modales_pagina, true)): ?>
 <!-- MODAL EDITAR MOVIMIENTO (el monto se precarga en ARS para no alterarlo por redondeo) -->
 <div id="modalEditarMovimiento" class="modal hidden">
     <form class="modal-content modal-form-content" method="POST" action="includes/movimientos_handler.php" data-form-moneda>
@@ -215,6 +228,7 @@
         </div>
     </form>
 </div>
+<?php endif; ?>
 
 <footer class="footer">
     <p>Trackify © <?php echo date('Y'); ?></p>
@@ -222,9 +236,11 @@
 
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.all.min.js"></script>
-<!-- Flatpickr (su hoja de estilos se carga en el header) -->
+<?php if ($usa_calendario): ?>
+<!-- Flatpickr (su hoja de estilos se carga en el header; solo en páginas con fechas) -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
+<?php endif; ?>
 
 <?php if (!empty($_SESSION['flash'])): ?>
 <script>
@@ -233,8 +249,8 @@
 </script>
 <?php unset($_SESSION['flash']); endif; ?>
 
-<script src="js/main.js?v=7"></script>
-<script src="js/moneda.js?v=3"></script>
+<?= jsScript('js/main.js') ?>
+<?= jsScript('js/moneda.js') ?>
 <?php if(isset($extra_js)) echo $extra_js; ?>
 
 </body>

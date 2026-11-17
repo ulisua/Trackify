@@ -9,7 +9,8 @@
 
 * **Tecnología:** **Vanilla CSS puro** (ES6+ Custom Properties, CSS Grid, Flexbox). No se utilizan preprocesadores (SASS/LESS) ni frameworks utilitarios como Tailwind o Bootstrap.
 * **Organización:** **Arquitectura Modular por Capas** (Inspirada en ITCSS / SMACSS).
-* **Punto de Entrada Único:** `styles.css` en la raíz actúa exclusivamente como orquestador mediante directivas `@import`.
+* **Hojas base enlazadas en paralelo:** la lista de hojas comunes vive en `CSS_BASE` (`includes/assets.php`) y `headComun()` las enlaza con un `<link>` cada una. Antes un `styles.css` raíz las traía con `@import`, que el navegador descarga **una detrás de otra**; ese archivo ya no existe.
+* **Caché con versión automática:** todo CSS/JS propio se enlaza con `cssLink()` / `jsScript()`, que agregan `?v=<fecha de modificación>`. El navegador cachea y descarga la versión nueva apenas el archivo cambia (no hay que subir `?v=7` a mano).
 * **Cero Parpadeo (Anti-FOUC):** El tema visual activo se inyecta en el atributo `data-theme` del elemento `<html>` de forma síncrona en el `<head>`, previniendo cualquier destello blanco o desfasaje durante la carga.
 
 ---
@@ -18,7 +19,7 @@
 
 ```
 trackify/
-├── styles.css                       # ENTRY POINT: Orquestador global con directivas @import
+├── includes/assets.php              # CSS_BASE (orden de las hojas base), headComun(), cssLink(), jsScript()
 └── css/
     ├── variables.css                # 1. Tokens inmutables de marca y fuentes
     ├── themes.css                   # 2. Variables contextuales de tema (Claro / Oscuro)
@@ -31,7 +32,8 @@ trackify/
     │   ├── forms.css                #    Inputs, custom select dropdowns, Flatpickr y modales
     │   ├── buttons.css              #    Botones de acción, variantes y hover states
     │   ├── charts.css               #    Contenedores de gráficos Chart.js
-    │   └── chat.css                 #    Chat del asistente IA (página ia.php y panel flotante del dashboard)
+    │   ├── chat.css                 #    Chat del asistente IA (página ia.php y panel flotante del dashboard)
+    │   └── moneda.css               #    Selectores de moneda/período y vista previa de conversión
     └── pages/                       # 6. Hojas de estilo específicas por página (carga diferida)
         ├── auth.css                 #    Login, Registro y Verificación (orbes de luz, tarjetas auth)
         ├── categorias.css           #    Grid de categorías, tabs y las 7 paletas pastel
@@ -42,44 +44,42 @@ trackify/
     └── responsive.css               # 7. Sistema responsive centralizado (escalado móvil compactado)
 ```
 
-### Orden Estricto de Importación en `styles.css`
+### Orden estricto de las hojas base (`CSS_BASE` en `includes/assets.php`)
 
-```css
-/* ===== TRACKIFY MAIN STYLESHEET (ENTRY POINT) ===== */
-
-/* 1. Variables de Marca y Sistema de Temas */
-@import url('css/variables.css');
-@import url('css/themes.css');
-
-/* 2. Estilos de Base y Layout Estructural */
-@import url('css/base.css');
-@import url('css/layout.css');
-
-/* 3. Componentes Reutilizables Comunes */
-@import url('css/components/navbar.css');
-@import url('css/components/sidebar.css');
-@import url('css/components/cards.css');
-@import url('css/components/forms.css');
-@import url('css/components/buttons.css');
-@import url('css/components/charts.css');
-@import url('css/components/chat.css');
+```php
+const CSS_BASE = [
+    'css/variables.css',              // 1. Variables de marca
+    'css/themes.css',                 //    y sistema de temas
+    'css/base.css',                   // 2. Base
+    'css/layout.css',                 //    y layout estructural
+    'css/components/navbar.css',      // 3. Componentes reutilizables
+    'css/components/sidebar.css',
+    'css/components/cards.css',
+    'css/components/forms.css',
+    'css/components/buttons.css',
+    'css/components/charts.css',
+    'css/components/chat.css',
+    'css/components/moneda.css',
+];
 ```
+
+Para sumar una hoja común nueva, agregala a `CSS_BASE` en el lugar que le corresponda: se enlaza sola en todas las pantallas (con y sin sesión).
 
 ### Orden real de carga en el `<head>` (`includes/header.php`)
 
 ```
 1. flatpickr.min.css (CDN)        ← librerías primero, para poder sobrescribirlas
-2. styles.css                     ← tokens, base, layout y componentes (incluye components/moneda.css)
+2. headComun(true)                ← favicons, preconnect a los CDN, fuente Inter y las hojas de CSS_BASE
 3. css/pages/<pagina>.css         ← $extra_css de cada página
 4. css/responsive.css             ← SIEMPRE al final
 ```
 
 > [!IMPORTANT]
-> `css/responsive.css` **no se importa en `styles.css`**: se enlaza al final del `<head>` (en `header.php` y en las páginas de acceso). Así sus media queries ganan sobre las hojas de página por orden de cascada, sin necesidad de `!important`.
-> Antes se importaba dentro de `styles.css`, quedaba antes que `css/pages/` y perdía contra ellas: por eso había acumulado más de 200 `!important`.
+> `css/responsive.css` **no está en `CSS_BASE`**: se enlaza al final del `<head>` (en `header.php` y en `includes/auth_layout.php`). Así sus media queries ganan sobre las hojas de página por orden de cascada, sin necesidad de `!important`.
+> Antes se cargaba junto con las hojas base, quedaba antes que `css/pages/` y perdía contra ellas: por eso había acumulado más de 200 `!important`.
 
 > [!NOTE]
-> Las hojas de `css/pages/` **NO se importan en `styles.css`**. Se inyectan bajo demanda en el `<head>` mediante la variable PHP `$extra_css` dentro de cada página específica (ej. `$extra_css = '<link rel="stylesheet" href="css/pages/dashboard.css">';`).
+> Las hojas de `css/pages/` **NO están en `CSS_BASE`**. Se inyectan bajo demanda en el `<head>` mediante la variable PHP `$extra_css` dentro de cada página específica, siempre con el helper y después de `require_once 'conexion.php'` (ej. `$extra_css = cssLink('css/pages/dashboard.css');`).
 
 ### Puntos de corte (todos en `css/responsive.css`)
 
@@ -115,8 +115,8 @@ Son constantes de identidad visual que **no cambian** con el tema claro u oscuro
 Los tamaños **no se escriben en `px` fijos** sino con dos unidades fluidas que se achican de forma continua desde 1440px hasta 320px:
 
 ```css
---u:  clamp(0.6px,  calc(0.4858px + 0.03572vw), 1px);  /* cajas: 1 → 0.6  */
---uf: clamp(0.76px, calc(0.6915px + 0.02143vw), 1px);  /* textos: 1 → 0.76 */
+--u:  clamp(0.8px, calc(0.74286px + 0.017857vw), 1px);  /* cajas: 1 → 0.8 */
+--uf: clamp(0.9px, calc(0.87143px + 0.008929vw), 1px);  /* textos: 1 → 0.9 */
 
 .mi-tarjeta {
     padding: calc(16 * var(--u)) calc(20 * var(--u));   /* cajas: padding, márgenes, gaps, anchos/altos, íconos, radios */
@@ -125,7 +125,8 @@ Los tamaños **no se escriben en `px` fijos** sino con dos unidades fluidas que 
 ```
 
 - Desde 1440px de ancho ambas valen exactamente `1px`: el diseño de escritorio no cambia.
-- Las cajas se achican más que el texto: por debajo de 0.76 la letra deja de ser legible.
+- Las cajas se achican más que el texto. Los mínimos eran 0.6 / 0.76 y en el celular todo quedaba demasiado chico; se subieron a 0.8 / 0.9.
+- En ≤600px todos los campos de formulario (inputs, selects propios, fecha y botones de los modales) van a `16px` exactos: evita el zoom de iOS y deja las letras del modal parejas.
 - **No** usar para bordes de 1–3px, sombras, `transform` ni breakpoints de `` (los breakpoints siguen en `px`).
 - Para elementos que se tocan con el dedo o que no deben quedar diminutos, poné un piso con `max()`: `min-height: max(28px, calc(38 * var(--u)))`.
 - Los campos de texto editables quedan en `16px` en ≤600px (regla en `responsive.css`): con menos, iOS hace zoom al enfocarlos. Los de solo lectura (calendarios) no la necesitan.
@@ -215,6 +216,8 @@ Ningún `<select>` se muestra con el popup nativo: `mejorarSelect()` en `js/main
 * `.btn.ingreso`: Verde lima (`background: var(--brand-green-light); color: var(--brand-green-dark);`).
 * `.btn.gasto`: Bordó profundo (`background: var(--brand-purple); color: #ffffff;`).
 * `.btn-nuevo-movimiento`: Botón de acción con efecto de brillo deslizante animado mediante pseudo-elemento `::after`.
+* `.btn-nuevo`: forma común de "+ Nueva categoría" / "+ Nuevo objetivo" (en `buttons.css`); cada página define solo sus colores.
+* `.btn-agregar-grande`: versión más alta del botón de alta, **solo** en Ingresos, Gastos y Objetivos.
 * `.btn-peligro`: Botón con bordes y tipografía en rojo carmesí para acciones destructivas.
 * `.btn-google`: Botón blanco con sombra para autenticación federada en `auth.css`.
 
@@ -266,10 +269,11 @@ Sobrescrito en `css/components/forms.css`:
 * Selección activa (`.flatpickr-day.selected`): Fondo en verde de marca (`--brand-green-dark`) con texto en lima (`--brand-green-light`).
 * Sincronizado automáticamente al cambiar el modo claro/oscuro.
 
-### SweetAlert2 (Ventanas de Confirmación)
-Sobrescrito con tema Trackify:
-* Fondo oscuro: `#2c2c3e`
+### SweetAlert2 (Ventanas de Confirmación y Toasts)
+Sobrescrito con tema Trackify (`css/components/forms.css`):
+* Popup `.swal-trackify` de vidrio con los orbes de la marca; toast `.swal-toast-trackify` abajo a la derecha.
 * Botones de confirmación estilizados con `.swal-btn-danger` (rojo bordó) y `.swal-btn-primary` (verde corporativo).
+* **Fondo oscuro solo para alertas modales:** la regla de `.swal2-backdrop-show` va con `body:not(.swal2-toast-shown)`. SweetAlert2 le pone esa clase también al contenedor del toast; sin el filtro, el `!important` lo oscurecía y la pantalla quedaba negra al registrar un movimiento. No quites ese `:not()`.
 
 ---
 
@@ -299,10 +303,10 @@ Sobrescrito con tema Trackify:
 
 ## 9. Reglas Críticas para no Volver a un CSS Monolítico
 
-1. **PROHIBIDO escribir estilos masivos en `styles.css`:** Este archivo debe contener exclusivamente `@import`. Todo estilo nuevo debe colocarse en su componente correspondiente o en su página respectiva.
+1. **Sin `@import` ni hoja "orquestadora":** todo estilo nuevo va en su componente o en su página. Una hoja común nueva se registra en `CSS_BASE` (`includes/assets.php`); nunca con `@import` (descarga en cadena) ni con un `<link>` escrito a mano (pierde el versionado automático).
 2. **NUNCA usar colores hexadecimales "hardcodeados" dentro de los componentes:** Utiliza siempre variables (`var(--bg-card)`, `var(--text-primary)`, `var(--border-color)`). De lo contrario, romperás el modo oscuro.
 3. **No contaminar con estilos inline en PHP:** No escribas `style="background: #123456;"` en bucles de PHP. Utiliza clases CSS declaradas (como `.card-mint` o `.fill-teal`).
-4. **Si creas una página nueva:** Crea su correspondiente archivo dentro de `css/pages/nombre_pagina.css` y cárgalo en el archivo PHP mediante la variable `$extra_css` antes de invocar `includes/header.php`. Empezá el contenido con un `.page-header` para que el título quede alineado con el resto.
+4. **Si creas una página nueva:** Crea su correspondiente archivo dentro de `css/pages/nombre_pagina.css` y cárgalo en el archivo PHP con `$extra_css = cssLink('css/pages/nombre_pagina.css');` (después de `conexion.php` y antes de invocar `includes/header.php`). Empezá el contenido con un `.page-header` para que el título quede alineado con el resto.
 5. **Media queries solo en `css/responsive.css`**, en el bloque del punto de corte que corresponda. No agregues `!important` para ganarle a una hoja de página: `responsive.css` ya se carga después.
 6. **No fuerces el tamaño de un `<canvas>` de Chart.js con CSS:** la altura se fija en `.grafico-wrap`; forzar `width/height` del canvas deja el gráfico vacío o diminuto.
 7. **Reglas de dos clases que compiten** (`.acciones` vs `.dashboard-acciones`, `.tabla td` vs `.negativo`): revisá especificidad y orden antes de agregar otra regla.

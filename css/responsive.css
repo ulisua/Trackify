@@ -71,6 +71,19 @@
 
 /* ===== ≤900px: navegación móvil ===== */
 @media (max-width: 900px) {
+    /* Orbes del header y el footer más suaves: en una barra angosta el mismo degradé
+       queda muy concentrado y se ve brusco. Elipses más anchas y la mitad de opacidad. */
+    :root {
+        --barra-header-bg:
+            radial-gradient(90% 260% at 0% 0%, rgba(207, 242, 124, 0.14), transparent 70%),
+            radial-gradient(90% 260% at 100% 100%, rgba(234, 115, 245, 0.18), transparent 70%),
+            var(--barra-fondo);
+        --barra-footer-bg:
+            radial-gradient(90% 300% at 0% 100%, rgba(234, 115, 245, 0.18), transparent 70%),
+            radial-gradient(90% 300% at 100% 0%, rgba(207, 242, 124, 0.12), transparent 70%),
+            var(--barra-fondo);
+    }
+
     /* --- Navbar: hamburguesa a la izquierda, logo centrado, sin selectores --- */
     .navbar {
         height: calc(64 * var(--u));
@@ -120,7 +133,10 @@
         min-height: 100dvh;
         z-index: 2000;
         transform: translateX(-100%);
-        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Cerrado queda invisible (no solo corrido): con anchos fraccionarios asomaba
+           una línea de 1px en el borde izquierdo y el teclado podía enfocar sus links */
+        visibility: hidden;
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.32s;
         padding-top: calc(76 * var(--u));
         box-shadow: none;
         overflow-y: auto;
@@ -129,6 +145,8 @@
 
     .sidebar.open {
         transform: translateX(0);
+        visibility: visible;
+        transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 4px 0 30px rgba(0, 0, 0, 0.45);
     }
 
@@ -155,18 +173,11 @@
         grid-template-columns: 1fr;
     }
 
-    /* --- Perfil --- */
-    .perfil-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .perfil-sidebar-card {
-        position: static;
-    }
-
+    /* --- Perfil (la columna única ya viene del bloque ≤1100px) --- */
+    /* Grilla 2×2: en fila con wrap, "Moneda" quedaba sola en una segunda línea */
     .perfil-user-stats {
-        flex-direction: row;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: calc(14 * var(--u));
     }
 
@@ -352,11 +363,6 @@
         min-width: 0;
     }
 
-    .tab {
-        flex: 1;
-        text-align: center;
-    }
-
     .cat-grid {
         grid-template-columns: 1fr 1fr;
         gap: calc(10 * var(--u));
@@ -418,18 +424,25 @@
     }
 
     .tab {
+        flex: 1;
+        text-align: center;
         padding: calc(8 * var(--u)) calc(12 * var(--u));
         min-height: max(28px, calc(38 * var(--u)));
         font-size: 0.88rem;
     }
 
     /* iOS hace zoom al enfocar campos con letra menor a 16px: los campos de texto no se achican.
+       Los selects propios, la fecha (Flatpickr la muestra en un input de solo lectura) y los
+       botones de los modales usan el mismo tamaño, para que todo el formulario se lea parejo.
        Especificidad baja a propósito: los campos grandes (código de verificación) conservan su tamaño. */
-    input:where(:not([type="checkbox"], [type="radio"], [type="color"], [readonly])),
+    input:where(:not([type="checkbox"], [type="radio"], [type="color"])),
     select,
     textarea,
     .input-chat,
-    .form-group input:not([readonly]) {
+    .form-group input,
+    .select-trackify-trigger,
+    .custom-select-trigger,
+    .modal-actions .btn {
         font-size: 16px;
     }
 

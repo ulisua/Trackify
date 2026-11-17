@@ -234,7 +234,7 @@ if(isset($_SESSION['usuario_id'])) {
     }
 }
 
-$extra_css = '<link rel="stylesheet" href="css/pages/objetivos.css">';
+$extra_css = cssLink('css/pages/objetivos.css');
 require_once 'includes/header.php';
 ?>
 
@@ -243,7 +243,7 @@ require_once 'includes/header.php';
                     <h2 class="titulo-con-icono"><img src="iconos/generales/dianaconflecha.png" alt="" class="icono-titulo"> Objetivos de ahorro</h2>
                     <p class="page-subtitle">Seguí el progreso de tus metas</p>
                 </div>
-                <button class="btn-nuevo" onclick="abrirModal('objetivo')">+ Nuevo objetivo</button>
+                <button class="btn-nuevo btn-agregar-grande" onclick="abrirModal('objetivo')">+ Nuevo objetivo</button>
             </div>
 
             <!-- Stats -->

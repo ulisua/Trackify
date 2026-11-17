@@ -135,6 +135,8 @@ function inicializarFormularioMoneda(form) {
     form.addEventListener('submit', async (e) => {
         // La conversión es asíncrona: siempre se cancela el envío nativo y se reenvía al terminar
         e.preventDefault();
+        // Un doble clic en "Guardar" mientras se consulta la cotización duplicaba el movimiento
+        if (form.dataset.enviando) return;
         const monto = parseFloat(visible.value);
 
         if (!(monto > 0)) {
@@ -143,10 +145,12 @@ function inicializarFormularioMoneda(form) {
             return;
         }
 
+        form.dataset.enviando = '1';
         let ars = monto;
         if (select.value === 'USD') {
             const tc = await obtenerTipoCambio();
             if (!(tc > 0)) {
+                delete form.dataset.enviando;
                 mostrarAvisoMonto('No se pudo obtener la cotización del dólar. Cargá el monto en ARS o intentá más tarde.');
                 return;
             }
@@ -156,16 +160,36 @@ function inicializarFormularioMoneda(form) {
 
         // Mismo rango que acepta el servidor (columnas DECIMAL(12,2), ver montoValido())
         if (ars < 0.01 || ars > MONTO_MAXIMO) {
+            delete form.dataset.enviando;
             mostrarAvisoMonto('El monto es demasiado chico o demasiado grande.');
             visible.focus();
             return;
         }
         oculto.value = ars.toFixed(2);
+
+        const boton = form.querySelector('button[type="submit"]');
+        if (boton) {
+            boton.disabled = true;
+            boton.textContent = 'Guardando…';
+        }
         HTMLFormElement.prototype.submit.call(form);
     });
 }
 
 const MONTO_MAXIMO = 9999999999.99;
+
+// Al volver con "atrás" el navegador puede restaurar la página con el botón aún en "Guardando…"
+window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    document.querySelectorAll('form[data-enviando]').forEach(form => {
+        delete form.dataset.enviando;
+        const boton = form.querySelector('button[type="submit"]');
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = 'Guardar';
+        }
+    });
+});
 
 function mostrarAvisoMonto(texto) {
     alertaTrackify('Revisá el monto', texto, 'warning');

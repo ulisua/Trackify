@@ -360,6 +360,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: calc(8 * var(--u));
     box-sizing: border-box;
 }
 

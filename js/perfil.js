@@ -249,6 +249,38 @@ function inicializarControlTema() {
 }
 
 // ============== ZONA DE PELIGRO ==============
+// Exportación a CSV para Excel en español: separador ";" y coma decimal.
+// (Con punto decimal, Excel en español leía 1500.5 como 15005.)
+const COLUMNAS_CSV = ['tipo', 'categoria', 'monto', 'fecha', 'descripcion'];
+
+function celdaCSV(valor) {
+    const s = String(valor ?? '');
+    // Entre comillas si contiene el separador, comillas o saltos de línea
+    return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+async function exportarMovimientosCSV() {
+    const res = await fetch('export_movimientos.php', { credentials: 'same-origin' });
+    if (!res.ok) throw new Error('Error al pedir los datos: ' + res.status);
+    const filas = await res.json();
+    if (!Array.isArray(filas)) throw new Error('Respuesta inválida del servidor');
+
+    const lineas = [COLUMNAS_CSV.join(';'), ...filas.map(f => COLUMNAS_CSV.map(col =>
+        celdaCSV(col === 'monto' ? Number(f.monto).toFixed(2).replace('.', ',') : f[col])
+    ).join(';'))];
+
+    // BOM para que Excel abra bien los acentos (UTF-8)
+    const blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `trackify_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function inicializarExportar() {
     const btn = $id('btnExportarDatos');
     if (!btn) return;
@@ -257,11 +289,7 @@ function inicializarExportar() {
         btn.disabled = true;
         btn.textContent = 'Exportando...';
         try {
-            if (typeof window.TrackifyExportCSV?.fetchAndExport !== 'function') {
-                throw new Error('No se cargó js/utils/exportCSV.js');
-            }
-            const hoy = new Date().toISOString().slice(0, 10);
-            await window.TrackifyExportCSV.fetchAndExport('export_movimientos.php', `trackify_${hoy}.csv`, ['tipo', 'categoria', 'monto', 'fecha', 'descripcion']);
+            await exportarMovimientosCSV();
             btn.innerHTML = '<img src="iconos/generales/tick.png" alt="" class="icono-boton"> Exportado';
         } catch (err) {
             console.error(err);

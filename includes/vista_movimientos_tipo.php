@@ -63,7 +63,7 @@ function argsEditarMovimiento($mov, $tipo) {
             <!-- ACCIONES + FILTROS -->
             <div class="acciones-filtros-bar">
                 <div class="acciones">
-                    <button class="btn <?php echo $config_vista['btn']; ?> btn-nuevo-movimiento" onclick="abrirModal('<?php echo $tipo_vista; ?>')">+ Nuevo <?php echo $config_vista['singular']; ?></button>
+                    <button class="btn <?php echo $config_vista['btn']; ?> btn-nuevo-movimiento btn-agregar-grande" onclick="abrirModal('<?php echo $tipo_vista; ?>')">+ Nuevo <?php echo $config_vista['singular']; ?></button>
                 </div>
                 <div class="filtros" data-filtros-movimientos>
                     <input type="text" id="filtroFecha" class="js-fecha-filtro" placeholder="Todas las fechas" aria-label="Filtrar por fecha" readonly>

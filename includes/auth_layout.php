@@ -1,6 +1,7 @@
 <?php
 // includes/auth_layout.php
 // Estructura común de las pantallas sin sesión (login, registro, verificación de email).
+require_once __DIR__ . '/assets.php';
 
 function authInicio($titulo) { ?>
 <!DOCTYPE html>
@@ -10,11 +11,9 @@ function authInicio($titulo) { ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= htmlspecialchars($titulo) ?> - Trackify</title>
-<link rel="icon" href="favicon.ico">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="css/pages/auth.css">
-<link rel="stylesheet" href="css/responsive.css">
+<?php headComun(); ?>
+<?= cssLink('css/pages/auth.css') ?>
+<?= cssLink('css/responsive.css') ?>
 </head>
 <body class="login-body">
 

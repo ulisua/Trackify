@@ -26,6 +26,7 @@ unset($motor_bd);
 
 require_once __DIR__ . '/includes/categorias_meta.php';
 require_once __DIR__ . '/includes/seguridad.php';
+require_once __DIR__ . '/includes/assets.php';
 
 // Migraciones automáticas: llevan cualquier base vieja al esquema actual (ver includes/migraciones.php)
 require_once __DIR__ . '/includes/migraciones.php';

@@ -130,8 +130,10 @@ img, svg {
 }
 
 /* ===== EXPERIENCIA ===== */
-/* Entrada suave del contenido de cada página (escalonada en los primeros bloques) */
-.content > * {
+/* Entrada suave del contenido de cada página (escalonada en los primeros bloques).
+   Los modales quedan afuera: la animación de opacidad le gana a .modal.hidden { opacity: 0 }
+   y los de perfil.php (que están dentro de .content) se veían un instante al cargar. */
+.content > *:not(.modal) {
     animation: fadeIn 0.35s ease backwards;
 }
 

@@ -132,7 +132,7 @@ function contextoFinancieroIA($conn, $user_id) {
     return implode("\n", $lineas);
 }
 
-$extra_css = '<link rel="stylesheet" href="css/pages/ia.css">';
+$extra_css = cssLink('css/pages/ia.css');
 require_once 'includes/header.php';
 ?>
 
@@ -155,5 +155,5 @@ require_once 'includes/header.php';
             </div>
 
 <?php
-$extra_js = '<script src="js/ia.js?v=7"></script>';
+$extra_js = jsScript('js/ia.js');
 require_once 'includes/footer.php';

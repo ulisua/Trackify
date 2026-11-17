@@ -76,17 +76,26 @@ function actualizarCategoriaMetaSiFalta($conn, &$categoria) {
 // ── Visibilidad de categorías ────────────────────────────────────────────────
 // Cada usuario ve las categorías predeterminadas (id_usuario IS NULL) y las propias.
 
+// Se guarda en memoria durante el request: header.php la pide en todas las páginas y
+// ingresos/gastos/movimientos la vuelven a pedir para sus filtros (antes eran dos consultas iguales).
+// Los POST que crean o editan categorías terminan en una redirección, así que no queda desactualizada.
 function obtenerCategoriasVisibles($conn, $user_id) {
+    static $cache = [];
+    if (isset($cache[$user_id])) {
+        return $cache[$user_id];
+    }
     $categorias = ['ingreso' => [], 'gasto' => []];
-    // ORDER BY nombre se hace en PHP: así el orden (con tildes) es el mismo en MySQL y PostgreSQL
+    // ORDER BY nombre se hace en PHP: así el orden (con tildes) es el mismo en MySQL y PostgreSQL.
+    // La clave normalizada se calcula una vez por fila, no en cada comparación del ordenamiento.
     $filas = $conn->filas("SELECT id_categoria, nombre, tipo, icono, color, id_usuario FROM categorias WHERE id_usuario IS NULL OR id_usuario = ?", [$user_id]);
-    usort($filas, fn($a, $b) => strcmp(normalizarNombreCategoria($a['nombre']), normalizarNombreCategoria($b['nombre'])));
+    $claves = array_map(fn($f) => normalizarNombreCategoria($f['nombre']), $filas);
+    array_multisort($claves, SORT_STRING, $filas);
     foreach ($filas as $row) {
         if (isset($categorias[$row['tipo']])) {
             $categorias[$row['tipo']][] = $row;
         }
     }
-    return $categorias;
+    return $cache[$user_id] = $categorias;
 }
 
 // Devuelve el id de una categoría visible para el usuario, o null si no existe.

@@ -1,7 +1,7 @@
 <?php
 $page = 'perfil';
-$extra_css = '<link rel="stylesheet" href="css/pages/perfil.css?v=2">';
 require_once 'conexion.php';
+$extra_css = cssLink('css/pages/perfil.css');
 
 // ── Guardar datos personales: nombre y nombre de usuario (PRG) ───────────────
 // El email no se edita. La contraseña se cambia por separado, vía api/cambiar_password.php (ver js/perfil.js).
@@ -326,5 +326,5 @@ function camposClaveNueva() {
 </div>
 
 <?php
-$extra_js = '<script src="js/utils/exportCSV.js"></script><script src="js/perfil.js?v=3"></script>';
+$extra_js = jsScript('js/perfil.js');
 require_once 'includes/footer.php';

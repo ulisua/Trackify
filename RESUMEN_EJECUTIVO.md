@@ -1,217 +1,76 @@
-# ✅ RESUMEN EJECUTIVO - Optimizaciones Mobile Trackify
+# Resumen ejecutivo — Trackify
 
-## 🎯 Misión Completada
+Aplicación web de finanzas personales (PHP + MySQL/PostgreSQL, JavaScript y CSS sin frameworks ni build).
+Registra ingresos y gastos, categorías propias, objetivos de ahorro, muestra montos en ARS o USD y tiene un asistente de IA.
 
-Se han optimizado y corregido **5 aspectos críticos** de la versión mobile de Trackify, aplicando únicamente cambios en **media queries CSS** sin alterar el diseño de desktop.
+Documentación técnica detallada:
 
----
-
-## 📋 ENTREGABLES
-
-### 1. Archivo CSS Modificado
-- **Ubicación:** `css/responsive.css`
-- **Cambios:** Líneas 129-622 actualizadas
-- **Tamaño:** 644 líneas totales
-- **Status:** ✅ Listo
-
-### 2. JavaScript Opcional (Header Dropdown)
-- **Ubicación:** `js/header-dropdown.js` (NUEVO)
-- **Función:** Activa el sistema de dropdown del header en móvil
-- **Status:** ✅ Listo (recomendado incluir)
-
-### 3. Documentación Técnica
-- `CSS_MOBILE_OPTIMIZATIONS.md` - Detalle técnico de cada cambio
-- `IMPLEMENTATION_GUIDE.md` - Pasos para activar funcionalidades
-- `BEFORE_AFTER_VISUAL.md` - Comparativa visual antes/después
-- `RESUMEN_EJECUTIVO.md` - Este archivo
+| Documento | Qué cubre |
+| :--- | :--- |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Estructura de archivos, base de datos, seguridad, flujo de cada página |
+| [`docs/CSS_ARCHITECTURE.md`](docs/CSS_ARCHITECTURE.md) | Orden de carga de estilos, temas claro/oscuro, responsive, componentes |
+| [`docs/JAVASCRIPT_ARCHITECTURE.md`](docs/JAVASCRIPT_ARCHITECTURE.md) | Módulos JS, modales, conversor de moneda, alertas |
+| `documentacion/` | Entregables del proyecto (manual de usuario, DER, bitácora, migración a PostgreSQL) |
 
 ---
 
-## 🚀 ACTIVACIÓN RÁPIDA (3 pasos)
+## Puesta en marcha
 
-### Paso 1: Validar CSS ✅ HECHO
-```bash
-# El archivo css/responsive.css ya contiene todos los cambios
-# No requiere acción - solo verificar en DevTools
-```
-
-### Paso 2: Activar JavaScript (Opcional pero Recomendado)
-En `includes/header.php`, busca la línea `</head>` y añade:
-```html
-<script src="js/header-dropdown.js" defer></script>
-```
-
-### Paso 3: Testing en Dispositivo Móvil
-Abre la aplicación en un teléfono o emulador y verifica:
-- [ ] Dashboard: Grid 2×3 con orden correcto
-- [ ] Header: Dropdown funciona al hacer click en ▼
-- [ ] Movimientos: Montos en verde (ingresos) y púrpura (gastos)
-- [ ] Categorías: 3 columnas compactas
-- [ ] Perfil: Sin scroll horizontal
+1. Copiar `.env.example` como `.env` y completar los datos (base, SMTP, Google, Groq).
+2. Importar `trackify.sql` (MySQL/MariaDB, XAMPP) o `trackify_postgres.sql` (con `DB_DRIVER=pgsql`).
+   Una base de una versión anterior no hace falta reimportarla: `conexion.php` la actualiza sola.
+3. Abrir `http://localhost/trackify/login.php`.
 
 ---
 
-## 📊 RESULTADOS ESPERADOS
+## Últimos cambios (noviembre 2026)
 
-### Dashboard
-```
-ANTES (3 columnas) → DESPUÉS (2 columnas)
-Tarjetas pequeñas  → Tarjetas legibles
-Números truncados  → Números visibles
-Scroll excesivo    → Scroll controlado
-```
+### Corregido
+- **Pantalla negra al registrar un movimiento.** Al guardar aparece el aviso "Ingreso/Gasto guardado"
+  (toast de SweetAlert2). SweetAlert2 le pone al contenedor del toast la misma clase que al fondo de las
+  alertas, y nuestro CSS forzaba ese fondo oscuro con blur (`!important`). En el celular y en modo oscuro
+  tapaba toda la pantalla. Ahora el fondo solo se aplica a las alertas modales (`css/components/forms.css`).
+- **Movimientos duplicados con doble clic.** El botón Guardar se deshabilita ("Guardando…") mientras se envía
+  el formulario (`js/moneda.js`).
 
-### Header
-```
-ANTES: ☰ | LOGO | ARS | MES | Hola, Usuario → SATURADO
-DESPUÉS: ☰ | LOGO | ▼ → LIMPIO
-```
+### Favicon
+- Nuevos íconos en `favicons/` (16, 32, apple-touch 180, android 192 y 512) más `site.webmanifest` y
+  `theme-color`. `favicon.ico` de la raíz reemplazado por la versión nueva.
+- Se enlazan desde un solo lugar (`headComun()` en `includes/assets.php`) para todas las pantallas,
+  con y sin sesión.
 
-### Movimientos
-```
-ANTES: Concepto sin énfasis, color igual
-DESPUÉS: Concepto bold, verde ingreso, púrpura gasto
-```
+### Optimización
+| Antes | Ahora |
+| :--- | :--- |
+| `styles.css` traía 12 hojas con `@import`, que se descargan una detrás de otra | Se enlazan en paralelo desde `CSS_BASE` (`includes/assets.php`); `styles.css` se eliminó |
+| Versiones de caché a mano (`main.js?v=7`), fáciles de olvidar | `cssLink()` / `jsScript()` agregan `?v=<fecha de modificación>` automáticamente |
+| Sin `preconnect` a Google Fonts ni a jsDelivr | `preconnect` en el `<head>`: la fuente y las librerías empiezan a bajar antes |
+| Consulta a `information_schema` (lenta) en cada request para revisar el esquema | Se recuerda en la sesión 5 minutos |
+| Cada select propio agregaba 4 listeners globales (click, Escape, resize, scroll) | Un solo juego de listeners compartido |
+| Al hacer scroll se recorrían todos los `<input>` de la página buscando calendarios abiertos | Solo se revisan las instancias de Flatpickr creadas |
 
-### Categorías
-```
-ANTES: 2 columnas grandes
-DESPUÉS: 3 columnas compactas
-```
-
-### Perfil
-```
-ANTES: Scroll horizontal visible ⚠️
-DESPUÉS: 100% viewport width ✅
-```
-
----
-
-## 📈 IMPACTO
-
-| Aspecto | Mejora |
-|---------|--------|
-| **Readabilidad** | +50% |
-| **Compacidad** | +30% |
-| **UX Clarity** | +60% |
-| **Visual Hierarchy** | +40% |
-| **Scroll Horizontal** | -100% |
+### Segunda ronda
+- **Perfil:** los modales de "Borrar historial" / "Eliminar cuenta" se veían un instante al cargar. La
+  animación de entrada del contenido le ganaba a la opacidad 0 del modal oculto; ahora excluye los modales.
+- **Responsive más grande:** la escala mínima subió (cajas 0.6 → 0.8, textos 0.76 → 0.9). En los modales
+  todos los campos y botones usan el mismo tamaño de letra.
+- **Botones de alta más altos** solo en Ingresos, Gastos y Objetivos (`.btn-agregar-grande`).
+- **Orbes del header y footer más suaves** en pantallas chicas.
+- **Detalles corregidos:** texto largo pisando la flecha de los selectores, "Moneda" sola en una segunda fila
+  en perfil, línea de 1px del menú lateral asomando en el borde, gráficos vacíos que dejaban cajas altas
+  sin contenido, íconos pegados al texto en los botones de perfil.
+- **Exportar CSV:** los montos salían con punto decimal (Excel en español leía `1500.5` como `15005`) y las
+  descripciones con `;` desarmaban las columnas.
+- **Menos carga por página:** cada página imprime solo sus modales; Flatpickr y la consulta de categorías
+  se cargan solo donde hay campos de fecha / modales de movimiento; la consulta de categorías ya no se repite
+  dentro del mismo request; `js/utils/exportCSV.js` se integró en `js/perfil.js`; CSS duplicado eliminado.
 
 ---
 
-## 🔒 SEGURIDAD DE CAMBIOS
+## Reglas para no romper nada
 
-✅ **Cero impacto desktop** (`> 900px` sin cambios)  
-✅ **Cero cambios HTML** (estructura preservada)  
-✅ **Cero cambios globales** (solo media queries)  
-✅ **Cero Breaking Changes** (compatible con existente)  
-✅ **Rendimiento** (optimizado, no penalizado)  
-
----
-
-## 📱 DISPOSITIVOS SOPORTADOS
-
-| Tipo | Resolución | Status |
-|------|-----------|--------|
-| Móvil Ultra-pequeño | ≤340px | ✅ |
-| Móvil Pequeño | 340-380px | ✅ |
-| Móvil Estándar | 380-768px | ✅ |
-| Tablet | 768-900px | ✅ |
-| Desktop | >900px | ✅ Sin cambios |
-
----
-
-## 🛠️ SI NECESITAS AYUDA
-
-### Problema: Dropdown no funciona
-**Solución:** Verifica que `js/header-dropdown.js` esté incluido en el HTML
-
-### Problema: Grid de tarjetas sigue mostrando 3 columnas
-**Solución:** Limpia caché del navegador y recarga (Ctrl+Shift+R)
-
-### Problema: Colores de movimientos no se ven
-**Solución:** Verifica que las clases `mov-ingreso` y `mov-gasto` estén en los elementos
-
-### Problema: Perfil tiene scroll horizontal
-**Solución:** Ejecuta en console: `console.log(document.querySelectorAll('body > *').filter(el => el.scrollWidth > window.innerWidth))`
-
----
-
-## 📞 CHECKLIST PRE-DEPLOY
-
-- [ ] CSS validado en responsive.css
-- [ ] Header dropdown JS incluido en header.php
-- [ ] Pruebas en iPhone (375px)
-- [ ] Pruebas en Samsung (412px)
-- [ ] Dashboard: Grid 2×3 correcto
-- [ ] Colores movimientos diferenciados
-- [ ] Categorías en 3 columnas
-- [ ] Perfil sin scroll horizontal
-- [ ] Desktop sin cambios
-- [ ] Validación en DevTools (mobile emulation)
-
----
-
-## 📁 ARCHIVOS EN WORKSPACE
-
-```
-trackify/
-├── css/
-│   ├── responsive.css ✅ MODIFICADO
-│   ├── variables.css
-│   ├── base.css
-│   ├── layout.css
-│   ├── themes.css
-│   └── components/
-│       └── navbar.css
-├── js/
-│   ├── main.js
-│   ├── header-dropdown.js ✅ NUEVO
-│   └── ...
-├── CSS_MOBILE_OPTIMIZATIONS.md ✅ NUEVO
-├── IMPLEMENTATION_GUIDE.md ✅ NUEVO
-├── BEFORE_AFTER_VISUAL.md ✅ NUEVO
-└── RESUMEN_EJECUTIVO.md ✅ NUEVO
-```
-
----
-
-## 🎯 PRÓXIMOS PASOS
-
-1. **Inmediato:** Verifica los cambios en DevTools (mobile viewport)
-2. **Hoy:** Incluye `js/header-dropdown.js` en header.php
-3. **Mañana:** Testing en dispositivos reales
-4. **Opcional:** Añade animaciones suaves al dropdown (CSS transitions)
-
----
-
-## ✨ SÍNTESIS FINAL
-
-```
-┌────────────────────────────────────────────────────────┐
-│                    TRACKIFY MOBILE v1.0                 │
-│                                                        │
-│  ✅ 5 Tareas Completadas                              │
-│  ✅ 0 Breaking Changes                                │
-│  ✅ 100% Respeto Regla de Oro (solo media queries)    │
-│  ✅ Pronto para Producción                            │
-│                                                        │
-│  Status: 🟢 LISTO PARA DEPLOY                         │
-└────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🙋 ¿DUDAS O PREGUNTAS?
-
-Consulta:
-1. `CSS_MOBILE_OPTIMIZATIONS.md` - Detalle técnico
-2. `IMPLEMENTATION_GUIDE.md` - Pasos y debugging
-3. `BEFORE_AFTER_VISUAL.md` - Comparativas visuales
-
----
-
-**Generado:** Octubre 2026  
-**Desarrollador:** Frontend CSS Expert  
-**Verificado:** ✅ 100%  
-**Estado de Deploy:** 🚀 READY
+- Los montos se guardan **siempre en ARS**; la conversión desde USD la hace el formulario.
+- Toda consulta filtra por `id_usuario = ?` y usa `$conn` con parámetros (sirve para MySQL y PostgreSQL).
+- CSS/JS propio: siempre con `cssLink()` / `jsScript()`, nunca `<link>`/`<script>` a mano.
+- Alertas: `alertaTrackify()`, `confirmarTrackify()`, `avisoTrackify()`; nunca `alert()` ni `Swal.fire` suelto.
+- Media queries solo en `css/responsive.css`.

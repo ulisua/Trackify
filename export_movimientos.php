@@ -13,7 +13,7 @@ $user_id = intval($_SESSION['usuario_id']);
 
 // Obtener todos los movimientos del usuario
 $filas = $conn->filas(
-    "SELECT m.id_movimiento, m.tipo, m.monto, m.descripcion, m.fecha, c.nombre as categoria_nombre
+    "SELECT m.tipo, m.monto, m.descripcion, m.fecha, c.nombre as categoria_nombre
      FROM movimientos m
      LEFT JOIN categorias c ON m.id_categoria = c.id_categoria
      WHERE m.id_usuario = ?
@@ -24,7 +24,6 @@ $filas = $conn->filas(
 $movs = [];
 foreach ($filas as $r) {
     $movs[] = [
-        'id' => (int)$r['id_movimiento'],
         'tipo' => $r['tipo'] === 'ingreso' ? 'Ingreso' : 'Gasto',
         'categoria' => $r['categoria_nombre'] ?? 'Sin categoria',
         'monto' => (float)$r['monto'],

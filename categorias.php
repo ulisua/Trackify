@@ -1,7 +1,7 @@
 <?php
 $page = 'categorias';
-$extra_css = '<link rel="stylesheet" href="css/pages/categorias.css">';
 require_once 'conexion.php';
+$extra_css = cssLink('css/pages/categorias.css');
 // Procesar acciones de categorías.
 // Las categorías predeterminadas (id_usuario NULL) son de solo lectura: cada usuario
 // solo puede crear, editar y eliminar sus propias categorías.
@@ -232,5 +232,5 @@ function renderGridCategorias($categorias, $total, $id, $oculto) {
             <?php renderGridCategorias($categorias_por_tipo['ingreso'], $totales_por_tipo['ingreso'], 'gridIngresos', true); ?>
 
 <?php
-$extra_js = '<script src="js/categorias.js"></script>';
+$extra_js = jsScript('js/categorias.js');
 require_once 'includes/footer.php';

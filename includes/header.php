@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../conexion.php';
+require_once __DIR__ . '/assets.php';
 
 if (!isset($_SESSION['usuario_id'])) {
     redirigir('login.php');
@@ -12,11 +13,39 @@ $titulo = $titulo_pagina ?? 'Trackify';
 
 require_once __DIR__ . '/periodo.php';
 
-// Categorías visibles para el usuario (predeterminadas + propias), agrupadas por tipo para JS
-$dbCategorias = ['ingreso' => [], 'gasto' => []];
-foreach (obtenerCategoriasVisibles($conn, (int)$_SESSION['usuario_id']) as $tipoCat => $listaCat) {
-    $dbCategorias[$tipoCat] = array_column($listaCat, 'nombre');
+// Modales que usa cada página: footer.php imprime solo esos (antes iban los 7 en todas).
+$modales_pagina = [
+    'dashboard'   => ['movimiento', 'objetivo'],
+    'ingresos'    => ['movimiento', 'editar_movimiento'],
+    'gastos'      => ['movimiento', 'editar_movimiento'],
+    'movimientos' => ['editar_movimiento'],
+    'objetivos'   => ['objetivo', 'ahorro', 'editar_objetivo'],
+    'categorias'  => ['categoria', 'editar_categoria'],
+][$pagina_actual] ?? [];
+
+// Flatpickr (calendario) solo donde hay campos de fecha: modales con fecha o filtros por fecha
+$usa_calendario = array_intersect($modales_pagina, ['movimiento', 'editar_movimiento', 'objetivo', 'editar_objetivo']) !== [];
+
+// Categorías visibles (predeterminadas + propias) para el selector de los modales de movimiento
+$dbCategorias = null;
+if (array_intersect($modales_pagina, ['movimiento', 'editar_movimiento'])) {
+    $dbCategorias = ['ingreso' => [], 'gasto' => []];
+    foreach (obtenerCategoriasVisibles($conn, (int)$_SESSION['usuario_id']) as $tipoCat => $listaCat) {
+        $dbCategorias[$tipoCat] = array_column($listaCat, 'nombre');
+    }
 }
+
+// Menú lateral: página => [archivo, texto]
+$secciones_menu = [
+    'dashboard'   => ['index.php', 'Dashboard'],
+    'movimientos' => ['movimientos.php', 'Movimientos'],
+    'ingresos'    => ['ingresos.php', 'Ingresos'],
+    'gastos'      => ['gastos.php', 'Gastos'],
+    'categorias'  => ['categorias.php', 'Categorías'],
+    'objetivos'   => ['objetivos.php', 'Objetivos'],
+    'ia'          => ['ia.php', 'IA'],
+    'perfil'      => ['perfil.php', 'Perfil'],
+];
 
 // Selectores de moneda y período. Se renderizan dos veces: en el navbar (escritorio)
 // y dentro del menú lateral (móvil). js/moneda.js los mantiene sincronizados.
@@ -52,16 +81,13 @@ function renderSelectoresHeader($moneda_actual, $periodo_actual, $conEtiquetas) 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(csrfToken()); ?>">
     <title><?php echo htmlspecialchars($titulo); ?></title>
-    <link rel="icon" href="favicon.ico">
 
     <!-- Librerías primero, para que los estilos de Trackify las sobrescriban -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="styles.css">
+    <?php if ($usa_calendario): ?><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css"><?php endif; ?>
+    <?php headComun(true); ?>
 
     <script>
-        window.dbCategorias = <?php echo json_encode($dbCategorias, JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+        <?php if ($dbCategorias !== null): ?>window.dbCategorias = <?php echo json_encode($dbCategorias, JSON_HEX_TAG | JSON_HEX_AMP); ?>;<?php endif; ?>
 
         function cambiarPeriodo(periodo) {
             const url = new URL(window.location.href);
@@ -72,7 +98,7 @@ function renderSelectoresHeader($moneda_actual, $periodo_actual, $conEtiquetas) 
 
     <?php if(isset($extra_css)) echo $extra_css; ?>
     <!-- El responsive va al final: sus reglas deben ganar sobre las de cada página -->
-    <link rel="stylesheet" href="css/responsive.css">
+    <?= cssLink('css/responsive.css') ?>
 </head>
 
 <body>
@@ -109,14 +135,9 @@ function renderSelectoresHeader($moneda_actual, $periodo_actual, $conEtiquetas) 
             <?php renderSelectoresHeader($moneda_actual, $periodo_actual, true); ?>
         </div>
         <nav>
-            <a href="index.php" <?php echo ($pagina_actual == 'dashboard') ? 'class="active"' : ''; ?>>Dashboard</a>
-            <a href="movimientos.php" <?php echo ($pagina_actual == 'movimientos') ? 'class="active"' : ''; ?>>Movimientos</a>
-            <a href="ingresos.php" <?php echo ($pagina_actual == 'ingresos') ? 'class="active"' : ''; ?>>Ingresos</a>
-            <a href="gastos.php" <?php echo ($pagina_actual == 'gastos') ? 'class="active"' : ''; ?>>Gastos</a>
-            <a href="categorias.php" <?php echo ($pagina_actual == 'categorias') ? 'class="active"' : ''; ?>>Categorías</a>
-            <a href="objetivos.php" <?php echo ($pagina_actual == 'objetivos') ? 'class="active"' : ''; ?>>Objetivos</a>
-            <a href="ia.php" <?php echo ($pagina_actual == 'ia') ? 'class="active"' : ''; ?>>IA</a>
-            <a href="perfil.php" <?php echo ($pagina_actual == 'perfil') ? 'class="active"' : ''; ?>>Perfil</a>
+            <?php foreach ($secciones_menu as $clave => [$archivo, $texto]): ?>
+                <a href="<?= $archivo ?>"<?= $pagina_actual === $clave ? ' class="active" aria-current="page"' : '' ?>><?= $texto ?></a>
+            <?php endforeach; ?>
             <a href="logout.php" onclick="event.preventDefault(); confirmarLogout();">Cerrar sesión</a>
         </nav>
     </aside>

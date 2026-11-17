@@ -8,5 +8,5 @@ require_once 'includes/header.php';
 $tipo_vista = 'gasto';
 require_once 'includes/vista_movimientos_tipo.php';
 
-$extra_js = '<script src="js/filtros_movimientos.js"></script>';
+$extra_js = jsScript('js/filtros_movimientos.js');
 require_once 'includes/footer.php';

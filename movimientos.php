@@ -1,7 +1,7 @@
 <?php
 $page = 'movimientos';
-$extra_css = '<link rel="stylesheet" href="css/pages/movimientos.css">';
 require_once 'conexion.php';
+$extra_css = cssLink('css/pages/movimientos.css');
 // Editar / eliminar usan el handler común (PRG con return_url)
 require_once 'includes/movimientos_handler.php';
 require_once 'includes/header.php';

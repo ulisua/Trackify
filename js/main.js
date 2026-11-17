@@ -118,30 +118,35 @@ function inicializarCalendarios() {
     const hoy = `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}`;
     const base = { dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', locale: 'es', disableMobile: true };
 
+    const calendarios = [];
+    // flatpickr() devuelve una instancia o un array según la cantidad de inputs
+    const crear = (inputs, opciones) => {
+        if (inputs.length) calendarios.push(...[].concat(flatpickr(inputs, opciones)));
+    };
+
     const objetivos = document.querySelectorAll('#fecha_limite, #edit_fecha_limite');
     objetivos.forEach(input => {
         if (!input.placeholder) input.placeholder = 'Selecciona fecha límite';
         if (!input.value || input.value < hoy) input.value = hoy;
     });
-    if (objetivos.length) flatpickr(objetivos, { ...base, minDate: hoy });
+    crear(objetivos, { ...base, minDate: hoy });
 
     const movimientos = document.querySelectorAll('#fecha, #edit_mov_fecha');
     movimientos.forEach(input => {
         if (!input.placeholder) input.placeholder = 'Selecciona una fecha';
         if (!input.value || input.value > hoy) input.value = hoy;
     });
-    if (movimientos.length) flatpickr(movimientos, { ...base, maxDate: hoy });
+    crear(movimientos, { ...base, maxDate: hoy });
 
-    const filtros = document.querySelectorAll('.js-fecha-filtro');
-    if (filtros.length) flatpickr(filtros, base);
+    crear(document.querySelectorAll('.js-fecha-filtro'), base);
 
     // Cerrar el calendario abierto al hacer scroll fuera de él
+    // (solo se revisan las instancias creadas, no todos los inputs de la página)
+    if (!calendarios.length) return;
     window.addEventListener('scroll', (e) => {
         if (e.target.closest?.('.flatpickr-calendar')) return;
-        document.querySelectorAll('input').forEach(input => {
-            if (input._flatpickr?.isOpen) input._flatpickr.close();
-        });
-    }, true);
+        calendarios.forEach(fp => { if (fp.isOpen) fp.close(); });
+    }, { capture: true, passive: true });
 }
 
 // ============== 5. MODALES ==============
@@ -346,6 +351,22 @@ function enlazarDescripcionSugerida() {
 // ni las tarjetas con overflow.
 const selectProto = Object.getOwnPropertyDescriptors(HTMLSelectElement.prototype);
 
+// Listas abiertas en este momento (lista -> función que la cierra). Un solo juego de
+// listeners globales para todos los selects, en lugar de cuatro por cada uno.
+const listasAbiertas = new Map();
+
+function cerrarListas(excepto) {
+    listasAbiertas.forEach((cerrar, lista) => { if (lista !== excepto) cerrar(); });
+}
+
+document.addEventListener('click', () => cerrarListas());
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarListas(); });
+window.addEventListener('resize', () => cerrarListas(), { passive: true });
+window.addEventListener('scroll', (e) => {
+    if (!listasAbiertas.size) return;
+    listasAbiertas.forEach((cerrar, lista) => { if (!lista.contains(e.target)) cerrar(); });
+}, { capture: true, passive: true });
+
 function mejorarSelect(select) {
     if (select.dataset.mejorado || select.multiple) return;
     select.dataset.mejorado = '1';
@@ -378,6 +399,7 @@ function mejorarSelect(select) {
 
     const cerrar = () => {
         if (!lista.classList.contains('abierta')) return;
+        listasAbiertas.delete(lista);
         lista.classList.remove('abierta');
         wrap.classList.remove('abierto');
         trigger.setAttribute('aria-expanded', 'false');
@@ -436,8 +458,9 @@ function mejorarSelect(select) {
     trigger.addEventListener('click', (e) => {
         e.stopPropagation();
         const abrir = !lista.classList.contains('abierta');
-        document.querySelectorAll('.select-lista.abierta').forEach(l => l.dispatchEvent(new Event('cerrar')));
+        cerrarListas();
         if (!abrir) return;
+        listasAbiertas.set(lista, cerrar);
         lista.classList.add('abierta');
         wrap.classList.add('abierto');
         trigger.setAttribute('aria-expanded', 'true');
@@ -453,11 +476,6 @@ function mejorarSelect(select) {
         if (nuevo >= 0 && nuevo < select.options.length) elegir(select.options[nuevo].value);
     });
 
-    lista.addEventListener('cerrar', cerrar);
-    document.addEventListener('click', cerrar);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
-    window.addEventListener('resize', cerrar);
-    window.addEventListener('scroll', (e) => { if (!lista.contains(e.target)) cerrar(); }, true);
 
     // Asignaciones por código (abrir modales, sincronizar moneda, habilitar en perfil)
     ['value', 'selectedIndex', 'disabled'].forEach(prop => {

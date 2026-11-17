@@ -22,7 +22,7 @@ Navegador (Cliente)
    │                    ├── Consulta la BD (MySQL o PostgreSQL) vía includes/db.php (PDO, consultas preparadas)
    │                    ├── Procesa lógica y filtra períodos (includes/periodo.php)
    │                    ├── Hidrata variables hacia JS (inline JSON)
-   │                    └── Renderiza HTML + CSS (styles.css + css/pages/...)
+   │                    └── Renderiza HTML + CSS (hojas de CSS_BASE + css/pages/...)
    │
    └── [HTTP POST] ──> includes/movimientos_handler.php / endpoints PHP
                         ├── Procesa transacción DML en la base
@@ -48,13 +48,16 @@ trackify/
 │   ├── variables.css                # Paleta de colores de marca y tipografía
 │   ├── components/                  # Componentes reutilizables (navbar, sidebar, cards, forms, buttons, charts, moneda)
 │   └── pages/                       # Estilos específicos de cada vista (dashboard, auth, categorias, etc.)
+├── favicons/                        # Favicons (16, 32, apple-touch 180, android 192/512) y site.webmanifest
 ├── iconos/                          # Recursos gráficos PNG locales
 │   ├── gasto/                       # Iconos específicos de categorías de gasto
 │   ├── generales/                   # Iconos UI (flechas, tachos, lápiz, robots, alertas)
 │   └── ingreso/                     # Iconos específicos de categorías de ingreso
 ├── includes/
+│   ├── assets.php                   # headComun() (favicons, preconnect, fuente, CSS_BASE), cssLink()/jsScript() con ?v= automático
+│   ├── auth_layout.php              # Estructura común de login, registro y verificación de email
 │   ├── categorias_meta.php          # Metadatos (nombre -> icono/color) y helpers de categorías visibles por usuario
-│   ├── footer.php                   # Pie global, modales compartidos, librerías (SweetAlert2, Flatpickr) y mensaje flash para js/main.js
+│   ├── footer.php                   # Pie global, modales de la página ($modales_pagina), librerías (SweetAlert2, Flatpickr) y mensaje flash
 │   ├── header.php                   # Cabecera global, control de sesión, selectores de moneda/período (navbar + menú móvil)
 │   ├── mailer.php                   # Envío de códigos por email: verificación de cuenta y creación de contraseña (PHPMailer, .env)
 │   ├── movimientos_handler.php      # Controlador POST central: CRUD movimientos, borrar historial, eliminar cuenta
@@ -62,18 +65,17 @@ trackify/
 │   ├── seguridad.php                # CSRF, URL de retorno segura, validación de montos/fechas, jsAttr(), flash()
 │   └── vista_movimientos_tipo.php   # Vista compartida por ingresos.php y gastos.php
 ├── js/
-│   ├── utils/
-│   │   └── exportCSV.js             # Utilidad modular: conversión a CSV con BOM UTF-8 y descarga Blob
 │   ├── categorias.js                # Tabs, orden de tarjetas (recordado en localStorage) y modal de edición
 │   ├── filtros_movimientos.js       # Filtro por fecha/categoría de ingresos.php y gastos.php
 │   ├── ia.js                        # Chat del asistente (escapa HTML, fetch con CSRF, botón flotante ocultable)
 │   ├── main.js                      # Global: CSRF en formularios, alertas SweetAlert2 de marca, menú, Flatpickr, modales y selects propios
 │   ├── moneda.js                    # Conversor bimoneda (ExchangeRate API + Frankfurter + cache) y formularios con monto
-│   └── perfil.js                    # Datos personales, contraseña (vía api/cambiar_password.php), tema oscuro y zona de peligro
+│   └── perfil.js                    # Datos personales, contraseña (vía api/cambiar_password.php), tema oscuro, exportación CSV y zona de peligro
 ├── phpmailer/                       # Librería PHPMailer (Exception.php, PHPMailer.php, SMTP.php)
 ├── categorias.php                   # Vista y CRUD de categorías
+├── favicon.ico                      # Copia de favicons/favicon.ico en la raíz (algunos navegadores la piden ahí)
 ├── .env.example                     # Plantilla de configuración (copiar como .env, que NO se versiona)
-├── conexion.php                     # Conexión (BaseDatos sobre PDO, motor según DB_DRIVER), carga de .env y seguridad, ejecuta las migraciones
+├── conexion.php                     # Conexión (BaseDatos sobre PDO, motor según DB_DRIVER), carga .env, seguridad y assets, ejecuta las migraciones
 ├── env.php                          # Parser manual simple del archivo .env
 ├── export_movimientos.php           # Endpoint JSON autenticado para exportación de datos
 ├── gastos.php                       # Vista de gastos, filtros por fecha/categoría y métricas mensuales
@@ -87,7 +89,6 @@ trackify/
 ├── perfil.php                       # Perfil: datos personales (nombre, @usuario, email), seguridad, modo oscuro y zona de peligro
 ├── reenviar_codigo.php              # Reenvío de código OTP de verificación de email vía PHPMailer
 ├── registro.php                     # Registro de usuarios con contraseña Bcrypt y envío de OTP
-├── styles.css                       # Hoja de estilos raíz (entry point que importa módulos CSS)
 ├── trackify.sql                     # Esquema unificado MySQL/MariaDB + categorías predeterminadas
 ├── trackify_postgres.sql            # Mismo esquema en PostgreSQL (DB_DRIVER=pgsql)
 └── verificar_email.php              # Validación del código OTP de 6 dígitos
@@ -118,7 +119,7 @@ trackify/
 | **`consejos_ia`** | `id_consejos` (PK, AI), `id_usuario` (FK), `mensaje` (TEXT), `fecha` (TIMESTAMP) | Tabla en esquema para histórico de consejos (reservada). |
 
 ### Auto-Migraciones y Seeding en Tiempo de Ejecución (`includes/migraciones.php`, llamado desde `conexion.php`)
-Al inicializarse `conexion.php`, `migrarEsquema()` hace una sola consulta a `information_schema` y, solo si falta algo, ejecuta sentencias `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` (con la versión correspondiente para MySQL o para PostgreSQL) para garantizar que columnas añadidas en iteraciones recientes (`uuid`, `google_id`, `email_verificado`, `moneda_principal`, `icono`, `color`, `estado`, `categorias.id_usuario`, etc.) existan en la tabla. Las migraciones son **solo aditivas**; la ampliación de `metas_ahorro.monto_*` a `DECIMAL(12,2)` se ejecuta una única vez (verifica la escala antes). Para unificar la base de devulises también se corrigen, una sola vez: `categorias.Icono_tipo` se renombra a `icono`, `categorias.color` pasa a admitir NULL, `usuarios.uuid` se completa y pasa a `CHAR(36) NOT NULL UNIQUE`, y `consejos_ia.id_consejos` recibe `AUTO_INCREMENT`. Todo se detecta con la misma consulta inicial a `information_schema`, así que con la base al día no se ejecuta ningún `ALTER`.  
+Al inicializarse `conexion.php`, `migrarEsquema()` hace una sola consulta a `information_schema` (como esa consulta es lenta, el resultado se recuerda en la sesión durante 5 minutos — `MIGRACION_REVISAR_CADA` — y mientras tanto no se repite; cambiar `DB_DRIVER`, `DB_HOST` o `DB_NAME` fuerza a revisar de nuevo) y, solo si falta algo, ejecuta sentencias `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` (con la versión correspondiente para MySQL o para PostgreSQL) para garantizar que columnas añadidas en iteraciones recientes (`uuid`, `google_id`, `email_verificado`, `moneda_principal`, `icono`, `color`, `estado`, `categorias.id_usuario`, etc.) existan en la tabla. Las migraciones son **solo aditivas**; la ampliación de `metas_ahorro.monto_*` a `DECIMAL(12,2)` se ejecuta una única vez (verifica la escala antes). Para unificar la base de devulises también se corrigen, una sola vez: `categorias.Icono_tipo` se renombra a `icono`, `categorias.color` pasa a admitir NULL, `usuarios.uuid` se completa y pasa a `CHAR(36) NOT NULL UNIQUE`, y `consejos_ia.id_consejos` recibe `AUTO_INCREMENT`. Todo se detecta con la misma consulta inicial a `information_schema`, así que con la base al día no se ejecuta ningún `ALTER`.  
 Además, si `SELECT COUNT(*) FROM categorias` devuelve `<= 5`, se ejecuta un **seeding automático** insertando 11 categorías de ingreso y 16 de gasto con metadatos asociados desde `includes/categorias_meta.php`.
 
 ---
@@ -166,8 +167,8 @@ Cada página principal sigue esta secuencia estricta:
 ```php
 <?php
 $page = 'gastos';                         // 1. Identificador de página activa para el sidebar
-$extra_css = '<link ...>';                 // 2. (Opcional) CSS específico de la página
-require_once 'conexion.php';              // 3. Conexión a BD
+require_once 'conexion.php';              // 2. Conexión a BD (carga también includes/assets.php)
+$extra_css = cssLink('css/pages/...');    // 3. (Opcional) CSS específico de la página
 require_once 'includes/movimientos_handler.php'; // 4. (Opcional) Si la página procesa formularios POST directos
 require_once 'includes/header.php';       // 5. Inicia sesión, valida auth, renderiza <head>, navbar y <aside>
 
@@ -177,7 +178,7 @@ require_once 'includes/header.php';       // 5. Inicia sesión, valida auth, ren
 <!-- 7. HTML semántico del contenido de la página (<main class="content">) -->
 
 <?php
-$extra_js = '<script src="..."></script>'; // 8. (Opcional) Scripts específicos de la vista
+$extra_js = jsScript('js/...');           // 8. (Opcional) Scripts específicos de la vista
 require_once 'includes/footer.php';       // 9. Cierra contenedor, inyecta modales globales, SweetAlert2, Flatpickr, js/main.js
 ?>
 ```
@@ -185,6 +186,8 @@ require_once 'includes/footer.php';       // 9. Cierra contenedor, inyecta modal
 ### Componentes de Inclusión Reutilizados
 * **`includes/header.php`**:
   * Ejecuta el script inline contra parpadeo de modo oscuro (**anti-FOUC**).
+  * Define `$modales_pagina` (qué modales imprime el footer en cada página), `$usa_calendario` (si se carga Flatpickr) y `$secciones_menu` (los links del menú lateral, generados en un bucle). `window.dbCategorias` solo se arma (y se consulta la base) en páginas con modales de movimiento.
+  * Llama a `headComun(true)` (`includes/assets.php`): favicons + manifest, `preconnect` a Google Fonts y jsDelivr, la fuente Inter y las hojas de `CSS_BASE` enlazadas en paralelo (sin `@import`). `includes/auth_layout.php` usa `headComun()` para login/registro/verificación.
   * Inyecta `window.dbCategorias = {...}` con las categorías **visibles para el usuario** (predeterminadas + propias) agrupadas por tipo, y el token CSRF en `<meta name="csrf-token">`.
   * Renderiza la barra superior (`.navbar`), logo, botón toggle para móviles y saludo. Los selectores de moneda (`.js-selector-moneda`) y período (`.js-selector-periodo`) se renderizan dos veces: en el navbar (escritorio) y dentro del menú lateral (móvil, ≤900px).
   * Carga `css/responsive.css` al final del `<head>`, después de `$extra_css`.
@@ -193,10 +196,10 @@ require_once 'includes/footer.php';       // 9. Cierra contenedor, inyecta modal
   * Centraliza el filtrado temporal en sesión (`semana`, `quincena`, `mes`), calculando `$fecha_desde` y `$fecha_hasta`.
   * Inicializa `$_SESSION['moneda']` desde `usuarios.moneda_principal`.
 * **`includes/footer.php`**:
-  * Contiene los modales compartidos: `#modal` (nuevo movimiento), `#modalObjetivo`, `#modalAhorro`, `#modalEditarObjetivo`, `#modalCategoria`, `#modalEditarCategoria`, `#modalEditarMovimiento`. Los modales de la zona de peligro (`#modalBorrarHistorial`, `#modalEliminarCuenta`) están en `perfil.php`, el único lugar donde se usan.
-  * Carga las librerías externas (**SweetAlert2**, **Flatpickr** con localización al español), fijadas a versión exacta (SweetAlert2 11.26.25, Flatpickr 4.6.13, Chart.js 4.6.1 en el dashboard).
+  * Contiene los modales compartidos: `#modal` (nuevo movimiento), `#modalObjetivo`, `#modalAhorro`, `#modalEditarObjetivo`, `#modalCategoria`, `#modalEditarCategoria`, `#modalEditarMovimiento`. **Solo imprime los que usa la página**, según `$modales_pagina` (definido en `header.php`, por `$page`). Una página nueva que necesite un modal debe agregarse a ese mapa. Los modales de la zona de peligro (`#modalBorrarHistorial`, `#modalEliminarCuenta`) están en `perfil.php`, el único lugar donde se usan.
+  * Carga las librerías externas (**SweetAlert2** siempre; **Flatpickr** con localización al español solo si `$usa_calendario`, es decir, en páginas con campos de fecha), fijadas a versión exacta (SweetAlert2 11.26.25, Flatpickr 4.6.13, Chart.js 4.6.1 en el dashboard).
   * Deja el mensaje flash de la última operación (`flash()` en PHP) en `window.trackifyFlash`; `js/main.js` lo muestra.
-  * Carga `js/main.js`, `js/moneda.js` y `$extra_js`. Todo el JS común (CSRF, alertas, calendarios) vive en `js/main.js`, no en línea.
+  * Carga `js/main.js`, `js/moneda.js` (con `jsScript()`, versionados por fecha de modificación) y `$extra_js`. Todo el JS común (CSRF, alertas, calendarios) vive en `js/main.js`, no en línea.
 * **`includes/categorias_meta.php`**:
   * Función `obtenerMetaCategoriaPorNombre($nombre, $tipo)`: normaliza tildes y mayúsculas para emparejar con iconos PNG en `iconos/gasto/` o `iconos/ingreso/` y colores pastel por defecto.
 * **`includes/movimientos_handler.php`**:
@@ -228,7 +231,7 @@ Trackify utiliza una combinación de tres estrategias de comunicación:
 3. **Peticiones Asíncronas (AJAX / Fetch API):**
    * `api/cambiar_moneda.php`: Recibe `POST` con `FormData` (y cabecera `X-CSRF-Token`) para persistir la preferencia de moneda en BD.
    * `api/cambiar_password.php`: `POST` con `accion` = `cambiar` | `enviar_codigo` | `crear` (cabecera `X-CSRF-Token`). Responde `{ ok, mensaje | error }`. Valida largo (8–72 bytes), que no contenga el nombre ni el email, límite de 5 intentos de código y 60 s entre envíos.
-   * `export_movimientos.php`: Endpoint autenticado (`GET`) que responde con array JSON formateado con `JSON_UNESCAPED_UNICODE` para consumo de `TrackifyExportCSV.fetchAndExport()`.
+   * `export_movimientos.php`: Endpoint autenticado (`GET`) que responde con array JSON formateado con `JSON_UNESCAPED_UNICODE` para `exportarMovimientosCSV()` de `js/perfil.js`.
    * `ia.php`: `js/ia.js` realiza `fetch('./ia.php')` enviando payload JSON `{ pregunta: ... }` con cabecera `X-CSRF-Token`; espera `{ respuesta }`.
 
 ---
@@ -265,4 +268,5 @@ Trackify utiliza una combinación de tres estrategias de comunicación:
 4a. **Alertas:** nunca `alert()`/`confirm()` ni `Swal.fire` suelto: usar `alertaTrackify()`, `confirmarTrackify()`, `avisoTrackify()` o `confirmarEliminacion()` de `js/main.js`, que aplican la estética Trackify.
 4b. **POST nuevos:** cualquier formulario POST recibe el token CSRF automáticamente; un `fetch` POST debe enviar la cabecera `X-CSRF-Token: window.csrfToken`.
 5. **No romper la compatibilidad de selectores:** Para selectores personalizados de categorías, se debe mantener la estructura `.custom-select-wrapper > .custom-select-trigger + .custom-select-options` que inicializa `js/main.js`.
-6. **Validación de fechas en Flatpickr:** Los objetivos solo aceptan fechas presentes o futuras (`minDate: today`), mientras que los movimientos solo aceptan fechas pasadas o presentes (`maxDate: today`).
+6. **Recursos estáticos:** todo CSS/JS propio se enlaza con `cssLink()` / `jsScript()` y nunca con un `<link>`/`<script>` escrito a mano ni con `?v=N` manual. Una hoja común nueva se agrega a `CSS_BASE`.
+7. **Validación de fechas en Flatpickr:** Los objetivos solo aceptan fechas presentes o futuras (`minDate: today`), mientras que los movimientos solo aceptan fechas pasadas o presentes (`maxDate: today`).
