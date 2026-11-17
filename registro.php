@@ -32,34 +32,16 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
         if($query->execute()){
             $nuevo_id = $conn->insert_id;
-            require_once 'phpmailer/PHPMailer.php';
-            require_once 'phpmailer/SMTP.php';
-            require_once 'phpmailer/Exception.php';
+            require_once 'enviar_emailjs.php';
 
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            try {
-                $mail->isSMTP();
-                $mail->Host = 'sandbox.smtp.mailtrap.io';
-                $mail->SMTPAuth = true;
-                $mail->Username = '6e724e2630cb1b';
-                $mail->Password = 'b4ad1521076737';
-                $mail->SMTPSecure = 'tls';
-                $mail->Port = 2525;
-                $mail->CharSet = 'UTF-8';
-                $mail->setFrom('noreply@trackify.com', 'Trackify');
-                $mail->addAddress($email, $nombre);
-                $mail->Subject = 'Verificá tu cuenta de Trackify';
-                $mail->isHTML(true);
-                $mail->Body = "<div style='font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'><img src='http://localhost/trackify/logo.png' alt='Trackify' style='height:60px;margin-bottom:24px;'><h2 style='color:#1E1B26;margin:0 0 8px;'>Verificá tu email</h2><p style='color:#64748b;margin:0 0 24px;'>Usá el siguiente código para completar tu registro. Vence en 15 minutos.</p><div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>$codigo</div><p style='color:#94a3b8;font-size:.85rem;margin:0;'>Si no creaste una cuenta en Trackify, ignorá este email.</p></div>";
-                $mail->send();
-
+            if (enviar_emailjs($email, $codigo)) {
                 $_SESSION['verificar_id'] = $nuevo_id;
                 $_SESSION['verificar_email'] = $email;
                 $_SESSION['verificar_nombre'] = $nombre;
                 header('Location: verificar_email.php');
                 exit();
-            } catch (Exception $e) {
-                $mensaje = 'Error al enviar el email: ' . $mail->ErrorInfo;
+            } else {
+                $mensaje = 'Error al enviar el email. Intentá de nuevo más tarde.';
             }
         } else {
             $mensaje = "Error al registrar";

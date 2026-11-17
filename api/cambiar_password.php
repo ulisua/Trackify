@@ -159,11 +159,10 @@ try {
             fallo(429, "Esperá $espera segundos para pedir otro código.", ['espera' => $espera]);
         }
 
-        $smtp_host = getenv('SMTP_HOST');
-        $smtp_user = getenv('SMTP_USER');
-        $smtp_pass = getenv('SMTP_PASS');
-        if (!$smtp_host || !$smtp_user || !$smtp_pass) {
-            error_log('cambiar_password: faltan SMTP_HOST / SMTP_USER / SMTP_PASS en el .env');
+        require_once __DIR__ . '/../enviar_emailjs.php';
+
+        if (!getenv('EMAILJS_SERVICE_ID') || !getenv('EMAILJS_TEMPLATE_ID') || !getenv('EMAILJS_PUBLIC_KEY') || !getenv('EMAILJS_PRIVATE_KEY')) {
+            error_log('cambiar_password: faltan variables EMAILJS_* en el entorno');
             fallo(500, 'No pudimos enviar el código porque el correo del servidor no está configurado.');
         }
 
@@ -173,36 +172,7 @@ try {
         $upd->bind_param('ssi', $codigo, $expira, $user_id);
         $upd->execute();
 
-        require_once __DIR__ . '/../phpmailer/PHPMailer.php';
-        require_once __DIR__ . '/../phpmailer/SMTP.php';
-        require_once __DIR__ . '/../phpmailer/Exception.php';
-
-        try {
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host       = $smtp_host;
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $smtp_user;
-            $mail->Password   = $smtp_pass;
-            $mail->SMTPSecure = getenv('SMTP_SECURE') ?: 'tls';
-            $mail->Port       = (int) (getenv('SMTP_PORT') ?: 2525);
-            $mail->CharSet    = 'UTF-8';
-            $mail->setFrom(getenv('MAIL_FROM') ?: 'noreply@trackify.com', 'Trackify');
-            $mail->addAddress($usuario['email'], $usuario['nombre']);
-            $mail->Subject = 'Código para crear tu contraseña - Trackify';
-            $mail->isHTML(true);
-            $nombre_html = htmlspecialchars($usuario['nombre'], ENT_QUOTES, 'UTF-8');
-            $mail->Body = "
-                <div style='font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:12px;'>
-                    <h2 style='color:#1E1B26;margin:0 0 8px;'>Hola, $nombre_html</h2>
-                    <p style='color:#64748b;margin:0 0 24px;'>Usá este código para crear la contraseña de tu cuenta. Vence en " . CODIGO_MINUTOS . " minutos.</p>
-                    <div style='background:#084734;color:#CFF27C;font-size:2rem;font-weight:700;letter-spacing:12px;text-align:center;padding:20px;border-radius:8px;margin-bottom:24px;'>$codigo</div>
-                    <p style='color:#94a3b8;font-size:.85rem;margin:0;'>Si no pediste este código, ignorá este email y no lo compartas con nadie.</p>
-                </div>";
-            $mail->AltBody = "Tu código para crear la contraseña es $codigo. Vence en " . CODIGO_MINUTOS . " minutos.";
-            $mail->send();
-        } catch (\Throwable $e) {
-            error_log('cambiar_password: error al enviar el email: ' . $e->getMessage());
+        if (!enviar_emailjs($usuario['email'], $codigo)) {
             fallo(500, 'No pudimos enviar el código. Intentá de nuevo en unos minutos.');
         }
 
