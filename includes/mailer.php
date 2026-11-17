@@ -1,9 +1,11 @@
 <?php
 // includes/mailer.php
-// Código de verificación por email. Las credenciales SMTP se leen de .env
-// (ver .env.example); nunca deben escribirse en el código.
+// Código de verificación por email. Se envía por EmailJS (API HTTP) si están las variables
+// EMAILJS_* en .env, o si no por SMTP. Las credenciales se leen de .env (ver .env.example);
+// nunca deben escribirse en el código.
 
 require_once dirname(__DIR__) . '/env.php';
+require_once dirname(__DIR__) . '/enviar_emailjs.php';
 require_once dirname(__DIR__) . '/phpmailer/PHPMailer.php';
 require_once dirname(__DIR__) . '/phpmailer/SMTP.php';
 require_once dirname(__DIR__) . '/phpmailer/Exception.php';
@@ -49,6 +51,15 @@ function enviarNuevoCodigo($conn, $asunto, $introduccion) {
 // Devuelve true si el email se envió. Los errores se registran en el log de PHP, no se muestran.
 // Lo usan la verificación de cuenta y la creación de contraseña (api/cambiar_password.php).
 function enviarEmailCodigo($email, $nombre, $codigo, $asunto, $introduccion, $titulo = 'Verificá tu email') {
+    if (emailjsConfigurado()) {
+        return enviar_emailjs($email, $codigo, [
+            'nombre'       => $nombre,
+            'asunto'       => $asunto,
+            'titulo'       => $titulo,
+            'introduccion' => $introduccion,
+        ]);
+    }
+
     $host    = env('SMTP_HOST');
     $usuario = env('SMTP_USER');
     $clave   = env('SMTP_PASS');
