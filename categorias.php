@@ -115,7 +115,7 @@ $filas_categorias = $conn->filas("
     WHERE c.id_usuario IS NULL OR c.id_usuario = ?
     GROUP BY c.id_categoria, c.nombre, c.tipo, c.icono, c.color, c.id_usuario
 ", [$user_id, $fecha_desde, $fecha_hasta, $user_id]);
-// Mayor monto primero; a igual monto, por nombre (sin distinguir mayúsculas ni tildes, igual en los dos motores)
+// Mayor monto primero; a igual monto, por nombre (sin distinguir mayúsculas ni tildes)
 usort($filas_categorias, fn($a, $b) => ((float)$b['total_monto'] <=> (float)$a['total_monto'])
     ?: strcmp(normalizarNombreCategoria($a['nombre']), normalizarNombreCategoria($b['nombre'])));
 

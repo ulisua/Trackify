@@ -100,7 +100,7 @@ function contextoFinancieroIA($conn, $user_id) {
     $lineas = [];
 
     // Totales de los últimos 3 meses
-    $meses = $conn->filas("SELECT " . $conn->sqlMes('fecha') . " AS mes,
+    $meses = $conn->filas("SELECT TO_CHAR(fecha, 'YYYY-MM') AS mes,
             SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) AS ingresos,
             SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) AS gastos
         FROM movimientos WHERE id_usuario = ? AND fecha >= ?

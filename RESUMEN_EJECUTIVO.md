@@ -1,6 +1,6 @@
 # Resumen ejecutivo — Trackify
 
-Aplicación web de finanzas personales (PHP + MySQL/PostgreSQL, JavaScript y CSS sin frameworks ni build).
+Aplicación web de finanzas personales (PHP + PostgreSQL, JavaScript y CSS sin frameworks ni build).
 Registra ingresos y gastos, categorías propias, objetivos de ahorro, muestra montos en ARS o USD y tiene un asistente de IA.
 
 Documentación técnica detallada:
@@ -16,14 +16,29 @@ Documentación técnica detallada:
 
 ## Puesta en marcha
 
-1. Copiar `.env.example` como `.env` y completar los datos (base, SMTP, Google, Groq).
-2. Importar `trackify.sql` (MySQL/MariaDB, XAMPP) o `trackify_postgres.sql` (con `DB_DRIVER=pgsql`).
+1. Instalar PostgreSQL (16 o superior) y crear la base: `createdb -U postgres trackify`.
+2. Importar el esquema: `psql -U postgres -d trackify -f trackify_postgres.sql`.
    Una base de una versión anterior no hace falta reimportarla: `conexion.php` la actualiza sola.
-3. Abrir `http://localhost/trackify/login.php`.
+3. En `C:\xampp\php\php.ini` quitar el `;` de `;extension=pdo_pgsql` y reiniciar Apache.
+4. Copiar `.env.example` como `.env` y completar los datos (base `DB_*`, email, Google, Groq).
+5. Abrir `http://localhost/trackify/login.php`.
+
+Si tenías datos en la base MySQL vieja: `C:\xampp\php\php.exe herramientas/migrar_mysql_a_postgres.php`
+(con MySQL de XAMPP encendido) los copia a PostgreSQL.
 
 ---
 
 ## Últimos cambios (noviembre 2026)
+
+### Base de datos: solo PostgreSQL
+- La app dejó de soportar MySQL. `includes/db.php`, `conexion.php` y `includes/migraciones.php` quedaron
+  solo con PostgreSQL (sin `DB_DRIVER` ni ramas por motor); `trackify.sql` (MySQL) se eliminó.
+- Conexión configurable con `DB_*` o con `DATABASE_URL` + `DB_SSLMODE=require` (bases en la nube).
+- `herramientas/migrar_mysql_a_postgres.php` copia los datos de una base MySQL vieja (cualquier versión).
+
+### Emails con EmailJS
+- `includes/mailer.php` envía por EmailJS (API HTTP) si están las variables `EMAILJS_*` en `.env`; si no,
+  por SMTP. Render bloquea SMTP, por eso se agregó (fusión de la rama devulises).
 
 ### Corregido
 - **Pantalla negra al registrar un movimiento.** Al guardar aparece el aviso "Ingreso/Gasto guardado"
@@ -70,7 +85,7 @@ Documentación técnica detallada:
 ## Reglas para no romper nada
 
 - Los montos se guardan **siempre en ARS**; la conversión desde USD la hace el formulario.
-- Toda consulta filtra por `id_usuario = ?` y usa `$conn` con parámetros (sirve para MySQL y PostgreSQL).
+- Toda consulta filtra por `id_usuario = ?` y usa `$conn` con parámetros (nunca valores concatenados en el SQL).
 - CSS/JS propio: siempre con `cssLink()` / `jsScript()`, nunca `<link>`/`<script>` a mano.
 - Alertas: `alertaTrackify()`, `confirmarTrackify()`, `avisoTrackify()`; nunca `alert()` ni `Swal.fire` suelto.
 - Media queries solo en `css/responsive.css`.

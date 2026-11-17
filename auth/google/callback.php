@@ -60,14 +60,14 @@ $nombre    = mb_substr($user_info['name'] ?? explode('@', $email)[0], 0, 50);
 $foto      = $user_info['picture'] ?? '';
 
 // Busca primero por google_id y después por email
-// (CASE en lugar de "ORDER BY google_id = ? DESC": en PostgreSQL los NULL quedarían primero)
+// (CASE en lugar de "ORDER BY google_id = ? DESC": con google_id NULL la comparación da NULL y quedaría primero)
 $user = $conn->fila("SELECT id_usuario, nombre, google_id FROM usuarios WHERE google_id = ? OR LOWER(email) = ?
                      ORDER BY CASE WHEN google_id = ? THEN 0 ELSE 1 END LIMIT 1", [$google_id, $email, $google_id]);
 
 if ($user) {
     if ($user['google_id'] !== $google_id) {
         // Cuenta existente con ese email: Google lo verificó, se vincula y se marca como verificada
-        $conn->ejecutar("UPDATE usuarios SET google_id = ?, Foto_perfil = ?, email_verificado = 1 WHERE id_usuario = ?", [$google_id, $foto, $user['id_usuario']]);
+        $conn->ejecutar("UPDATE usuarios SET google_id = ?, foto_perfil = ?, email_verificado = 1 WHERE id_usuario = ?", [$google_id, $foto, $user['id_usuario']]);
     }
     iniciarSesionUsuario($user['id_usuario'], $user['nombre']);
     redirigir('index.php');
@@ -76,7 +76,7 @@ if ($user) {
 // clave es NOT NULL: las cuentas de Google se crean sin contraseña ('')
 $uuid = generarUuid();
 $nombre_usuario = generarNombreUsuario($conn, $email);
-$id_nuevo = $conn->insertar("INSERT INTO usuarios (nombre, nombre_usuario, Foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, ?, '', NOW(), ?, ?, 1)",
+$id_nuevo = $conn->insertar("INSERT INTO usuarios (nombre, nombre_usuario, foto_perfil, email, clave, fecha_registro, uuid, google_id, email_verificado) VALUES (?, ?, ?, ?, '', NOW(), ?, ?, 1)",
     [$nombre, $nombre_usuario, $foto, $email, $uuid, $google_id], 'id_usuario');
 
 iniciarSesionUsuario($id_nuevo, $nombre);

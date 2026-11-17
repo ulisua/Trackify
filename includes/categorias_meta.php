@@ -85,7 +85,7 @@ function obtenerCategoriasVisibles($conn, $user_id) {
         return $cache[$user_id];
     }
     $categorias = ['ingreso' => [], 'gasto' => []];
-    // ORDER BY nombre se hace en PHP: así el orden (con tildes) es el mismo en MySQL y PostgreSQL.
+    // El orden se hace en PHP para ordenar sin distinguir tildes ni mayúsculas (independiente del collation de la base).
     // La clave normalizada se calcula una vez por fila, no en cada comparación del ordenamiento.
     $filas = $conn->filas("SELECT id_categoria, nombre, tipo, icono, color, id_usuario FROM categorias WHERE id_usuario IS NULL OR id_usuario = ?", [$user_id]);
     $claves = array_map(fn($f) => normalizarNombreCategoria($f['nombre']), $filas);

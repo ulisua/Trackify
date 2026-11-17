@@ -1,28 +1,30 @@
 <?php
-// Conexión a la base de datos. El motor se elige en .env:
-//   DB_DRIVER=mysql  (por defecto: MySQL/MariaDB de XAMPP)
-//   DB_DRIVER=pgsql  (PostgreSQL; requiere extension=pdo_pgsql en php.ini)
+// Conexión a PostgreSQL. Los datos se leen de .env (ver .env.example):
+//   DATABASE_URL=postgresql://usuario:clave@host:5432/base   (la que da Render/Neon/Supabase), o bien
+//   DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS por separado.
+//   DB_SSLMODE=require para bases en la nube (en local se deja vacío).
+// Requiere extension=pdo_pgsql en php.ini.
 require_once __DIR__ . '/env.php';
 require_once __DIR__ . '/includes/db.php';
 
-$motor_bd = strtolower((string)env('DB_DRIVER', 'mysql')) === 'pgsql' ? 'pgsql' : 'mysql';
+$url_bd = parse_url((string)env('DATABASE_URL', '')) ?: [];
 try {
     $conn = new BaseDatos(
-        $motor_bd,
-        env('DB_HOST', 'localhost'),
-        env('DB_PORT'),
-        env('DB_NAME', 'trackify'),
-        env('DB_USER', $motor_bd === 'pgsql' ? 'postgres' : 'root'),
-        env('DB_PASS', '')
+        $url_bd['host'] ?? env('DB_HOST', 'localhost'),
+        isset($url_bd['port']) ? (string)$url_bd['port'] : env('DB_PORT', '5432'),
+        isset($url_bd['path']) ? ltrim($url_bd['path'], '/') : env('DB_NAME', 'trackify'),
+        isset($url_bd['user']) ? urldecode($url_bd['user']) : env('DB_USER', 'postgres'),
+        isset($url_bd['pass']) ? urldecode($url_bd['pass']) : env('DB_PASS', ''),
+        env('DB_SSLMODE')
     );
 } catch (PDOException $e) {
-    error_log('Trackify: error de conexión a la base de datos (' . $motor_bd . '): ' . $e->getMessage());
+    error_log('Trackify: error de conexión a PostgreSQL: ' . $e->getMessage());
     http_response_code(500);
-    die($motor_bd === 'pgsql'
-        ? 'No se pudo conectar con PostgreSQL. Verificá que el servidor esté iniciado, los datos DB_* de .env y que la extensión pdo_pgsql esté habilitada en php.ini.'
-        : 'No se pudo conectar con la base de datos. Verificá que MySQL esté iniciado.');
+    die(extension_loaded('pdo_pgsql')
+        ? 'No se pudo conectar con PostgreSQL. Verificá que el servidor esté iniciado y los datos DB_* de .env.'
+        : 'Falta la extensión pdo_pgsql de PHP: habilitá extension=pdo_pgsql en php.ini y reiniciá Apache.');
 }
-unset($motor_bd);
+unset($url_bd);
 
 require_once __DIR__ . '/includes/categorias_meta.php';
 require_once __DIR__ . '/includes/seguridad.php';

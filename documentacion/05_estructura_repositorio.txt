@@ -21,15 +21,15 @@ trackify/
 ├── reenviar_codigo.php        Reenvío del código (máx. 1 por minuto)
 ├── logout.php                 Cierre de sesión
 │
-├── conexion.php               Crea la conexión ($conn) según DB_DRIVER + carga .env, seguridad y migraciones automáticas + categorías iniciales
+├── conexion.php               Crea la conexión a PostgreSQL ($conn) + carga .env, seguridad y migraciones automáticas + categorías iniciales
 ├── env.php                    Lector del archivo .env -> función env()
-├── trackify.sql               Esquema unificado MySQL + categorías predeterminadas (importar en phpMyAdmin)
-├── trackify_postgres.sql      Mismo esquema para PostgreSQL (DB_DRIVER=pgsql)
-├── styles.css                 Hoja de estilos raíz: importa todos los módulos de /css
+├── enviar_emailjs.php         Envío de emails por la API de EmailJS (lo usa includes/mailer.php)
+├── trackify_postgres.sql      Esquema de la base (PostgreSQL) + categorías predeterminadas
 ├── .env.example               Plantilla de configuración (copiar como .env, que NO se sube)
 ├── .gitignore                 Ignora .env, .DS_Store, Thumbs.db
 ├── favicon.ico, logo.png      Identidad visual
-├── RESUMEN_EJECUTIVO.md       Informe de optimizaciones mobile (desactualizado)
+├── favicons/                  Favicons (16, 32, 180, 192, 512) y site.webmanifest
+├── RESUMEN_EJECUTIVO.md       Resumen del proyecto, puesta en marcha y últimos cambios
 │
 ├── api/                       Endpoints que responden JSON (llamados con fetch)
 │   ├── cambiar_moneda.php       Guarda la moneda preferida (ARS/USD)
@@ -39,11 +39,16 @@ trackify/
 │   └── google/
 │       └── callback.php         Retorno de Google OAuth 2.0: login, vinculación o alta
 │
+├── herramientas/              Scripts de consola (no se abren desde el navegador)
+│   └── migrar_mysql_a_postgres.php  Copia los datos de una base MySQL vieja a PostgreSQL (uso único)
+│
 ├── includes/                  Piezas PHP reutilizadas por las páginas
-│   ├── db.php                   Capa de acceso a datos (clase BaseDatos sobre PDO, MySQL y PostgreSQL)
-│   ├── migraciones.php          Lleva cualquier base vieja al esquema actual (los dos motores)
-│   ├── header.php               <head>, control de sesión, navbar, selectores moneda/período, sidebar
-│   ├── footer.php               Modales compartidos, librerías CDN, js/main.js, mensajes flash
+│   ├── db.php                   Capa de acceso a datos (clase BaseDatos sobre PDO, PostgreSQL)
+│   ├── migraciones.php          Lleva cualquier base PostgreSQL vieja al esquema actual
+│   ├── assets.php               Favicons, CSS base (CSS_BASE), cssLink()/jsScript() con versión automática
+│   ├── header.php               <head>, control de sesión, navbar, selectores moneda/período, sidebar,
+│   │                            qué modales y librerías usa cada página ($modales_pagina)
+│   ├── footer.php               Modales de la página, librerías CDN, js/main.js, mensajes flash
 │   ├── auth_layout.php          Estructura común de las pantallas de login/registro/verificación
 │   ├── tema_inicial.php         Aplica modo claro/oscuro antes de pintar (evita parpadeo)
 │   ├── seguridad.php            CSRF, sesión, uuid, validación de montos/fechas, @usuario, flash()
@@ -57,11 +62,9 @@ trackify/
 │   ├── main.js                  Global: CSRF, alertas de marca, menú, calendarios, modales, selects
 │   ├── moneda.js                Cotización del dólar y conversión ARS/USD
 │   ├── ia.js                    Chat del asistente
-│   ├── perfil.js                Perfil, contraseña, modo oscuro, zona de peligro
+│   ├── perfil.js                Perfil, contraseña, modo oscuro, exportación CSV, zona de peligro
 │   ├── categorias.js            Pestañas y orden de tarjetas de categorías
-│   ├── filtros_movimientos.js   Filtros de ingresos.php / gastos.php
-│   └── utils/
-│       └── exportCSV.js         Convierte JSON a CSV (UTF-8 con BOM) y lo descarga
+│   └── filtros_movimientos.js   Filtros de ingresos.php / gastos.php
 │
 ├── css/
 │   ├── variables.css            Paleta de colores y tipografías
@@ -100,9 +103,9 @@ RAMAS REMOTAS
 CÓMO SE RELACIONAN LAS CARPETAS
   Página .php de la raíz
      ├─ require conexion.php ──> env.php, includes/db.php, includes/migraciones.php, includes/seguridad.php,
-     │                            includes/categorias_meta.php
+     │                            includes/categorias_meta.php, includes/assets.php
      ├─ require includes/header.php ──> includes/periodo.php,
      │                                  includes/tema_inicial.php,
-     │                                  styles.css (-> css/**)
+     │                                  css/** (vía headComun() de includes/assets.php)
      ├─ (opcional) includes/movimientos_handler.php
      └─ require includes/footer.php ──> js/main.js, js/moneda.js, CDN

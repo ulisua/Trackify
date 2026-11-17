@@ -165,7 +165,7 @@ sequenceDiagram
     actor U as Usuario
     participant N as Navegador
     participant R as registro.php
-    participant BD as MySQL
+    participant BD as PostgreSQL
     participant ML as mailer.php
     participant S as Servidor SMTP
     participant V as verificar_email.php
@@ -198,7 +198,7 @@ sequenceDiagram
     actor U as Usuario
     participant JS as js/ia.js
     participant IA as ia.php
-    participant BD as MySQL
+    participant BD as PostgreSQL
     participant G as API Groq
 
     U->>JS: Escribe una pregunta
@@ -219,7 +219,7 @@ sequenceDiagram
 sequenceDiagram
     actor U as Usuario
     participant O as objetivos.php
-    participant BD as MySQL
+    participant BD as PostgreSQL
 
     U->>O: POST aporte (monto en ARS)
     O->>BD: BEGIN

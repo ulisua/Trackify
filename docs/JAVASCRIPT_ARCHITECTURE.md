@@ -51,7 +51,7 @@ window.dbCategorias = {
 Utilizado por `js/main.js` para poblar dinámicamente las opciones del selector de categorías según se presione `+ Ingreso` o `+ Gasto`.
 
 ### B. Hidratación de Datos para Gráficos (Chart.js)
-En `index.php`, las series de tiempo y distribuciones calculadas por MySQL se inyectan en variables globales de script antes de inicializar las instancias de `Chart`:
+En `index.php`, las series de tiempo y distribuciones calculadas por PostgreSQL se inyectan en variables globales de script antes de inicializar las instancias de `Chart`:
 ```php
 const tortaLabels = <?php echo $js_torta_labels; ?>;
 const tortaData   = <?php echo $js_torta_data; ?>;

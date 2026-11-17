@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nombre_usuario = generarNombreUsuario($conn, $email); // editable después desde el perfil
 
             try {
-                $id_nuevo = $conn->insertar("INSERT INTO usuarios (nombre, nombre_usuario, email, clave, fecha_registro, uuid, email_verificado, Foto_perfil) VALUES (?, ?, ?, ?, NOW(), ?, 0, '')",
+                $id_nuevo = $conn->insertar("INSERT INTO usuarios (nombre, nombre_usuario, email, clave, fecha_registro, uuid, email_verificado, foto_perfil) VALUES (?, ?, ?, ?, NOW(), ?, 0, '')",
                     [$nombre, $nombre_usuario, $email, $password, $uuid], 'id_usuario');
                 // La pantalla de verificación genera y envía el código al abrirse
                 iniciarVerificacionEmail($id_nuevo, $email, $nombre);

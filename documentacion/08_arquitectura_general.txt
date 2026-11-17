@@ -83,13 +83,14 @@ aplica las reglas del sistema.
   siempre recibe y guarda el monto en pesos y vuelve a validarlo.
 
 CAPA DE DATOS — guarda y recupera la información de la base de datos.
-  - includes/db.php: clase BaseDatos (PDO). Es la única puerta a la
-    base; oculta las diferencias entre MySQL y PostgreSQL, así que el
-    resto del sistema no cambia según el motor (se elige con DB_DRIVER).
+  - includes/db.php: clase BaseDatos (PDO, driver pdo_pgsql). Es la
+    única puerta a la base: las páginas nunca abren conexiones propias.
+    Gracias a eso el pasaje de MySQL a PostgreSQL (11/2026) no tocó las
+    páginas.
   - conexion.php + includes/migraciones.php: conexión, migraciones
     automáticas y carga de
     categorías iniciales.
-  - Base de datos MySQL/MariaDB o PostgreSQL "trackify" con 5 tablas: usuarios,
+  - Base de datos PostgreSQL "trackify" con 5 tablas: usuarios,
     movimientos, categorias, metas_ahorro, consejos_ia.
   - Todas las consultas usan prepared statements y filtran por el
     usuario de la sesión.
@@ -124,7 +125,7 @@ través de la capa de procesamiento.
   └────────────────┼─────────────────────────┘   SMTP    │ OAuth    │
                    ▼                           ────────► │ Mailtrap │
           ┌─────────────────┐                            └──────────┘
-          │ MySQL o Postgre │
+          │   PostgreSQL    │
           │ base "trackify" │
           └─────────────────┘
 
@@ -151,8 +152,11 @@ través de la capa de procesamiento.
 ---------------------------------------------------------------------
 5. DECISIONES Y JUSTIFICACIÓN
 ---------------------------------------------------------------------
-- PHP sin framework: corre en XAMPP sin instalaciones extra y el
-  equipo entiende cada parte del código.
+- PHP sin framework: corre en XAMPP (más PostgreSQL) y el equipo
+  entiende cada parte del código.
+- PostgreSQL en lugar de MySQL: más estricto con los datos y es la
+  base que ofrecen gratis los servicios donde se puede publicar la app
+  (Render, Neon, Supabase). Decidido por el grupo en 11/2026.
 - Renderizado en el servidor (multipágina): más simple que una SPA y
   suficiente para el tamaño del proyecto.
 - Montos siempre en ARS en la base: evita mezclar monedas y que el

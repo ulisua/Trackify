@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = mb_strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
 
-    // LOWER(): PostgreSQL distingue mayúsculas en las comparaciones (MySQL no)
+    // LOWER(): en PostgreSQL "=" distingue mayúsculas
     $user = $conn->fila("SELECT id_usuario, nombre, email, clave, email_verificado FROM usuarios WHERE LOWER(email) = ?", [$email]);
 
     // Mismo mensaje para email inexistente o contraseña incorrecta (no revela qué cuentas existen)

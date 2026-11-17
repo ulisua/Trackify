@@ -110,7 +110,7 @@ procesa y redirige otra vez a la página; eso se llama patrón
 Post/Redirect/Get y evita que al apretar F5 se cargue dos veces el
 mismo gasto.
 
-BASE DE DATOS: MySQL (en XAMPP es MariaDB). Tiene 5 tablas:
+BASE DE DATOS: PostgreSQL. Tiene 5 tablas:
 - usuarios
 - movimientos       (ingresos y gastos juntos, con una columna "tipo")
 - categorias
@@ -166,7 +166,7 @@ frecuentes, y no subir nunca las contraseñas al repositorio.
 CIERRE (30 segundos)
 ---------------------------------------------------------------------
 
-En resumen: Trackify es una app web en PHP y MySQL para controlar
+En resumen: Trackify es una app web en PHP y PostgreSQL para controlar
 ingresos y gastos, en pesos o dólares, con metas de ahorro y un
 asistente de IA que te aconseja con tus propios datos.
 
@@ -180,7 +180,14 @@ PREGUNTAS QUE PROBABLEMENTE HAGAN (y cómo responderlas)
 P: ¿Por qué no usaron Laravel o React?
 R: Porque queríamos entender cómo funciona todo por debajo y no
    depender de un framework que no habíamos visto en la cursada. Además
-   corre en XAMPP sin instalar nada más.
+   corre en XAMPP sin instalar nada más que PostgreSQL.
+
+P: ¿Por qué PostgreSQL y no MySQL?
+R: Empezamos con MySQL y lo cambiamos en el grupo: PostgreSQL es más
+   estricto con los datos (tipos, GROUP BY, mayúsculas) y es la base que
+   ofrecen gratis los servicios donde queremos publicar la app. El
+   código accede a la base por una sola clase (includes/db.php), así
+   que el cambio no tocó las páginas.
 
 P: ¿Qué pasa si la API del dólar no responde?
 R: La app prueba con una segunda API. Si ninguna responde, no deja

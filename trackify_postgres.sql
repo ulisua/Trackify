@@ -1,23 +1,23 @@
 -- =====================================================================
--- Trackify — esquema unificado para PostgreSQL
+-- Trackify — esquema de la base de datos (PostgreSQL)
 -- =====================================================================
--- Mismas tablas y columnas que trackify.sql (MySQL/MariaDB).
--- Basado en la conversión de devulises, completado con las columnas que
--- usa el código (icono, id_usuario en categorías, metas con descripción/
--- estado y centavos, nombre_usuario, foto_perfil).
+-- Única base soportada por la app. Crea las tablas, índices, claves
+-- foráneas y las categorías predeterminadas (sin usuarios ni datos).
 --
--- Uso:  psql -U <usuario> -d trackify -f trackify_postgres.sql
+-- Uso (base vacía):
+--   createdb -U postgres trackify
+--   psql -U postgres -d trackify -f trackify_postgres.sql
 --
--- Para que la app use esta base: en .env poner DB_DRIVER=pgsql (y DB_HOST,
--- DB_PORT, DB_NAME, DB_USER, DB_PASS), habilitar extension=pdo_pgsql en
--- php.ini y reiniciar Apache. Una base creada con una versión anterior de
--- este archivo se actualiza sola (includes/migraciones.php).
+-- La app se conecta con los datos DB_* (o DATABASE_URL) de .env y necesita
+-- extension=pdo_pgsql en php.ini. Una base creada con una versión anterior
+-- de este archivo se actualiza sola (includes/migraciones.php).
+-- Para traer los datos de una base MySQL vieja:
+--   php herramientas/migrar_mysql_a_postgres.php
 --
--- Notas de compatibilidad con el código:
---  * Sin comillas en los nombres: PostgreSQL los pasa a minúscula, así que
---    "Foto_perfil" en las consultas PHP resuelve a foto_perfil.
---  * email_verificado y es_hormiga son SMALLINT (0/1) para que las
---    consultas que comparan con 0/1 funcionen igual que en MySQL.
+-- Notas:
+--  * Nombres sin comillas: PostgreSQL los guarda en minúscula.
+--  * email_verificado y es_hormiga son SMALLINT (0/1), no BOOLEAN: el
+--    código compara con 0/1.
 -- =====================================================================
 
 BEGIN;
@@ -25,7 +25,7 @@ BEGIN;
 SET TIME ZONE 'UTC';
 
 -- ---------------------------------------------------------------------
--- Tipos ENUM (reemplazan enum(...) de MariaDB)
+-- Tipos ENUM
 -- ---------------------------------------------------------------------
 CREATE TYPE tipo_movimiento AS ENUM ('ingreso', 'gasto');
 CREATE TYPE estado_meta     AS ENUM ('activo', 'inactivo', 'logrado');
@@ -110,8 +110,7 @@ CREATE TABLE consejos_ia (
   PRIMARY KEY (id_consejos)
 );
 
--- MariaDB: fecha ... ON UPDATE current_timestamp()
--- PostgreSQL no tiene ON UPDATE, se replica con un trigger.
+-- "fecha" se actualiza sola en cada UPDATE (PostgreSQL no tiene ON UPDATE).
 CREATE OR REPLACE FUNCTION actualizar_fecha_consejos_ia()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -131,7 +130,7 @@ EXECUTE FUNCTION actualizar_fecha_consejos_ia();
 CREATE INDEX idx_categorias_usuario        ON categorias (id_usuario);
 CREATE INDEX idx_consejos_ia_id_usuario    ON consejos_ia (id_usuario);
 CREATE INDEX idx_metas_ahorro_id_usuario   ON metas_ahorro (id_usuario);
-CREATE INDEX idx_movimientos_id_usuario    ON movimientos (id_usuario);
+CREATE INDEX idx_movimientos_usuario_fecha ON movimientos (id_usuario, fecha);
 CREATE INDEX idx_movimientos_id_categoria  ON movimientos (id_categoria);
 
 -- ---------------------------------------------------------------------

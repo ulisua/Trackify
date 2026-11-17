@@ -52,7 +52,7 @@ if(isset($_SESSION['usuario_id'])) {
     // ── Gráfico de barras: ingresos vs gastos por mes (últimos 6 meses) ─────
     $filas_barras = $conn->filas(
         "SELECT
-            " . $conn->sqlMes('fecha') . " as mes,
+            TO_CHAR(fecha, 'YYYY-MM') as mes,
             SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as total_ingresos,
             SUM(CASE WHEN tipo = 'gasto'   THEN monto ELSE 0 END) as total_gastos
          FROM movimientos

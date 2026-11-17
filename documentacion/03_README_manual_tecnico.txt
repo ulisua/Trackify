@@ -1,6 +1,6 @@
 =====================================================================
   TRACKIFY — README / MANUAL TÉCNICO
-  Aplicación web de finanzas personales (PHP + MySQL o PostgreSQL)
+  Aplicación web de finanzas personales (PHP + PostgreSQL)
   Versión documentada: commit 190451c (06/11/2026), rama devagus
 =====================================================================
 
@@ -37,14 +37,14 @@ un asistente de IA que responde con los datos reales del usuario.
 2. STACK TECNOLÓGICO
 ---------------------------------------------------------------------
 Backend ........ PHP 8.x (sin framework), PDO (includes/db.php)
-Base de datos .. MySQL / MariaDB 10.4 (incluida en XAMPP) o
-                 PostgreSQL 13+ (se elige con DB_DRIVER en .env)
+Base de datos .. PostgreSQL 13+ (probado con 16). Hasta 11/2026 la
+                 app usaba MySQL/MariaDB de XAMPP.
 Servidor web ... Apache (XAMPP)
 Frontend ....... HTML5, CSS3 modular, JavaScript vanilla (sin build)
 Librerías JS ... Chart.js 4.6.1 (gráficos), SweetAlert2 11.26.25
                  (alertas), Flatpickr 4.6.13 (calendarios). Por CDN.
 Librería PHP ... PHPMailer (incluida en /phpmailer)
-Servicios ...... Google OAuth 2.0, SMTP (Mailtrap en desarrollo),
+Servicios ...... Google OAuth 2.0, EmailJS o SMTP (Mailtrap en desarrollo),
                  Groq API (IA), ExchangeRate-API y Frankfurter
                  (cotización del dólar)
 
@@ -53,13 +53,13 @@ Servicios ...... Google OAuth 2.0, SMTP (Mailtrap en desarrollo),
 3. REQUISITOS
 ---------------------------------------------------------------------
 - XAMPP con PHP 8.0 o superior (el código usa str_contains y match).
-- Extensiones PHP habilitadas: pdo_mysql (o pdo_pgsql para
-  PostgreSQL), curl, openssl, mbstring.
-- MariaDB 10.0.2+ / MySQL 8.0.29+ (por "ADD COLUMN IF NOT EXISTS"),
-  o PostgreSQL 13+.
+- Extensiones PHP habilitadas: pdo_pgsql, curl, openssl, mbstring.
+  (XAMPP trae pdo_pgsql pero desactivada: ver paso 3 de la instalación.)
+- PostgreSQL 13+ (instalador para Windows: postgresql.org/download;
+  trae pgAdmin y psql). XAMPP no lo incluye.
 - Conexión a internet para: CDN de librerías, cotización, IA, Google
   y envío de emails.
-- Opcional: cuentas en Google Cloud (OAuth), Mailtrap (SMTP) y
+- Opcional: cuentas en Google Cloud (OAuth), EmailJS o Mailtrap (SMTP) y
   Groq (API key gratuita).
 
 
@@ -69,22 +69,28 @@ Servicios ...... Google OAuth 2.0, SMTP (Mailtrap en desarrollo),
 1) Clonar el repositorio dentro de htdocs:
      cd C:\xampp\htdocs
      git clone <url-del-repositorio> trackify
-2) Abrir el panel de XAMPP e iniciar Apache y MySQL.
-3) Entrar a http://localhost/phpmyadmin y crear una base llamada
-   "trackify" (cotejamiento utf8mb4_general_ci).
-4) Importar trackify.sql en esa base (pestaña Importar).
+2) Instalar PostgreSQL (anotar la contraseña del usuario "postgres";
+   puerto 5432).
+3) Habilitar el driver en PHP: en C:\xampp\php\php.ini quitar el ";"
+   de ";extension=pdo_pgsql". Iniciar (o reiniciar) Apache desde el
+   panel de XAMPP. MySQL ya no hace falta.
+4) Crear la base "trackify" e importar el esquema. Por consola:
+     createdb -U postgres trackify
+     psql -U postgres -d trackify -f trackify_postgres.sql
+   o en pgAdmin: Create > Database "trackify", después Query Tool >
+   abrir trackify_postgres.sql > Ejecutar.
    Trae el esquema completo y las categorías predeterminadas, sin
    usuarios.
-   Con PostgreSQL: importar trackify_postgres.sql (psql o pgAdmin),
-   poner DB_DRIVER=pgsql en .env, quitar el ";" de
-   ";extension=pdo_pgsql" en C:
-mpp\php\php.ini y reiniciar Apache.
 5) Copiar .env.example como .env (en la raíz del proyecto) y
-   completar los valores (ver sección 5).
+   completar los valores (ver sección 5), en especial DB_PASS.
+   Si tenías datos en la base MySQL vieja, copiarlos con (MySQL de
+   XAMPP encendido):
+     C:\xampp\php\php.exe herramientas/migrar_mysql_a_postgres.php
+   Ver 10_migracion_mysql_a_postgresql.txt.
 6) Abrir http://localhost/trackify
    En la primera carga, includes/migraciones.php agrega lo que falte y
    crea las categorías predeterminadas (ver sección 6).
-7) Registrarse. Si el SMTP no está configurado, el email no llega:
+7) Registrarse. Si EmailJS/SMTP no está configurado, el email no llega:
    ver "Problemas frecuentes".
 
 
@@ -96,19 +102,25 @@ línea por línea y la función env('CLAVE', 'por_defecto') devuelve el
 valor.
 
   APP_URL              URL base, sin barra final (se usa en los emails)
-  DB_DRIVER            mysql (por defecto) o pgsql
-  DB_HOST / DB_PORT /  Conexión. Por defecto: localhost / (puerto del
-  DB_USER / DB_PASS /  motor) / root / (vacío) / trackify
-  DB_NAME
+  DB_HOST / DB_PORT /  Conexión a PostgreSQL. Por defecto: localhost /
+  DB_NAME / DB_USER /  5432 / trackify / postgres / (vacío)
+  DB_PASS
+  DATABASE_URL         Alternativa a los DB_*: la URL que dan Render,
+                       Neon o Supabase (postgresql://usuario:clave@host:5432/base)
+  DB_SSLMODE           "require" para bases en la nube; vacío en local
   GOOGLE_CLIENT_ID     Credenciales OAuth de Google Cloud Console.
   GOOGLE_CLIENT_SECRET La redirect URI debe estar registrada allá.
   GOOGLE_REDIRECT_URI  Ej.: http://localhost/trackify/auth/google/callback.php
+  EMAILJS_SERVICE_ID / Envío de los códigos por la API de EmailJS (si
+  _TEMPLATE_ID /       están las 4, se usa en lugar de SMTP; necesario
+  _PUBLIC_KEY /        en Render, que bloquea SMTP).
+  _PRIVATE_KEY
   SMTP_HOST/PORT/      Servidor de correo para los códigos de
   USER/PASS/FROM       verificación (Mailtrap en desarrollo).
   GROQ_API_KEY         API key de Groq (cada integrante usa la suya).
   GROQ_MODEL           Modelo de Groq. Por defecto: openai/gpt-oss-120b
 
-Sin SMTP no se pueden verificar cuentas nuevas por email; sin
+Sin EmailJS ni SMTP no se pueden verificar cuentas nuevas por email; sin
 GROQ_API_KEY el chat responde con un mensaje de "no configurado".
 
 
@@ -123,22 +135,22 @@ Regla de oro: movimientos.monto y los montos de metas_ahorro se
 guardan SIEMPRE en pesos (ARS).
 
 Acceso a datos (includes/db.php):
-- Clase BaseDatos sobre PDO, igual para los dos motores. conexion.php
-  la crea como $conn. Métodos: fila(), filas(), valor(), ejecutar(),
-  insertar() (RETURNING en PostgreSQL), transaccion(), sqlMes().
-- Reglas para que una consulta funcione en los dos motores: ver
-  docs/ARCHITECTURE.md sección 3.
+- Clase BaseDatos sobre PDO (driver pdo_pgsql). conexion.php la crea
+  como $conn. Métodos: fila(), filas(), valor(), ejecutar(),
+  insertar() (con RETURNING), transaccion().
+- Reglas de SQL para PostgreSQL: ver docs/ARCHITECTURE.md sección 3.
 
 Migraciones automáticas (includes/migraciones.php, llamado por conexion.php):
-- En cada request se hace UNA consulta a information_schema que cuenta
-  si están todas las columnas esperadas ($columnas_esperadas).
+- Se hace UNA consulta a information_schema/pg_indexes que revisa si
+  están todas las columnas e índices esperados (COLUMNAS_ESPERADAS).
+  El resultado se recuerda en la sesión 5 minutos.
 - Si falta alguna, se ejecutan los "ALTER TABLE ... ADD COLUMN IF NOT
   EXISTS". Son solo ADITIVAS (nunca borran).
 - Si metas_ahorro.monto_objetivo no tiene decimales, se amplía a
-  DECIMAL(12,2) una sola vez.
+  NUMERIC(12,2) una sola vez.
 - Unificación con la base de devulises (se corrige una sola vez):
   categorias.Icono_tipo -> icono, color admite NULL, usuarios.uuid
-  completo y CHAR(36) NOT NULL UNIQUE, consejos_ia con AUTO_INCREMENT,
+  completo y CHAR(36) NOT NULL UNIQUE, consejos_ia con secuencia (autoincremento),
   movimientos.moneda. Por eso cualquier base vieja de cualquiera de los
   dos integrantes funciona sin reimportar.
 - Con la base al día, la consulta inicial no dispara ningún ALTER.
@@ -147,8 +159,10 @@ Migraciones automáticas (includes/migraciones.php, llamado por conexion.php):
   y color (includes/categorias_meta.php).
 
 Para agregar una columna nueva:
-  1. Agregar el ALTER TABLE ... ADD COLUMN IF NOT EXISTS en la lista.
-  2. Agregar el nombre de la columna en $columnas_esperadas.
+  1. Agregar el ALTER TABLE ... ADD COLUMN IF NOT EXISTS en
+     SQL_COLUMNAS_NUEVAS.
+  2. Agregar el nombre de la columna en COLUMNAS_ESPERADAS.
+  3. Agregarla también en trackify_postgres.sql.
   (Si no se hace el paso 2, la migración nunca se dispara.)
 
 
@@ -289,11 +303,13 @@ POST  ia.php   JSON { pregunta, historial? } -> { respuesta } / { error }
 ---------------------------------------------------------------------
 13. FRONTEND: CSS, JS Y LIBRERÍAS
 ---------------------------------------------------------------------
-CSS (styles.css importa todo):
+CSS (lista CSS_BASE en includes/assets.php; se enlazan en paralelo):
   variables.css (paleta y tipografía) -> themes.css (claro/oscuro con
   [data-theme]) -> base.css -> layout.css -> components/*.css ->
   pages/*.css -> responsive.css (se carga al final; corte principal en
-  900 px). Detalle: docs/CSS_ARCHITECTURE.md
+  900 px). Todo CSS/JS propio se enlaza con cssLink() / jsScript(), que
+  agregan ?v=<fecha de modificación> para el caché.
+  Detalle: docs/CSS_ARCHITECTURE.md
 
 JS:
   main.js ............ CSRF en formularios, alertas de marca
@@ -302,9 +318,10 @@ JS:
                        modales, selects personalizados, mensajes flash
   moneda.js .......... cotización y conversión
   ia.js .............. chat
-  perfil.js .......... perfil, contraseña, modo oscuro, zona de peligro
+  perfil.js .......... perfil, contraseña, modo oscuro, exportación CSV,
+                       zona de peligro
   categorias.js ...... pestañas y orden de tarjetas
-  filtros_movimientos.js, utils/exportCSV.js
+  filtros_movimientos.js
   Detalle: docs/JAVASCRIPT_ARCHITECTURE.md
 
 Modo oscuro: includes/tema_inicial.php aplica el tema antes de pintar
@@ -328,9 +345,8 @@ la página (evita el "parpadeo" blanco).
 7. Fechas: movimientos solo hasta hoy (maxDate), objetivos desde hoy
    (minDate).
 8. Columna nueva en la BD -> migración en includes/migraciones.php
-   para los dos motores (sección 6) y en los dos .sql.
-9. Consultas siempre con $conn->fila()/filas()/... y parámetros "?";
-   probarlas con MySQL y con PostgreSQL.
+   (sección 6) y en trackify_postgres.sql.
+9. Consultas siempre con $conn->fila()/filas()/... y parámetros "?".
 
 
 ---------------------------------------------------------------------
@@ -349,11 +365,15 @@ entregas.
 16. PROBLEMAS FRECUENTES
 ---------------------------------------------------------------------
 "No se pudo conectar con la base de datos"
-   -> MySQL (o PostgreSQL) no está iniciado, o DB_* no coincide.
-"could not find driver" en el log de PHP con DB_DRIVER=pgsql
+   -> PostgreSQL no está iniciado (Servicios de Windows:
+      "postgresql-x64-16"), o DB_* de .env no coincide.
+"Falta la extensión pdo_pgsql" / "could not find driver"
    -> Falta habilitar extension=pdo_pgsql en php.ini y reiniciar Apache.
 No llega el email de verificación
-   -> Revisar SMTP_* en .env. Con Mailtrap los correos aparecen en la
+   -> Revisar EMAILJS_* o SMTP_* en .env y el log de PHP. Un
+      "Error EmailJS HTTP 403 ... no Private Key was provided" significa
+      que EMAILJS_PRIVATE_KEY no es la Private Key de esa cuenta
+      (copiarla de nuevo en dashboard.emailjs.com > Account). Con Mailtrap los correos aparecen en la
       bandeja de Mailtrap, no en el correo real.
 "Error al iniciar sesión con Google" / redirect_uri_mismatch
    -> GOOGLE_REDIRECT_URI debe ser idéntica a la registrada en Google
@@ -364,9 +384,10 @@ Los montos en USD no se pueden cargar
    -> No hay cotización (sin internet o APIs caídas).
 Error 403 al enviar un formulario
    -> Token CSRF vencido (la sesión expiró). Recargar la página.
-"Unknown column ..." después de un pull
-   -> Recargar cualquier página: la migración automática agrega la
-      columna. Si no, revisar que esté en $columnas_esperadas.
+"column ... does not exist" después de un pull
+   -> Cerrar sesión y volver a entrar (la revisión del esquema se
+      recuerda 5 minutos por sesión): la migración automática agrega la
+      columna. Si no, revisar que esté en COLUMNAS_ESPERADAS.
 
 
 ---------------------------------------------------------------------

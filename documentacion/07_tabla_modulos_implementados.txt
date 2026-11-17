@@ -117,13 +117,14 @@ Migraciones automáticas de BD
   Observaciones: conexion.php agrega columnas faltantes y carga las
   categorías iniciales. Solo aditivas.
 
-Soporte MySQL / PostgreSQL
+Base de datos PostgreSQL
   Responsable: Cecch / Suarez
-  Estado: ✅
+  Estado: 🔄
   Observaciones: Capa de acceso a datos propia (includes/db.php, PDO).
-  El motor se elige con DB_DRIVER en .env. Esquema unificado en
-  trackify.sql y trackify_postgres.sql; las bases viejas de los dos
-  integrantes se actualizan solas. Probado de punta a punta en ambos.
+  Desde 11/2026 solo PostgreSQL (se quitó MySQL). Esquema en
+  trackify_postgres.sql; las bases viejas se actualizan solas y los
+  datos de MySQL se copian con herramientas/migrar_mysql_a_postgres.php.
+  Falta la prueba de punta a punta de cada integrante en PostgreSQL.
 
 Gasto hormiga
   Responsable: (a definir)
@@ -157,8 +158,8 @@ Testing (QA / QC)
 Documentación técnica
   Responsable: Equipo
   Estado: 🔄
-  Observaciones: docs/*.md y carpeta documentacion/. Falta regenerar
-  trackify.sql y actualizar RESUMEN_EJECUTIVO.md.
+  Observaciones: docs/*.md y carpeta documentacion/, actualizados al
+  pasaje a PostgreSQL.
 
 
 ---------------------------------------------------------------------
@@ -180,10 +181,10 @@ Modo oscuro	Cecch	✅	Sin parpadeo al cargar.
 Diseño responsive	Cecch	✅	Corte en 900 px, menú hamburguesa.
 Seguridad transversal	Cecch / Suarez	✅	Prepared statements, CSRF, XSS, UUID.
 Migraciones automáticas	Cecch	✅	Solo aditivas.
-Soporte MySQL / PostgreSQL	Cecch / Suarez	✅	Capa PDO propia; motor elegido con DB_DRIVER. Probado en ambos.
+Base de datos PostgreSQL	Cecch / Suarez	🔄	Capa PDO propia; solo PostgreSQL desde 11/2026. Falta prueba completa de cada integrante.
 Gasto hormiga	(a definir)	⏳	Columna creada, sin interfaz.
 Historial de consejos IA	Cecch	⏳	Tabla creada, sin uso.
 Docker	(a definir)	🔄	No versionado en el repo.
 Hosting	Equipo	⏳	Solo local.
 Testing (QA/QC)	Tester	🔄	Pruebas manuales.
-Documentación técnica	Equipo	🔄	Falta regenerar trackify.sql.
+Documentación técnica	Equipo	✅	Actualizada al pasaje a PostgreSQL.

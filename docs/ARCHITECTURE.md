@@ -19,7 +19,7 @@ Navegador (Cliente)
    │
    ├── [HTTP GET] ──> index.php / gastos.php / etc.
    │                    ├── Valida sesión ($_SESSION['usuario_id']) vía includes/header.php
-   │                    ├── Consulta la BD (MySQL o PostgreSQL) vía includes/db.php (PDO, consultas preparadas)
+   │                    ├── Consulta la BD (PostgreSQL) vía includes/db.php (PDO, consultas preparadas)
    │                    ├── Procesa lógica y filtra períodos (includes/periodo.php)
    │                    ├── Hidrata variables hacia JS (inline JSON)
    │                    └── Renderiza HTML + CSS (hojas de CSS_BASE + css/pages/...)
@@ -49,6 +49,8 @@ trackify/
 │   ├── components/                  # Componentes reutilizables (navbar, sidebar, cards, forms, buttons, charts, moneda)
 │   └── pages/                       # Estilos específicos de cada vista (dashboard, auth, categorias, etc.)
 ├── favicons/                        # Favicons (16, 32, apple-touch 180, android 192/512) y site.webmanifest
+├── herramientas/
+│   └── migrar_mysql_a_postgres.php  # Uso único por consola: copia los datos de una base MySQL vieja a PostgreSQL
 ├── iconos/                          # Recursos gráficos PNG locales
 │   ├── gasto/                       # Iconos específicos de categorías de gasto
 │   ├── generales/                   # Iconos UI (flechas, tachos, lápiz, robots, alertas)
@@ -59,7 +61,7 @@ trackify/
 │   ├── categorias_meta.php          # Metadatos (nombre -> icono/color) y helpers de categorías visibles por usuario
 │   ├── footer.php                   # Pie global, modales de la página ($modales_pagina), librerías (SweetAlert2, Flatpickr) y mensaje flash
 │   ├── header.php                   # Cabecera global, control de sesión, selectores de moneda/período (navbar + menú móvil)
-│   ├── mailer.php                   # Envío de códigos por email: verificación de cuenta y creación de contraseña (PHPMailer, .env)
+│   ├── mailer.php                   # Envío de códigos por email: verificación de cuenta y creación de contraseña (EmailJS si está configurado, si no SMTP con PHPMailer)
 │   ├── movimientos_handler.php      # Controlador POST central: CRUD movimientos, borrar historial, eliminar cuenta
 │   ├── periodo.php                  # Cálculo centralizado de fechas (semana, quincena, mes) y moneda
 │   ├── seguridad.php                # CSRF, URL de retorno segura, validación de montos/fechas, jsAttr(), flash()
@@ -75,7 +77,8 @@ trackify/
 ├── categorias.php                   # Vista y CRUD de categorías
 ├── favicon.ico                      # Copia de favicons/favicon.ico en la raíz (algunos navegadores la piden ahí)
 ├── .env.example                     # Plantilla de configuración (copiar como .env, que NO se versiona)
-├── conexion.php                     # Conexión (BaseDatos sobre PDO, motor según DB_DRIVER), carga .env, seguridad y assets, ejecuta las migraciones
+├── conexion.php                     # Conexión a PostgreSQL (BaseDatos sobre PDO), carga .env, seguridad y assets, ejecuta las migraciones
+├── enviar_emailjs.php               # Envío por la API HTTP de EmailJS (para servidores que bloquean SMTP, como Render)
 ├── env.php                          # Parser manual simple del archivo .env
 ├── export_movimientos.php           # Endpoint JSON autenticado para exportación de datos
 ├── gastos.php                       # Vista de gastos, filtros por fecha/categoría y métricas mensuales
@@ -87,39 +90,38 @@ trackify/
 ├── movimientos.php                  # Listado completo con filtros por rango, tipo y categoría
 ├── objetivos.php                    # Metas de ahorro: CRUD, aportes (gasto) y reintegro al eliminar (ingreso)
 ├── perfil.php                       # Perfil: datos personales (nombre, @usuario, email), seguridad, modo oscuro y zona de peligro
-├── reenviar_codigo.php              # Reenvío de código OTP de verificación de email vía PHPMailer
+├── reenviar_codigo.php              # Reenvío de código OTP de verificación de email (includes/mailer.php)
 ├── registro.php                     # Registro de usuarios con contraseña Bcrypt y envío de OTP
-├── trackify.sql                     # Esquema unificado MySQL/MariaDB + categorías predeterminadas
-├── trackify_postgres.sql            # Mismo esquema en PostgreSQL (DB_DRIVER=pgsql)
+├── trackify_postgres.sql            # Esquema PostgreSQL + categorías predeterminadas
 └── verificar_email.php              # Validación del código OTP de 6 dígitos
 ```
 
 > [!NOTE]
 > * La base de datos usa una única tabla normalizada de movimientos: `movimientos`.
-> * `trackify.sql` es el esquema unificado (fusión de las bases de devagus y devulises, 11/2026) e incluye las categorías predeterminadas. Una base de una versión anterior no necesita reimportarse: `conexion.php` la actualiza sola.
-> * `trackify_postgres.sql` tiene las mismas tablas y columnas para PostgreSQL. La app funciona con cualquiera de los dos motores: se elige con `DB_DRIVER` en `.env`.
+> * `trackify_postgres.sql` es el esquema (fusión de las bases de devagus y devulises, 11/2026) e incluye las categorías predeterminadas. Una base de una versión anterior no necesita reimportarse: `conexion.php` la actualiza sola.
+> * Desde 11/2026 la app usa **solo PostgreSQL**. Los datos de una base MySQL vieja se copian con `php herramientas/migrar_mysql_a_postgres.php` (ver `documentacion/10_migracion_mysql_a_postgresql.txt`).
 
 ---
 
-## 3. Modelo de Datos y Base de Datos (MySQL / PostgreSQL)
+## 3. Modelo de Datos y Base de Datos (PostgreSQL)
 
 * **Base de datos predeterminada:** `trackify` (definida en `conexion.php`).
-* **Motor de conexión:** clase `BaseDatos` de `includes/db.php`, sobre **PDO**. `DB_DRIVER=mysql` (por defecto, charset `utf8mb4`) o `DB_DRIVER=pgsql` (requiere `extension=pdo_pgsql`). Métodos: `fila()`, `filas()`, `valor()`, `ejecutar()`, `insertar()` (usa `RETURNING` en PostgreSQL), `transaccion()`, y `sqlMes()` para la única expresión que cambia entre motores. Las claves de las filas vienen siempre en minúscula. Las fechas relativas ("hace 5 meses") se calculan en PHP (`inicioDeMes()`), no con funciones de fecha del motor.
-* **Reglas para SQL portable:** nada de `DATE_FORMAT`, `CURDATE()`, `INTERVAL`, `IFNULL`, `INSERT IGNORE` ni `LEAST/GREATEST` con parámetros; comparar emails con `LOWER(email) = ?` (PostgreSQL distingue mayúsculas); ordenar por expresiones booleanas con `CASE WHEN ... THEN 0 ELSE 1 END` (en PostgreSQL los NULL van primero en DESC).
+* **Motor de conexión:** clase `BaseDatos` de `includes/db.php`, sobre **PDO** con el driver `pdo_pgsql` (hay que habilitar `extension=pdo_pgsql` en `php.ini`). Datos de conexión en `.env`: `DB_HOST`, `DB_PORT` (5432), `DB_NAME`, `DB_USER`, `DB_PASS`, o `DATABASE_URL` (la URL que dan Render/Neon/Supabase) con `DB_SSLMODE=require` para bases en la nube. Métodos: `fila()`, `filas()`, `valor()`, `ejecutar()`, `insertar()` (con `RETURNING`), `transaccion()`. Las claves de las filas vienen siempre en minúscula. Las fechas relativas ("hace 5 meses") se calculan en PHP (`inicioDeMes()`).
+* **Reglas de SQL en PostgreSQL:** comparar emails con `LOWER(email) = ?` (`=` distingue mayúsculas); agrupar por mes con `TO_CHAR(fecha, 'YYYY-MM')`; ordenar por expresiones booleanas con `CASE WHEN ... THEN 0 ELSE 1 END` (los NULL van primero en DESC); todas las columnas no agregadas del `SELECT` deben estar en el `GROUP BY`; nombres de tablas y columnas en minúscula y sin comillas.
 * **Configuración de entorno:** `env.php` lee `.env` línea por línea y expone las variables vía `putenv()`.
 
 ### Tablas Principales
 
 | Tabla | Columnas Clave | Propósito / Relación |
 | :--- | :--- | :--- |
-| **`usuarios`** | `id_usuario` (PK, AI), `nombre`, `email` (UNIQUE), `clave` (Bcrypt), `fecha_registro`, `uuid` (CHAR 36, NOT NULL, UNIQUE), `email_verificado`, `codigo_verificacion`, `codigo_expiracion`, `google_id`, `Foto_perfil`, `moneda_principal` (ENUM 'ARS','USD'), `nombre_usuario` (UNIQUE, 3-30 caracteres `[a-z0-9._]`; se genera desde el email al registrarse y se edita en el perfil) | Entidad central de autenticación y preferencia del usuario. Las cuentas de Google tienen `clave = ''` hasta que crean una contraseña con código por email (`api/cambiar_password.php`). |
-| **`categorias`** | `id_categoria` (PK, AI), `nombre`, `tipo` (ENUM 'ingreso','gasto'), `icono`, `color`, `id_usuario` (NULL o id) | `id_usuario NULL` = categoría **predeterminada** (compartida, solo lectura). Con id = categoría **propia** de ese usuario (solo él la ve, edita y elimina). |
-| **`movimientos`** | `id_movimiento` (PK, AI), `id_usuario` (FK), `id_categoria` (FK), `monto` (DECIMAL 12,2), `tipo` (ENUM 'ingreso','gasto'), `descripcion`, `fecha` (DATE), `es_hormiga` (TINYINT 1), `moneda` (VARCHAR 3, DEFAULT 'ARS') | Registro transaccional central. **Siempre almacena montos convertidos a ARS** (por eso `moneda` queda siempre en 'ARS'). |
-| **`metas_ahorro`**| `id_meta` (PK, AI), `id_usuario` (FK), `nombre_meta`, `descripcion`, `monto_objetivo` (DECIMAL 12,2), `monto_actual` (DECIMAL 12,2), `fecha_limite` (DATE), `estado` (ENUM 'activo','inactivo','logrado') | Objetivos de ahorro individuales por usuario. Montos en ARS. Cada aporte genera un gasto "Ahorro para meta"; al eliminar el objetivo, `monto_actual` vuelve como ingreso "Reintegro de meta" (misma transacción). |
-| **`consejos_ia`** | `id_consejos` (PK, AI), `id_usuario` (FK), `mensaje` (TEXT), `fecha` (TIMESTAMP) | Tabla en esquema para histórico de consejos (reservada). |
+| **`usuarios`** | `id_usuario` (PK, AI), `nombre`, `email` (UNIQUE), `clave` (Bcrypt), `fecha_registro`, `uuid` (CHAR 36, NOT NULL, UNIQUE), `email_verificado`, `codigo_verificacion`, `codigo_expiracion`, `google_id`, `foto_perfil`, `moneda_principal` (VARCHAR 3, CHECK 'ARS'/'USD'), `nombre_usuario` (UNIQUE, 3-30 caracteres `[a-z0-9._]`; se genera desde el email al registrarse y se edita en el perfil) | Entidad central de autenticación y preferencia del usuario. Las cuentas de Google tienen `clave = ''` hasta que crean una contraseña con código por email (`api/cambiar_password.php`). |
+| **`categorias`** | `id_categoria` (PK, AI), `nombre`, `tipo` (ENUM `tipo_movimiento`), `icono`, `color`, `id_usuario` (NULL o id) | `id_usuario NULL` = categoría **predeterminada** (compartida, solo lectura). Con id = categoría **propia** de ese usuario (solo él la ve, edita y elimina). |
+| **`movimientos`** | `id_movimiento` (PK, AI), `id_usuario` (FK), `id_categoria` (FK), `monto` (NUMERIC 12,2), `tipo` (ENUM `tipo_movimiento`), `descripcion`, `fecha` (DATE), `es_hormiga` (SMALLINT 0/1), `moneda` (VARCHAR 3, DEFAULT 'ARS') | Registro transaccional central. Índice compuesto `idx_movimientos_usuario_fecha (id_usuario, fecha)` para las consultas por usuario y rango de fechas (lo crea la migración si falta). **Siempre almacena montos convertidos a ARS** (por eso `moneda` queda siempre en 'ARS'). |
+| **`metas_ahorro`**| `id_meta` (PK, AI), `id_usuario` (FK), `nombre_meta`, `descripcion`, `monto_objetivo` (NUMERIC 12,2), `monto_actual` (NUMERIC 12,2), `fecha_limite` (DATE), `estado` (ENUM `estado_meta`: 'activo','inactivo','logrado') | Objetivos de ahorro individuales por usuario. Montos en ARS. Cada aporte genera un gasto "Ahorro para meta"; al eliminar el objetivo, `monto_actual` vuelve como ingreso "Reintegro de meta" (misma transacción). |
+| **`consejos_ia`** | `id_consejos` (PK, AI), `id_usuario` (FK), `mensaje` (TEXT), `fecha` (TIMESTAMP, se actualiza con un trigger) | Tabla en esquema para histórico de consejos (reservada). |
 
 ### Auto-Migraciones y Seeding en Tiempo de Ejecución (`includes/migraciones.php`, llamado desde `conexion.php`)
-Al inicializarse `conexion.php`, `migrarEsquema()` hace una sola consulta a `information_schema` (como esa consulta es lenta, el resultado se recuerda en la sesión durante 5 minutos — `MIGRACION_REVISAR_CADA` — y mientras tanto no se repite; cambiar `DB_DRIVER`, `DB_HOST` o `DB_NAME` fuerza a revisar de nuevo) y, solo si falta algo, ejecuta sentencias `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` (con la versión correspondiente para MySQL o para PostgreSQL) para garantizar que columnas añadidas en iteraciones recientes (`uuid`, `google_id`, `email_verificado`, `moneda_principal`, `icono`, `color`, `estado`, `categorias.id_usuario`, etc.) existan en la tabla. Las migraciones son **solo aditivas**; la ampliación de `metas_ahorro.monto_*` a `DECIMAL(12,2)` se ejecuta una única vez (verifica la escala antes). Para unificar la base de devulises también se corrigen, una sola vez: `categorias.Icono_tipo` se renombra a `icono`, `categorias.color` pasa a admitir NULL, `usuarios.uuid` se completa y pasa a `CHAR(36) NOT NULL UNIQUE`, y `consejos_ia.id_consejos` recibe `AUTO_INCREMENT`. Todo se detecta con la misma consulta inicial a `information_schema`, así que con la base al día no se ejecuta ningún `ALTER`.  
+Al inicializarse `conexion.php`, `migrarEsquema()` hace una sola consulta a `information_schema` (como esa consulta es lenta, el resultado se recuerda en la sesión durante 5 minutos — `MIGRACION_REVISAR_CADA` — y mientras tanto no se repite; cambiar `DATABASE_URL`, `DB_HOST` o `DB_NAME` fuerza a revisar de nuevo) y, solo si falta algo, ejecuta sentencias `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` para garantizar que columnas añadidas en iteraciones recientes (`uuid`, `google_id`, `email_verificado`, `moneda_principal`, `icono`, `color`, `estado`, `categorias.id_usuario`, etc.) existan en la tabla. Las migraciones son **solo aditivas**; la ampliación de `metas_ahorro.monto_*` a `NUMERIC(12,2)` se ejecuta una única vez (verifica la escala antes). Para unificar la base de devulises también se corrigen, una sola vez: `categorias.Icono_tipo` se renombra a `icono`, `categorias.color` pasa a admitir NULL, `usuarios.uuid` se completa y pasa a `CHAR(36) NOT NULL UNIQUE`, y `consejos_ia.id_consejos` recibe una secuencia (autoincremento). Todo se detecta con la misma consulta inicial a `information_schema`, así que con la base al día no se ejecuta ningún `ALTER`.  
 Además, si `SELECT COUNT(*) FROM categorias` devuelve `<= 5`, se ejecuta un **seeding automático** insertando 11 categorías de ingreso y 16 de gasto con metadatos asociados desde `includes/categorias_meta.php`.
 
 ---
@@ -128,7 +130,7 @@ Además, si `SELECT COUNT(*) FROM categorias` devuelve `<= 5`, se ejecuta un **s
 
 ### Aislamiento de Datos (Multi-Tenancy)
 1. **Regla de Oro:** Todo script transaccional consulta `$_SESSION['usuario_id']`.
-2. Todas las consultas DML a `movimientos`, `metas_ahorro` o `usuarios` **DEBEN** filtrar estrictamente con `WHERE id_usuario = ?` mediante consultas preparadas (`$stmt->bind_param("i", $user_id)`). Esto previene vulnerabilidades IDOR (Insecure Direct Object References).
+2. Todas las consultas DML a `movimientos`, `metas_ahorro` o `usuarios` **DEBEN** filtrar estrictamente con `WHERE id_usuario = ?` mediante consultas preparadas (`$conn->filas("... WHERE id_usuario = ?", [$user_id])`). Esto previene vulnerabilidades IDOR (Insecure Direct Object References).
 3. Salidas dinámicas de texto (`descripcion`, `nombre`, etc.) se escapan en el HTML utilizando `htmlspecialchars($string, ENT_QUOTES, 'UTF-8')` para neutralizar ataques XSS. Los valores que van como argumentos JS dentro de atributos (`onclick="fn(...)"`) se generan con `jsAttr($valor)` (JSON escapado), nunca concatenando comillas a mano.
 4. **CSRF:** `includes/seguridad.php` (incluido por `conexion.php`) rechaza con 403 todo POST de un usuario autenticado que no traiga el token (`csrf_token` en formularios, inyectado automáticamente por `footer.php`; cabecera `X-CSRF-Token` en `fetch`, usando `window.csrfToken`).
 5. **Redirecciones:** toda `return_url` pasa por `urlRetornoSegura()`, que solo admite rutas del propio sitio.
@@ -140,7 +142,7 @@ Además, si `SELECT COUNT(*) FROM categorias` devuelve `<= 5`, se ejecuta un **s
 2. Se genera un hash seguro de contraseña con `password_hash($pass, PASSWORD_DEFAULT)`.
 3. Se genera un código OTP numérico de 6 dígitos (`random_int`) con vencimiento a 15 minutos (`codigo_expiracion`) y un identificador único `uuid`.
 4. El registro se crea con `email_verificado = 0`.
-5. Se despacha un correo HTML mediante **PHPMailer** (`includes/mailer.php`, credenciales SMTP en `.env`).
+5. Se despacha el correo desde `includes/mailer.php`: por **EmailJS** si están las variables `EMAILJS_*` en `.env`, o si no por SMTP con **PHPMailer** (`SMTP_*`).
 6. El usuario es redirigido a `verificar_email.php` (máximo 5 intentos por código). Al validar el código, se actualiza `email_verificado = 1`, se limpian los campos del código, se regenera el id de sesión y se inicia la sesión.
 7. `reenviar_codigo.php` emite un nuevo código (como máximo uno por minuto) y reinicia los intentos.
 8. En `login.php` la contraseña se verifica **antes** de mirar si el email está verificado; el mensaje de error no distingue entre email inexistente y contraseña incorrecta.
@@ -151,7 +153,7 @@ Además, si `SELECT COUNT(*) FROM categorias` devuelve `<= 5`, se ejecuta un **s
   1. Valida el parámetro `state` (obligatorio, comparación con `hash_equals`).
   2. Solicita el token de acceso vía cURL contra `https://oauth2.googleapis.com/token`.
   3. Consulta el perfil en `https://www.googleapis.com/oauth2/v2/userinfo` y exige `verified_email`.
-  4. Si el `google_id` ya existe, inicia sesión. Si el email coincide con un usuario existente, vincula `google_id` y `Foto_perfil` (y lo marca verificado). Si es nuevo, lo inserta con `clave = ''` (sin contraseña; puede crear una desde el perfil validando un código de 6 dígitos enviado por email, vía `api/cambiar_password.php`).
+  4. Si el `google_id` ya existe, inicia sesión. Si el email coincide con un usuario existente, vincula `google_id` y `foto_perfil` (y lo marca verificado). Si es nuevo, lo inserta con `clave = ''` (sin contraseña; puede crear una desde el perfil validando un código de 6 dígitos enviado por email, vía `api/cambiar_password.php`).
   5. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REDIRECT_URI` se leen de `.env`.
 
 ### Cierre de Sesión y Destrucción de Cuenta
@@ -260,7 +262,7 @@ Trackify utiliza una combinación de tres estrategias de comunicación:
 
 ## 9. Convenciones y Reglas Críticas para no Romper el Proyecto
 
-0. **Acceso a datos:** siempre a través de `$conn` (`BaseDatos`, `includes/db.php`) con parámetros `?`; nunca `mysqli` ni SQL propio de un solo motor (ver sección 3). Toda consulta nueva debe probarse con `DB_DRIVER=mysql` y con `DB_DRIVER=pgsql`.
+0. **Acceso a datos:** siempre a través de `$conn` (`BaseDatos`, `includes/db.php`) con parámetros `?`; nunca `mysqli` ni valores concatenados en el SQL (ver sección 3 para las reglas de PostgreSQL).
 1. **NO alterar la regla de moneda en BD:** Nunca guardes valores en USD directamente en la tabla `movimientos`. Si agregas un formulario nuevo de movimientos, asegúrate de enviar el monto convertido a ARS.
 2. **Categorías predeterminadas vs. propias:** las de `id_usuario IS NULL` son compartidas y de solo lectura. Las consultas de categorías para un usuario usan `id_usuario IS NULL OR id_usuario = ?` (helpers en `includes/categorias_meta.php`). Al eliminar una categoría propia, sus movimientos pasan a "Otros gastos"/"Otros ingresos"; nunca se borran movimientos por borrar una categoría.
 3. **Respetar el filtro `id_usuario`:** Cada `SELECT`, `UPDATE` o `DELETE` sobre movimientos, objetivos o categorías propias debe contener la cláusula `id_usuario = ?`.

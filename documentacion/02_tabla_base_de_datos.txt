@@ -1,13 +1,13 @@
 =====================================================================
   TRACKIFY — DICCIONARIO DE DATOS ACTUALIZADO
-  Base de datos: trackify (MySQL / MariaDB 10.4, charset utf8mb4)
+  Base de datos: trackify (PostgreSQL 16, UTF-8)
   Estado: esquema unificado (fusión de las bases de devagus y
   devulises, 10/11/2026)
 =====================================================================
 
-Fuentes: trackify.sql (MySQL) y trackify_postgres.sql (PostgreSQL),
-que tienen las mismas tablas y columnas, + migraciones automáticas de
-conexion.php (llevan cualquier base vieja a este esquema).
+Fuentes: trackify_postgres.sql + migraciones automáticas de
+conexion.php (llevan cualquier base vieja a este esquema). Desde
+11/2026 la app usa solo PostgreSQL (antes MySQL/MariaDB).
 
 Referencias de la columna "Cambio":
   [=]  Igual que en la tabla anterior.
@@ -22,42 +22,42 @@ Formato de cada fila:
 ---------------------------------------------------------------------
 TABLA: usuarios
 ---------------------------------------------------------------------
-id_usuario          | INT(11)                    | PK - AUTO_INCREMENT | Identificador único del usuario. | [=]
+id_usuario          | SERIAL                     | PK - SERIAL         | Identificador único del usuario. | [=]
 nombre              | VARCHAR(50)                | -                   | Nombre del usuario (se muestra en el saludo y en el perfil). | [C] era VARCHAR(100); la base real es VARCHAR(50)
 nombre_usuario      | VARCHAR(30)                | UNIQUE              | Nombre de usuario público (@usuario). 3 a 30 caracteres [a-z 0-9 . _]. Se genera desde el email al registrarse y se edita en el perfil. | [N]
 email               | VARCHAR(100)               | UNIQUE              | Correo electrónico del usuario. No se puede repetir. | [C] no es FK, es clave única (UNIQUE)
 clave               | VARCHAR(255)               | -                   | Hash bcrypt de la contraseña (password_hash). Vacío ('') en cuentas creadas con Google hasta que el usuario crea una contraseña. | [C] se aclara que guarda un hash, no la clave
-fecha_registro      | DATETIME                   | -                   | Fecha y hora de creación de la cuenta. | [=]
+fecha_registro      | TIMESTAMP                  | -                   | Fecha y hora de creación de la cuenta. | [=]
 uuid                | CHAR(36) NOT NULL          | UNIQUE              | Identificador secundario alfanumérico (UUID v4) para no exponer el id correlativo. | [C] no es FK, es clave única (UNIQUE)
-Foto_perfil         | VARCHAR(255)               | -                   | URL de la foto de perfil (se completa con la foto de Google). | [=] (se precisa el largo)
+foto_perfil         | VARCHAR(255)               | -                   | URL de la foto de perfil (se completa con la foto de Google). | [=] (se precisa el largo)
 google_id           | VARCHAR(255)               | -                   | Id de la cuenta de Google vinculada (inicio de sesión con Google). NULL si no se vinculó. | [=]
-email_verificado    | TINYINT(1)                 | -                   | 0 = email sin verificar, 1 = verificado. Sin verificar no se puede iniciar sesión. | [C] la descripción anterior ("correo de seguridad") no era correcta
+email_verificado    | SMALLINT                   | -                   | 0 = email sin verificar, 1 = verificado. Sin verificar no se puede iniciar sesión. | [C] la descripción anterior ("correo de seguridad") no era correcta
 codigo_verificacion | VARCHAR(6)                 | -                | Código OTP de 6 dígitos enviado por email (verificación y creación de contraseña). Se borra al usarse. | [=]
-codigo_expiracion   | DATETIME                   | -                   | Fecha y hora en que vence el código (15 minutos después de enviarse). | [C] es la fecha de vencimiento, no un código
-moneda_principal    | ENUM('ARS','USD')          | -                   | Moneda preferida para mostrar los montos. Por defecto 'ARS'. | [N]
+codigo_expiracion   | TIMESTAMP                  | -                   | Fecha y hora en que vence el código (15 minutos después de enviarse). | [C] es la fecha de vencimiento, no un código
+moneda_principal    | VARCHAR(3) + CHECK         | -                   | Moneda preferida para mostrar los montos. Por defecto 'ARS'. | [N]
 
 
 ---------------------------------------------------------------------
 TABLA: movimientos
 ---------------------------------------------------------------------
-id_movimiento       | INT(11)                    | PK - AUTO_INCREMENT | Identificador único del movimiento. | [C] faltaba AUTO_INCREMENT; el nombre real es id_movimiento (singular)
-id_usuario          | INT(11)                    | FK -> usuarios      | Usuario dueño del movimiento. | [=]
-id_categoria        | INT(11)                    | FK -> categorias    | Categoría del movimiento. | [=]
-monto               | DECIMAL(12,2)              | -                   | Importe del movimiento, SIEMPRE en pesos argentinos (ARS). Debe ser mayor a 0 (validado en el servidor). | [C] se precisa precisión y moneda
-tipo                | ENUM('ingreso','gasto')    | -                   | Indica si el movimiento es un ingreso o un gasto. | [C] se aclaran los valores posibles
-fecha               | DATE                       | -                   | Fecha en que se realizó el movimiento (no puede ser futura). | [=]
+id_movimiento       | SERIAL                     | PK - SERIAL         | Identificador único del movimiento. | [C] faltaba AUTO_INCREMENT; el nombre real es id_movimiento (singular)
+id_usuario          | INTEGER                    | FK -> usuarios      | Usuario dueño del movimiento. | [=]
+id_categoria        | INTEGER                    | FK -> categorias    | Categoría del movimiento. | [=]
+monto               | NUMERIC(12,2)              | -                   | Importe del movimiento, SIEMPRE en pesos argentinos (ARS). Debe ser mayor a 0 (validado en el servidor). | [C] se precisa precisión y moneda
+tipo                | tipo_movimiento (ENUM)     | -                   | Indica si el movimiento es un ingreso o un gasto. | [C] se aclaran los valores posibles
+fecha               | DATE                       | INDEX (con id_usuario) | Fecha en que se realizó el movimiento (no puede ser futura). Índice compuesto idx_movimientos_usuario_fecha (id_usuario, fecha). | [N] índice
 descripcion         | VARCHAR(255)               | -                   | Descripción opcional del movimiento. | [=]
-es_hormiga          | TINYINT(1)                 | -                   | Marca de gasto hormiga (0/1). Existe en la base pero la interfaz todavía no la usa. | [C] en MySQL BOOLEAN = TINYINT(1)
+es_hormiga          | SMALLINT                   | -                   | Marca de gasto hormiga (0/1). Existe en la base pero la interfaz todavía no la usa. | [C] SMALLINT 0/1 (no BOOLEAN: el código compara con 0/1)
 moneda              | VARCHAR(3)                 | -                   | Moneda en la que está guardado el monto. Por defecto 'ARS' (la app siempre convierte a pesos antes de guardar). | [N] aporte de devulises
 
 
 ---------------------------------------------------------------------
 TABLA: categorias
 ---------------------------------------------------------------------
-id_categoria        | INT(11)                    | PK - AUTO_INCREMENT | Identificador único de la categoría. | [=]
-id_usuario          | INT(11)                    | INDEX (sin FK)      | NULL = categoría predeterminada del sistema (compartida, solo lectura). Con un id = categoría propia de ese usuario. | [N]
+id_categoria        | SERIAL                     | PK - SERIAL         | Identificador único de la categoría. | [=]
+id_usuario          | INTEGER                    | INDEX (sin FK)      | NULL = categoría predeterminada del sistema (compartida, solo lectura). Con un id = categoría propia de ese usuario. | [N]
 nombre              | VARCHAR(50)                | -                   | Nombre de la categoría. | [=] (se precisa el largo)
-tipo                | ENUM('ingreso','gasto')    | -                   | Si la categoría es de ingresos o de gastos. | [C] el tipo figuraba como "—"
+tipo                | tipo_movimiento (ENUM)     | -                   | Si la categoría es de ingresos o de gastos. | [C] el tipo figuraba como "—"
 icono               | VARCHAR(255)               | -                   | Ruta del ícono PNG (por ejemplo iconos/gasto/comida.png). | [C] es una ruta a un ícono, no una foto
 color               | VARCHAR(7)                 | -                   | Color hexadecimal de la tarjeta (#RRGGBB). | [N]
 
@@ -65,21 +65,21 @@ color               | VARCHAR(7)                 | -                   | Color h
 ---------------------------------------------------------------------
 TABLA: metas_ahorro
 ---------------------------------------------------------------------
-id_meta             | INT(11)                    | PK - AUTO_INCREMENT | Identificador único de cada meta. | [C] faltaba AUTO_INCREMENT
-id_usuario          | INT(11)                    | FK -> usuarios      | Usuario dueño de la meta. | [=]
+id_meta             | SERIAL                     | PK - SERIAL         | Identificador único de cada meta. | [C] faltaba AUTO_INCREMENT
+id_usuario          | INTEGER                    | FK -> usuarios      | Usuario dueño de la meta. | [=]
 nombre_meta         | VARCHAR(100)               | -                   | Nombre asignado a la meta. | [=]
 descripcion         | VARCHAR(255)               | -                   | Descripción opcional de la meta. | [N]
-monto_objetivo      | DECIMAL(12,2)              | -                   | Total a ahorrar, en ARS. | [C] antes DECIMAL(10,0) (sin centavos)
-monto_actual        | DECIMAL(12,2)              | -                   | Cantidad ahorrada hasta el momento, en ARS. Por defecto 0. | [C] antes DECIMAL(10,0)
+monto_objetivo      | NUMERIC(12,2)              | -                   | Total a ahorrar, en ARS. | [C] antes DECIMAL(10,0) (sin centavos)
+monto_actual        | NUMERIC(12,2)              | -                   | Cantidad ahorrada hasta el momento, en ARS. Por defecto 0. | [C] antes DECIMAL(10,0)
 fecha_limite        | DATE                       | -                   | Fecha hasta la que se espera alcanzar el objetivo (presente o futura). | [=]
-estado              | ENUM('activo','inactivo','logrado') | -          | Estado de la meta. Por defecto 'activo'. | [N]
+estado              | estado_meta (ENUM)                  | -          | Estado de la meta. Por defecto 'activo'. | [N]
 
 
 ---------------------------------------------------------------------
 TABLA: consejos_ia
 ---------------------------------------------------------------------
-id_consejos         | INT(11)                    | PK - AUTO_INCREMENT | Identificador único del consejo. | [C] faltaba AUTO_INCREMENT (agregado en la fusión)
-id_usuario          | INT(11)                    | FK -> usuarios      | Usuario que recibió el consejo. | [=]
+id_consejos         | SERIAL                     | PK - SERIAL         | Identificador único del consejo. | [C] faltaba AUTO_INCREMENT (agregado en la fusión)
+id_usuario          | INTEGER                    | FK -> usuarios      | Usuario que recibió el consejo. | [=]
 mensaje             | TEXT                       | -                   | Texto del consejo generado por la IA. | [C] es TEXT, no VARCHAR
 fecha               | TIMESTAMP                  | -                   | Fecha y hora del consejo (se completa automáticamente). | [C] es TIMESTAMP, no DATE
 
@@ -208,6 +208,31 @@ significa "categoría del sistema").
       - Probado en MySQL modo estricto con la base de cada integrante y
         con una base nueva, y el .sql de PostgreSQL en PostgreSQL.
 
+[12] 17/11/2026 — Índice para las consultas por fecha
+    - movimientos + índice compuesto idx_movimientos_usuario_fecha
+      (id_usuario, fecha). Casi todas las consultas (dashboard,
+      ingresos, gastos, movimientos) filtran por usuario y rango de
+      fechas; con este índice la base no recorre todos los movimientos
+      del usuario.
+    - Se elimina el índice simple de id_usuario (en MySQL "id_usuario",
+      en PostgreSQL "idx_movimientos_id_usuario"): el compuesto empieza
+      por id_usuario, así que cubre las mismas búsquedas y la FK.
+    - Lo hace solo includes/migraciones.php; trackify.sql y
+      trackify_postgres.sql ya lo traen para bases nuevas.
+
+[13] 17/11/2026 — Pasaje definitivo a PostgreSQL
+    - El grupo decide usar solo PostgreSQL. Se quita el soporte de
+      MySQL del código (includes/db.php, conexion.php,
+      includes/migraciones.php) y se elimina trackify.sql.
+      trackify_postgres.sql pasa a ser el único esquema.
+    - Los tipos del diccionario quedan con su nombre en PostgreSQL:
+      INT AUTO_INCREMENT -> SERIAL, DATETIME -> TIMESTAMP,
+      TINYINT(1) -> SMALLINT, DECIMAL -> NUMERIC, ENUM -> tipos
+      tipo_movimiento / estado_meta, moneda_principal -> VARCHAR(3)
+      con CHECK ('ARS','USD'). Foto_perfil se escribe foto_perfil.
+    - Los datos de una base MySQL vieja se copian con
+      herramientas/migrar_mysql_a_postgres.php (mismos ids).
+
 RESUMEN DE LO QUE CAMBIASTE VOS (aguscecchsagrado)
   - Unificaste ingresos/gastos en movimientos y pasaste el dinero a
     DECIMAL.
@@ -230,4 +255,4 @@ PENDIENTES / INCONSISTENCIAS DETECTADAS
     admiten NULL y moneda_principal es VARCHAR(3) en vez de ENUM; en
     la de devagus codigo_verificacion es VARCHAR(10). La app nunca
     escribe NULL en esas columnas.
-  (Resuelto en la fusión: uuid ya es UNIQUE y trackify.sql está al día.)
+  (Resuelto en la fusión: uuid ya es UNIQUE y el esquema está al día.)
